@@ -1,0 +1,203 @@
+
+cdacsinkholeadmin
+esec@sta#P1$3%*
+
+  
+
+Adm!n@Sinkhole_26
+U$er@Sinkhole_26
+
+ssh -i frontend.pem -p 2222 admin@52.66.92.79
+-----------------------------------------------------------------------------------------------------------------------------
+DockerFile
+
+FROM node:20-alpine
+
+WORKDIR /app
+
+COPY package*.json ./
+
+RUN npm install
+
+COPY . .
+
+RUN npm run build
+
+RUN cp -r public .next/standalone/
+RUN cp -r .next/static .next/standalone/.next/
+
+EXPOSE 3000
+
+ENV PORT=3000
+
+CMD ["node", ".next/standalone/server.js"]
+
+
+----------------------------------------------------------------------------------------------------------------------
+
+docker-compose.yml
+
+services:
+  frontend:
+    build: .
+    ports:
+      - "80:3000"
+    depends_on:
+      - keycloak
+    networks:
+      - keycloak_network
+
+  postgres:
+    image: postgres:15
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: password
+    networks:
+      - keycloak_network
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0.0
+    command: start
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: password
+      KC_HOSTNAME: 52.66.92.79
+      KC_HOSTNAME_STRICT: "false"
+      KC_HTTP_ENABLED: "true"
+      KC_PROXY_HEADERS: xforwarded
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: esec@sta#P1
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    networks:
+      - keycloak_network
+volumes:
+  postgres_data:
+
+------------------------------------------------------------------------------------------------------------
+
+package.json
+
+{
+  "name": "frontend",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint"
+  },
+  "dependencies": {
+    "framer-motion": "^12.38.0",
+    "jspdf": "^4.2.1",
+    "jspdf-autotable": "^5.0.7",
+    "leaflet": "^1.9.4",
+    "lucide-react": "^1.14.0",
+    "next": "16.2.4",
+    "next-auth": "^5.0.0-beta.31",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "react-leaflet": "^5.0.0",
+    "recharts": "^3.8.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "babel-plugin-react-compiler": "1.0.0",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.4",
+    "tailwindcss": "^4"
+  }
+}
+
+
+
+
+
+
+---------------------------------------------------------------------------
+
+
+sudo nano /etc/systemd/system/frontend.service
+
+[Unit]
+Description=Next.js Frontend
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/home/frontend
+Environment=NODE_ENV=production
+Environment=PORT=80
+ExecStart=/usr/bin/npm run start
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+------------------------------------------------------------------------------
+.env.production
+
+
+# ---------------------------------------------------------
+# AWS PRODUCTION ENVIRONMENT VARIABLES (SINGLE EC2)
+# ---------------------------------------------------------
+# Since everything is on ONE server, you only need the ONE Public IP
+# that AWS assigns to your single EC2 instance.
+
+# Replace <YOUR_EC2_PUBLIC_IP> with the actual IP (.g., 54.10.20.30)
+
+# 1. NEXT.JS CONFIGURATION
+AUTH_SECRET="jgfrehbhfverfheiurheiuhrbewrwgvurhtheijfhe"
+AUTH_URL="http://52.66.92.79"
+
+# 2. KEYCLOAK CONFIGURATION
+KEYCLOAK_CLIENT_ID="sinkhole"
+# KEYCLOAK_ISSUER="http://localhost:8080/realms/cdac"
+KEYCLOAK_ISSUER="http://keycloak:8080/realms/cdac"
+
+# 3. BACKEND FLASK CONFIGURATION
+BACKEND_URL="http://pcap-api:5000/api"
+
+------------------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+.env.production
+
+
+# ---------------------------------------------------------
+# AWS PRODUCTION ENVIRONMENT VARIABLES (SINGLE EC2)
+# ---------------------------------------------------------
+# Since everything is on ONE server, you only need the ONE Public IP
+# that AWS assigns to your single EC2 instance.
+
+# Replace <YOUR_EC2_PUBLIC_IP> with the actual IP (.g., 54.10.20.30)
+
+# 1. NEXT.JS CONFIGURATION
+AUTH_SECRET="jgfrehbhfverfheiurheiuhrbewrwgvurhtheijfhe"
+AUTH_URL="http://52.66.92.79"
+
+# 2. KEYCLOAK CONFIGURATION
+KEYCLOAK_CLIENT_ID="sinkhole"
+KEYCLOAK_ISSUER="http://localhost:8080/realms/cdac"
+
+# 3. BACKEND FLASK CONFIGURATION
+BACKEND_URL="http://localhost:5000/api"
+
