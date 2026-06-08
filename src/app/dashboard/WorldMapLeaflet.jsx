@@ -11,13 +11,11 @@ import { useTheme } from '@/components/ThemeProvider';
 import PropTypes from 'prop-types';
 
 const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false });
-const TileLayer = dynamic(() => import('react-leaflet').then(mod => mod.TileLayer), { ssr: false });
 const Marker = dynamic(() => import('react-leaflet').then(mod => mod.Marker), { ssr: false });
 const CircleMarker = dynamic(() => import('react-leaflet').then(mod => mod.CircleMarker), { ssr: false });
 const Tooltip = dynamic(() => import('react-leaflet').then(mod => mod.Tooltip), { ssr: false });
 const Polyline = dynamic(() => import('react-leaflet').then(mod => mod.Polyline), { ssr: false });
 const GeoJSON = dynamic(() => import('react-leaflet').then(mod => mod.GeoJSON), { ssr: false });
-const MarkerClusterGroup = dynamic(() => import('react-leaflet-cluster'), { ssr: false });
 
 function MapZoomListener({ setZoomLevel }) {
   const map = useMap();
@@ -94,6 +92,28 @@ function PcapFocusController({ focusCluster, mode }) {
     });
   }, [focusCluster, map, mode]);
 
+  return null;
+}
+
+function EnsureTopPane() {
+  const map = useMap();
+  useEffect(() => {
+    if (!map) return;
+    try {
+      if (!map.getPane('geoPane')) {
+        const geo = map.createPane('geoPane');
+        geo.style.zIndex = '300';
+        geo.style.pointerEvents = 'auto';
+      }
+      if (!map.getPane('topPane')) {
+        const p = map.createPane('topPane');
+        p.style.zIndex = '700';
+        p.style.pointerEvents = 'auto';
+      }
+    } catch (e) {
+      // ignore
+    }
+  }, [map]);
   return null;
 }
 
@@ -345,13 +365,25 @@ const getPcapPointStyle = (count) => {
   }
 
   return {
-    marker: '#3f7fe8',
-    halo: 'rgba(63, 127, 232, 0.15)',
-    pulse: 'rgba(63, 127, 232, 0.24)',
-    line: '#2563eb',
-    shadow: 'rgba(29, 78, 216, 0.22)'
+    marker: '#4f7fe8',
+    halo: 'rgba(79, 127, 232, 0.14)',
+    pulse: 'rgba(79, 127, 232, 0.22)',
+    line: '#2f6bdb',
+    shadow: 'rgba(37, 99, 235, 0.20)'
   };
 };
+
+const CONTINENT_LABELS = [
+  { id: 'north-america', text: 'NORTH\nAMERICA', position: [47, -102], className: 'label-large' },
+  { id: 'europe', text: 'EUROPE', position: [53, 15], className: 'label-large' },
+  { id: 'china', text: 'CHINA', position: [35, 103], className: 'label-large' },
+  { id: 'russia', text: 'RUSSIA', position: [61, 95], className: 'label-large' },
+  { id: 'africa', text: 'AFRICA', position: [2, 20], className: 'label-large' },
+  { id: 'south-america', text: 'SOUTH AMERICA', position: [-18, -60], className: 'label-medium' },
+  { id: 'greenland', text: 'GREENLAND', position: [73, -41], className: 'label-medium' },
+  { id: 'oceania', text: 'OCEANIA', position: [-13, 152], className: 'label-large' },
+  { id: 'australia', text: 'AUSTRALIA', position: [-25, 134], className: 'label-large' },
+];
 
 const getPcapMarkerSize = (count, zoomLevel) => {
   const zoomBoost = zoomLevel >= 7 ? 2 : 0;
@@ -368,6 +400,28 @@ const getPcapLineStyle = (count, zoomLevel) => {
     opacity: zoomLevel >= 6 ? 0.5 : 0.38
   };
 };
+
+function ContinentLabels({ theme, L }) {
+  if (!L) return null;
+
+  return CONTINENT_LABELS.map((label) => {
+    const icon = L.divIcon({
+      html: `<div class="continent-label ${label.className}">${label.text.replace(/\n/g, '<br/>')}</div>`,
+      className: 'continent-label-marker',
+      iconSize: [1, 1],
+      iconAnchor: [0, 0]
+    });
+
+    return (
+      <Marker
+        key={label.id}
+        position={label.position}
+        icon={icon}
+        interactive={false}
+      />
+    );
+  });
+}
 
 const COUNTRY_CENTROIDS = {
   "United States of America": [37.0902, -95.7129],
@@ -607,6 +661,7 @@ export function WorldMapLeaflet({ externalIps = [], onIpClick, mode = 'pcap', co
   const [selectedCountry, setSelectedCountry] = useState(null);
   const [L, setL] = useState(null);
   const [indiaBorder, setIndiaBorder] = useState(null);
+  const [worldCountries, setWorldCountries] = useState(null);
   const [zoomLevel, setZoomLevel] = useState(2);
   const [viewport, setViewport] = useState(null);
   const [focusedPcapCluster, setFocusedPcapCluster] = useState(null);
@@ -616,11 +671,15 @@ export function WorldMapLeaflet({ externalIps = [], onIpClick, mode = 'pcap', co
       setL(leaflet);
     });
 
-    // Fetch official India border GeoJSON
     fetch('/india-border.json')
       .then(res => res.json())
       .then(data => setIndiaBorder(data))
       .catch(err => console.error('Failed to load India border:', err));
+
+    fetch('/world-countries.json')
+      .then(res => res.json())
+      .then(data => setWorldCountries(data))
+      .catch(err => console.error('Failed to load world countries:', err));
   }, []);
 
   // Keep raw valid IPs separate; PCAP mode aggregates them until a cluster is revealed.
@@ -698,6 +757,9 @@ export function WorldMapLeaflet({ externalIps = [], onIpClick, mode = 'pcap', co
     })).filter(c => c.coords[0] !== 0);
   }, [countryData, mode]);
 
+  const indiaRenderer = useMemo(() => (L ? L.svg() : null), [L]);
+  const worldRenderer = useMemo(() => (L ? L.svg() : null), [L]);
+
   const initialCenter = useMemo(() => {
     if (mode === 'reports' && externalIps.length > 0) {
       const validIps = externalIps.filter(ip => ip.latitude && ip.longitude);
@@ -729,46 +791,65 @@ export function WorldMapLeaflet({ externalIps = [], onIpClick, mode = 'pcap', co
         maxBounds={[[-90, -180], [90, 180]]}
         maxBoundsViscosity={1.0}
       >
-        <TileLayer
-          key={theme}
-          url={theme === 'dark' 
-            ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-            : "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-          }
-          attribution='&copy; CARTO'
-        />
+        {worldCountries && worldRenderer && (
+          <GeoJSON
+            key={`world-${theme}`}
+            data={worldCountries}
+            renderer={worldRenderer}
+            pane="geoPane"
+            style={(feature) => {
+              const props = feature && feature.properties ? feature.properties : {};
+              const name = (props.ADMIN || props.NAME || '').toString().toLowerCase();
+              const iso = (props.ISO_A3 || props.iso_a3 || '').toString().toUpperCase();
+              const isIndia = iso === 'IND' || name.includes('india');
+
+              if (isIndia) {
+                return {
+                  stroke: false,
+                  fillColor: theme === 'dark' ? '#233047' : '#fffdf9',
+                  fillOpacity: 1,
+                  smoothFactor: 0
+                };
+              }
+
+              return {
+                color: theme === 'dark' ? '#8ea0bb' : '#5d6573',
+                weight: 0.55,
+                opacity: 1,
+                fillColor: theme === 'dark' ? '#233047' : '#fffdf9',
+                fillOpacity: 1,
+                lineCap: 'round',
+                lineJoin: 'round',
+                smoothFactor: 0
+              };
+            }}
+          />
+        )}
+
+        <ContinentLabels theme={theme} L={L} />
+        <EnsureTopPane />
 
         <MapZoomListener setZoomLevel={setZoomLevel} />
         <MapViewportListener setViewport={setViewport} />
         <MapBoundsHelper ips={externalIps} mode={mode} />
         <PcapFocusController focusCluster={activeFocusedPcapCluster} mode={mode} />
 
-        {indiaBorder && (
-          <>
-            {/* India Official Boundary - Refined Contrast Layer */}
-            <GeoJSON
-              key="india-border-layer-main"
-              data={indiaBorder}
-              style={{
-                color: '#000000',
-                weight: 1.2,
-                opacity: 0.3,
-                fillOpacity: 0.01,
-                fillColor: '#000000'
-              }}
-            />
-            {/* Inner Precision Line */}
-            <GeoJSON
-              key="india-border-layer-precision"
-              data={indiaBorder}
-              style={{
-                color: '#475569',
-                weight: 0.6,
-                opacity: 0.4,
-                fillOpacity: 0,
-              }}
-            />
-          </>
+        {indiaBorder && indiaRenderer && (
+          <GeoJSON
+            key={`india-border-${theme}`}
+            data={indiaBorder}
+            renderer={indiaRenderer}
+            pane="geoPane"
+            style={{
+              color: theme === 'dark' ? '#e9f2fb' : '#9ea7b1',
+              weight: theme === 'dark' ? 1.0 : 1.0,
+              opacity: theme === 'dark' ? 0.85 : 1,
+              fillOpacity: 0,
+              lineCap: 'round',
+              lineJoin: 'round',
+              smoothFactor: 0
+            }}
+          />
         )}
 
 
@@ -780,6 +861,7 @@ export function WorldMapLeaflet({ externalIps = [], onIpClick, mode = 'pcap', co
           return (
             <Fragment key={`line-${point.id}`}>
               <Polyline
+                pane="topPane"
                 positions={positions}
                 pathOptions={{
                   color: theme === 'dark' ? '#e2e8f0' : '#0f172a',
@@ -790,6 +872,7 @@ export function WorldMapLeaflet({ externalIps = [], onIpClick, mode = 'pcap', co
                 }}
               />
               <Polyline
+                pane="topPane"
                 positions={positions}
                 pathOptions={{
                   color: pointStyle.line,
@@ -824,7 +907,7 @@ export function WorldMapLeaflet({ externalIps = [], onIpClick, mode = 'pcap', co
               });
 
               return (
-                <Marker
+                <Marker pane="topPane"
                   key={idx}
                   position={[ip.latitude, ip.longitude]}
                   icon={icon}
@@ -861,7 +944,7 @@ export function WorldMapLeaflet({ externalIps = [], onIpClick, mode = 'pcap', co
         ) : mode === 'pcap' ? (
           pcapMarkerItems.map(({ point, markerSize, icon }) => {
             return (
-              <Marker
+              <Marker pane="topPane"
                 key={point.id}
                 position={[point.lat, point.lng]}
                 icon={icon}
@@ -927,7 +1010,7 @@ export function WorldMapLeaflet({ externalIps = [], onIpClick, mode = 'pcap', co
             });
 
             return (
-              <Marker
+              <Marker pane="topPane"
                 key={idx}
                 position={[ip.latitude, ip.longitude]}
                 icon={icon}
@@ -973,7 +1056,7 @@ export function WorldMapLeaflet({ externalIps = [], onIpClick, mode = 'pcap', co
           });
 
           return (
-            <Marker
+            <Marker pane="topPane"
               key={`country-${idx}`}
               position={point.coords}
               icon={icon}
@@ -995,7 +1078,20 @@ export function WorldMapLeaflet({ externalIps = [], onIpClick, mode = 'pcap', co
         })}
 
 
-        {/* Removed center red mark */}
+        {mode === 'pcap' && L && (
+          <Marker
+            pane="topPane"
+            key="center-delhi"
+            position={DELHI_COORDS}
+            icon={L.divIcon({
+              html: `<div class="center-red-dot"></div>`,
+              className: '',
+              iconSize: [12, 12],
+              iconAnchor: [6, 6]
+            })}
+            interactive={false}
+          />
+        )}
       </MapContainer>
 
 
@@ -1180,6 +1276,45 @@ export function WorldMapLeaflet({ externalIps = [], onIpClick, mode = 'pcap', co
           background: #ffffff !important;
           box-shadow: 0 0 50px rgba(37, 99, 235, 1);
         }
+        .center-red-dot {
+          width: 12px;
+          height: 12px;
+          background: #ef4444;
+          border-radius: 50%;
+          border: 2px solid white;
+          box-shadow: 0 6px 18px rgba(239,68,68,0.28);
+        }
+        .continent-label-marker {
+          background: transparent !important;
+          border: 0 !important;
+          box-shadow: none !important;
+        }
+        .continent-label {
+          transform: translate(-50%, -50%);
+          white-space: pre-line;
+          text-align: center;
+          font-weight: 800;
+          letter-spacing: 0.03em;
+          line-height: 0.95;
+          text-transform: uppercase;
+          user-select: none;
+          pointer-events: none;
+          color: ${theme === 'dark' ? 'rgba(255,255,255,0.62)' : 'rgba(70, 90, 122, 0.85)'};
+          text-shadow: ${theme === 'dark'
+            ? '0 1px 0 rgba(0,0,0,0.85)'
+            : '0 1px 0 rgba(255,255,255,0.65)'};
+        }
+        .continent-label.label-large {
+          font-size: 17px;
+        }
+        .continent-label.label-medium {
+          font-size: 14px;
+          line-height: 0.92;
+        }
+        .continent-label.label-small {
+          font-size: 11px;
+          opacity: 0.82;
+        }
         .pcap-marker {
           background: #3b82f6;
           border: 2px solid white;
@@ -1260,7 +1395,9 @@ export function WorldMapLeaflet({ externalIps = [], onIpClick, mode = 'pcap', co
             transform: scale(2.1);
           }
         }
-        .leaflet-container { background-color: transparent !important; }
+        .leaflet-container {
+          background: ${theme === 'dark' ? '#091224' : '#d8edf3'} !important;
+        }
         .leaflet-tooltip {
           background: hsl(var(--card) / 0.7) !important;
           backdrop-filter: blur(12px) !important;
