@@ -58,7 +58,7 @@ function MapBoundsHelper({ ips, mode }) {
       const validIps = ips.filter(ip => ip.latitude && ip.longitude);
       if (validIps.length > 0) {
         const bounds = validIps.map(ip => [ip.latitude, ip.longitude]);
-        map.fitBounds(bounds, { padding: [100, 100], maxZoom: 10 });
+        map.fitBounds(bounds, { padding: [100, 100], maxZoom: 5 });
       }
     }
   }, [ips, mode, map]);
@@ -118,7 +118,6 @@ function EnsureTopPane() {
 }
 
 const DELHI_COORDS = [28.6139, 77.2090];
-const GROUP_IP_PREVIEW_LIMIT = 250;
 const FOCUS_IP_RENDER_LIMIT = 180;
 
 const hasCoordinates = (ip) => {
@@ -128,9 +127,7 @@ const hasCoordinates = (ip) => {
 };
 
 const addPreviewIp = (group, ip) => {
-  if (group.ips.length < GROUP_IP_PREVIEW_LIMIT) {
-    group.ips.push(ip);
-  }
+  group.ips.push(ip);
   if (group.focusIps.length < FOCUS_IP_RENDER_LIMIT) {
     group.focusIps.push(ip);
   }
@@ -374,15 +371,15 @@ const getPcapPointStyle = (count) => {
 };
 
 const CONTINENT_LABELS = [
-  { id: 'north-america', text: 'NORTH\nAMERICA', position: [47, -102], className: 'label-large' },
+  { id: 'north-america', text: 'NORTH\nAMERICA', position: [49, -110], className: 'label-large' },
   { id: 'europe', text: 'EUROPE', position: [53, 15], className: 'label-large' },
-  { id: 'china', text: 'CHINA', position: [35, 103], className: 'label-large' },
+  { id: 'china', text: 'CHINA', position: [35, 93], className: 'label-large' },
   { id: 'russia', text: 'RUSSIA', position: [61, 95], className: 'label-large' },
-  { id: 'africa', text: 'AFRICA', position: [2, 20], className: 'label-large' },
-  { id: 'south-america', text: 'SOUTH AMERICA', position: [-18, -60], className: 'label-medium' },
-  { id: 'greenland', text: 'GREENLAND', position: [73, -41], className: 'label-medium' },
+  { id: 'africa', text: 'AFRICA', position: [5, 15], className: 'label-large' },
+  { id: 'south-america', text: 'SOUTH AMERICA', position: [-14, -65], className: 'label-medium' },
+  { id: 'greenland', text: 'GREENLAND', position: [76, -54], className: 'label-medium' },
   { id: 'oceania', text: 'OCEANIA', position: [-13, 152], className: 'label-large' },
-  { id: 'australia', text: 'AUSTRALIA', position: [-25, 134], className: 'label-large' },
+  { id: 'australia', text: 'AUSTRALIA', position: [-25, 116], className: 'label-large' },
 ];
 
 const getPcapMarkerSize = (count, zoomLevel) => {
@@ -652,6 +649,40 @@ const COUNTRY_CENTROIDS = {
   "French Southern Territories": [-49.2800, 69.3481],
   "United States Minor Outlying Islands": [19.2833, 166.6167],
   "Antarctica": [-75.2510, -0.0714],
+  "Republic of Côte d'Ivoire": [7.5400, -5.5471],
+  "Republic of Bosnia and Herzegovina": [43.9159, 17.6791],
+  "Libya": [26.3351, 17.2283],
+  "the State of Palestine": [31.9522, 35.2332],
+  "Republic of Myanmar": [21.9162, 95.9560],
+  "Republic of Iceland": [64.9631, -19.0208],
+  "Kingdom of Bahrain": [26.0667, 50.5577],
+  "Lebanese Republic": [33.8547, 35.8623],
+  "XK": [42.6026, 20.9030],
+  "Réunion": [-21.1151, 55.5364],
+  "Rwandese Republic": [-1.9403, 29.8739],
+  "Macao Special Administrative Region of China": [22.1987, 113.5439],
+  "Republic of Vanuatu": [-15.3767, 166.9592],
+  "Republic of Guyana": [4.8604, -58.9302],
+  "Congo, The Democratic Republic of the": [-4.0383, 21.7587],
+  "Brunei Darussalam": [4.5353, 114.7277],
+  "Republic of Cuba": [21.5218, -77.7812],
+  "Islamic Republic of Afghanistan": [33.9391, 67.7100],
+  "Virgin Islands of the United States": [18.3358, -64.8963],
+  "Curaçao": [12.1696, -68.9900],
+  "Islamic Republic of Mauritania": [21.0079, -10.9408],
+  "Jersey": [49.2144, -2.1312],
+  "Republic of Botswana": [-22.3285, 24.6849],
+  "Kingdom of Lesotho": [-29.6100, 28.2336],
+  "Gibraltar": [36.1408, -5.3536],
+  "Faroe Islands": [61.8926, -6.9118],
+  "Isle of Man": [54.2361, -4.5481],
+  "Republic of Maldives": [3.2028, 73.2207],
+  "Republic of Haiti": [18.9712, -72.2852],
+  "Democratic Republic of Timor-Leste": [-8.8742, 125.7275],
+  "Guernsey": [49.4657, -2.5853],
+  "Commonwealth of the Northern Mariana Islands": [15.0979, 145.6739],
+  "Commonwealth of Dominica": [15.4150, -61.3710],
+  "Kingdom of Eswatini": [-26.5225, 31.4659],
 };
 
 
@@ -671,7 +702,7 @@ export function WorldMapLeaflet({ externalIps = [], onIpClick, mode = 'pcap', co
       setL(leaflet);
     });
 
-    fetch('/india-border.json')
+    fetch('/india-border-simplified-0.01.json')
       .then(res => res.json())
       .then(data => setIndiaBorder(data))
       .catch(err => console.error('Failed to load India border:', err));
@@ -688,6 +719,34 @@ export function WorldMapLeaflet({ externalIps = [], onIpClick, mode = 'pcap', co
     if (!externalIps.length) return [];
     return externalIps.filter(hasCoordinates);
   }, [externalIps, mode]);
+
+  const reportsGroupedPoints = useMemo(() => {
+    if (mode !== 'reports') return [];
+    const groups = new Map();
+    validIps.forEach(ip => {
+      const lat = Number(ip.latitude);
+      const lng = Number(ip.longitude);
+      const key = `${lat},${lng}`;
+      if (groups.has(key)) {
+        const group = groups.get(key);
+        group.count += 1;
+        group.ips.push(ip);
+        group.totalPackets += (ip.packets || ip.packet_count || 1);
+      } else {
+        groups.set(key, {
+          id: key,
+          lat,
+          lng,
+          city: ip.city || "Unknown",
+          country: ip.country || "Unknown",
+          ips: [ip],
+          count: 1,
+          totalPackets: ip.packets || ip.packet_count || 1
+        });
+      }
+    });
+    return Array.from(groups.values());
+  }, [validIps, mode]);
 
   const activeFocusedPcapCluster = useMemo(() => {
     if (mode !== 'pcap' || !focusedPcapCluster) return null;
@@ -799,11 +858,10 @@ export function WorldMapLeaflet({ externalIps = [], onIpClick, mode = 'pcap', co
             pane="geoPane"
             style={(feature) => {
               const props = feature && feature.properties ? feature.properties : {};
-              const name = (props.ADMIN || props.NAME || '').toString().toLowerCase();
-              const iso = (props.ISO_A3 || props.iso_a3 || '').toString().toUpperCase();
-              const isIndia = iso === 'IND' || name.includes('india');
+              const iso = (props.iso_a3 || props.ISO_A3 || props.adm0_a3 || '').toString().toUpperCase();
+              const indiaAndNeighbors = new Set(['IND', 'PAK', 'CHN', 'NPL', 'BTN', 'BGD', 'MMR', 'LKA']);
 
-              if (isIndia) {
+              if (indiaAndNeighbors.has(iso)) {
                 return {
                   stroke: false,
                   fillColor: theme === 'dark' ? '#233047' : '#fffdf9',
@@ -841,9 +899,9 @@ export function WorldMapLeaflet({ externalIps = [], onIpClick, mode = 'pcap', co
             renderer={indiaRenderer}
             pane="geoPane"
             style={{
-              color: theme === 'dark' ? '#e9f2fb' : '#9ea7b1',
-              weight: theme === 'dark' ? 1.0 : 1.0,
-              opacity: theme === 'dark' ? 0.85 : 1,
+              color: theme === 'dark' ? '#8ea0bb' : '#5d6573',
+              weight: 0.55,
+              opacity: 1,
               fillOpacity: 0,
               lineCap: 'round',
               lineJoin: 'round',
@@ -851,7 +909,6 @@ export function WorldMapLeaflet({ externalIps = [], onIpClick, mode = 'pcap', co
             }}
           />
         )}
-
 
         {mode === 'pcap' && pcapLinePoints.map((point) => {
           const pointStyle = getPcapPointStyle(point.count);
@@ -886,92 +943,43 @@ export function WorldMapLeaflet({ externalIps = [], onIpClick, mode = 'pcap', co
           );
         })}
 
-        {mode === 'reports' && externalIps.length > 1000 ? (
-          // Use clustering for reports only. PCAP maps use deterministic zoom-aware grouping.
-          <MarkerClusterGroup
-            chunkedLoading
-            maxClusterRadius={50}
-            disableClusteringAtZoom={12}
-          >
-            {validIps.map((ip, idx) => {
-              const icon = L.divIcon({
-                html: `
-                  <div class="pcap-marker group" style="width: 24px; height: 24px;">
-                    <div class="pcap-pulse"></div>
-                    <span style="position: relative; z-index: 2; font-size: 10px;">1</span>
-                  </div>
-                `,
-                className: '',
-                iconSize: [24, 24],
-                iconAnchor: [12, 12]
-              });
+        {mode === 'reports' ? (
+          reportsGroupedPoints.map((point, idx) => {
+            const markerSize = getPcapMarkerSize(point.count, zoomLevel);
+            const pointStyle = getPcapPointStyle(point.count);
+            const icon = L.divIcon({
+              html: `
+                <div class="pcap-marker group" style="width: ${markerSize}px; height: ${markerSize}px; background: ${pointStyle.marker}; box-shadow: 0 0 0 4px ${pointStyle.halo}, 0 6px 14px ${pointStyle.shadow};">
+                  <div class="pcap-pulse" style="background: ${pointStyle.marker};"></div>
+                  <span style="position: relative; z-index: 2; font-size: ${point.count > 999 ? 9 : 10}px;">${point.count.toLocaleString()}</span>
+                </div>
+              `,
+              className: '',
+              iconSize: [markerSize, markerSize],
+              iconAnchor: [markerSize / 2, markerSize / 2]
+            });
 
-              return (
-                <Marker pane="topPane"
-                  key={idx}
-                  position={[ip.latitude, ip.longitude]}
-                  icon={icon}
-                  eventHandlers={{
-                    click: () => setSelectedGroup({ 
-                      lat: ip.latitude, 
-                      lng: ip.longitude, 
-                      city: ip.city || "Unknown", 
-                      country: ip.country || "Unknown",
-                      ips: [ip],
-                      totalPackets: ip.packet_count || 0
-                    })
-                  }}
-                >
-                  <Tooltip direction="top" offset={[0, -12]} opacity={1}>
-                    <div className="p-2 text-[11px] font-bold bg-card text-foreground rounded-lg shadow-xl border border-theme">
-                      <div className="text-blue-600 uppercase tracking-tighter mb-1 border-b border-theme pb-1">{ip.city || "Unknown"}</div>
-                      <div className="flex flex-col gap-1">
-                        <div className="flex justify-between gap-4">
-                          <span className="text-slate-500 font-black text-[9px]">IP:</span>
-                          <span className="text-foreground text-[9px]">{ip.ip}</span>
-                        </div>
-                        <div className="flex justify-between gap-4">
-                          <span className="text-slate-500 font-black text-[9px]">Packets:</span>
-                          <span className="text-foreground text-[9px]">{ip.packet_count || 1}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </Tooltip>
-                </Marker>
-              );
-            })}
-          </MarkerClusterGroup>
-        ) : mode === 'pcap' ? (
-          pcapMarkerItems.map(({ point, markerSize, icon }) => {
             return (
               <Marker pane="topPane"
-                key={point.id}
+                key={idx}
                 position={[point.lat, point.lng]}
                 icon={icon}
                 eventHandlers={{
-                  click: () => {
-                    if (point.count > 1) {
-                      setFocusedPcapCluster({ ...point, timestamp: Date.now() });
-                      setSelectedGroup(null);
-                      return;
-                    }
-
-                    setSelectedGroup({
-                      lat: point.lat,
-                      lng: point.lng,
-                      city: point.count === 1 ? point.city : `${point.count.toLocaleString()} IPs`,
-                      country: point.country,
-                      ips: point.ips,
-                      count: point.count,
-                      totalPackets: point.totalPackets
-                    });
-                  }
+                  click: () => setSelectedGroup({ 
+                    lat: point.lat, 
+                    lng: point.lng, 
+                    city: point.count === 1 ? point.city : `${point.count.toLocaleString()} IPs`, 
+                    country: point.country,
+                    ips: point.ips,
+                    count: point.count,
+                    totalPackets: point.totalPackets
+                  })
                 }}
               >
                 <Tooltip direction="top" offset={[0, -markerSize / 2]} opacity={1}>
                   <div className="p-2 text-[11px] font-bold bg-card text-foreground rounded-lg shadow-xl border border-theme">
                     <div className="text-blue-600 uppercase tracking-tighter mb-1 border-b border-theme pb-1">
-                      {point.count === 1 ? (point.city || "Unknown") : `${point.count.toLocaleString()} IPs grouped here`}
+                      {point.count === 1 ? (point.city || "Unknown") : `${point.count.toLocaleString()} IPs`}
                     </div>
                     <div className="flex flex-col gap-1">
                       {point.count === 1 && (
@@ -994,48 +1002,50 @@ export function WorldMapLeaflet({ externalIps = [], onIpClick, mode = 'pcap', co
               </Marker>
             );
           })
-        ) : (
-          // Direct rendering for small report datasets (<= 1000 IPs)
-          validIps.map((ip, idx) => {
-            const icon = L.divIcon({
-              html: `
-                <div class="pcap-marker group" style="width: 24px; height: 24px;">
-                  <div class="pcap-pulse"></div>
-                  <span style="position: relative; z-index: 2; font-size: 10px;">1</span>
-                </div>
-              `,
-              className: '',
-              iconSize: [24, 24],
-              iconAnchor: [12, 12]
-            });
-
+        ) : mode === 'pcap' ? (
+          pcapMarkerItems.map(({ point, markerSize, icon }) => {
             return (
               <Marker pane="topPane"
-                key={idx}
-                position={[ip.latitude, ip.longitude]}
+                key={point.id}
+                position={[point.lat, point.lng]}
                 icon={icon}
                 eventHandlers={{
-                  click: () => setSelectedGroup({ 
-                    lat: ip.latitude, 
-                    lng: ip.longitude, 
-                    city: ip.city || "Unknown", 
-                    country: ip.country || "Unknown",
-                    ips: [ip],
-                    totalPackets: ip.packet_count || 0
-                  })
+                  click: () => {
+                    if (point.count > 1 && zoomLevel < 12) {
+                      setFocusedPcapCluster(point);
+                    } else {
+                      setSelectedGroup({
+                        lat: point.lat,
+                        lng: point.lng,
+                        city: point.count === 1 ? point.city : `${point.count.toLocaleString()} IPs`,
+                        country: point.country,
+                        ips: point.ips,
+                        count: point.count,
+                        totalPackets: point.totalPackets
+                      });
+                    }
+                  }
                 }}
               >
-                <Tooltip direction="top" offset={[0, -12]} opacity={1}>
+                <Tooltip direction="top" offset={[0, -markerSize / 2]} opacity={1}>
                   <div className="p-2 text-[11px] font-bold bg-card text-foreground rounded-lg shadow-xl border border-theme">
-                    <div className="text-blue-600 uppercase tracking-tighter mb-1 border-b border-theme pb-1">{ip.city || "Unknown"}</div>
+                    <div className="text-blue-600 uppercase tracking-tighter mb-1 border-b border-theme pb-1">
+                      {point.count === 1 ? (point.city || "Unknown") : `${point.count.toLocaleString()} IPs`}
+                    </div>
                     <div className="flex flex-col gap-1">
+                      {point.count === 1 && (
+                        <div className="flex justify-between gap-4">
+                          <span className="text-slate-500 font-black text-[9px]">IP:</span>
+                          <span className="text-foreground text-[9px]">{point.ips[0].ip}</span>
+                        </div>
+                      )}
                       <div className="flex justify-between gap-4">
-                        <span className="text-slate-500 font-black text-[9px]">IP:</span>
-                        <span className="text-foreground text-[9px]">{ip.ip}</span>
+                        <span className="text-slate-500 font-black text-[9px]">Located IPs:</span>
+                        <span className="text-foreground text-[9px]">{point.count.toLocaleString()}</span>
                       </div>
                       <div className="flex justify-between gap-4">
                         <span className="text-slate-500 font-black text-[9px]">Packets:</span>
-                        <span className="text-foreground text-[9px]">{ip.packet_count || 1}</span>
+                        <span className="text-foreground text-[9px]">{point.totalPackets.toLocaleString()}</span>
                       </div>
                     </div>
                   </div>
@@ -1043,7 +1053,7 @@ export function WorldMapLeaflet({ externalIps = [], onIpClick, mode = 'pcap', co
               </Marker>
             );
           })
-        )}
+        ) : null}
 
 
         {mode === 'summary' && countryPoints.map((point, idx) => {
@@ -1129,7 +1139,7 @@ export function WorldMapLeaflet({ externalIps = [], onIpClick, mode = 'pcap', co
               {mode === 'summary' ? 'Total Countries' : 'Total IPs Located'}
             </div>
             <div className="text-lg font-black text-foreground tracking-tight group-hover:text-blue-500 transition-colors">
-              {mode === 'summary' ? countryData.length : externalIps.length.toLocaleString()}
+              {mode === 'summary' ? countryData.length : validIps.length.toLocaleString()}
             </div>
           </div>
         </motion.div>
@@ -1164,12 +1174,10 @@ export function WorldMapLeaflet({ externalIps = [], onIpClick, mode = 'pcap', co
                 <X size={20} className="group-hover/close:rotate-90 transition-transform" />
               </button>
             </motion.div>
-            <div className="max-h-80 overflow-y-auto custom-scrollbar p-2 bg-card">
-              {selectedGroup.count > selectedGroup.ips.length && (
-                <div className="px-3 py-2 text-[10px] font-black uppercase tracking-wider text-slate-500 border-b border-theme">
-                  Showing {selectedGroup.ips.length.toLocaleString()} of {selectedGroup.count.toLocaleString()} IPs
-                </div>
-              )}
+            <div className="max-h-[420px] overflow-y-auto custom-scrollbar p-2 bg-card" onPointerDown={(e) => e.stopPropagation()}>
+              <div className="px-3 py-2 text-[10px] font-black uppercase tracking-wider text-slate-500 border-b border-theme">
+                {selectedGroup.count} IP{selectedGroup.count !== 1 ? 's' : ''} in this region
+              </div>
               <table className="w-full text-left border-separate border-spacing-y-1">
                 <thead className="sticky top-0 bg-card z-10">
                   <tr>
