@@ -24,7 +24,7 @@ export default async function AppLoginPage() {
           
           
           <h1 className="text-4xl font-black text-foreground mb-4 tracking-tighter">
-            Sinkhole Traffic Analysis
+            Network Traffic Analysis
           </h1>
         
         

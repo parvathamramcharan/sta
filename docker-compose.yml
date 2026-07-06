@@ -1,9 +1,12 @@
 version: '3.8'
 services:
   frontend:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: pcap-frontend-frontend:latest
     ports:
-      - "80:3000"
+      - "6080:3000"
     environment:
       - AUTH_SECRET=${AUTH_SECRET}
       - AUTH_URL=${AUTH_URL}
