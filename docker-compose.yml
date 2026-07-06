@@ -1,10 +1,8 @@
 version: '3.8'
 services:
   frontend:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: pcap-frontend-frontend:latest
+    image: frontend:latest
+    container_name: frontend
     ports:
       - "6080:3000"
     environment:
