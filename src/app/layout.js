@@ -5,7 +5,7 @@ import { auth } from "@/auth";
 import { ThemeProvider } from "@/components/ThemeProvider";
 
 export const metadata = {
-  title: "Sinkhole Traffic Analysis",
+  title: "Network Traffic Analysis",
   description: "Professional traffic analysis platform",
 };
 
