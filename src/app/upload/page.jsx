@@ -389,14 +389,13 @@ export default function UploadPage() {
               <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_50%_0%,rgba(37,99,235,0.05)_0%,transparent_65%)] dark:bg-[radial-gradient(ellipse_at_50%_0%,rgba(59,130,246,0.06)_0%,transparent_65%)]" />
               <div className={`mb-2.5 opacity-65 ${accText}`}><UploadCloud size={34} /></div>
               <div className={`text-[1.05rem] font-semibold mb-1 tracking-[-0.02em] ${fg}`}>Drop files here to upload</div>
-              <div className={`text-[1rem] ${fgm}`}>
+              <div className={`text-[0.9rem] ${fgm}`}>
                 or <span className={`cursor-pointer hover:underline ${accText}`}>browse files</span>
               </div>
-              <div className={`text-[1rem] mt-1.5 ${fgd}`}>
+              <div className={`text-[0.82rem] mt-1.5 ${fgd}`}>
                 Accepted: .pcap, .pcapng, .tar, .zip, .rar, .log
-                <br /> <div className={`text-[1rem] ${accText}`}>Maximum upload size: <strong >10 GB</strong></div>
+                <br/><div className={accText}>Maximum Upload size: 10 GB</div>
               </div>
-              
               <input ref={fileInputRef} type="file" multiple className="hidden"
                 accept=".pcap,.pcapng,.zip,.tar,.gz,.tgz,.bz2,.tbz2,.xz,.txz,.zst,.7z,.rar,.log"
                 onChange={(e) => { if (e.target.files?.length) uploadFiles(e.target.files); }}
