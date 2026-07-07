@@ -26,12 +26,12 @@ function fileExt(name = "") {
 function getFileType(name = "") {
   const ext = "." + fileExt(name);
   if ([".pcap", ".pcapng"].includes(ext))
-    return { label: "PCAP", cls: "type-pcap" };
+    return { label: "PCAP" };
   if ([".zip", ".tar", ".gz", ".tgz", ".bz2", ".tbz2", ".xz", ".txz", ".zst", ".7z", ".rar"].includes(ext))
-    return { label: "Archive", cls: "type-arc" };
+    return { label: "Archive" };
   if (ext === ".log")
-    return { label: "Log", cls: "type-log" };
-  return { label: ext.replace(".", "").toUpperCase() || "File", cls: "type-other" };
+    return { label: "Log" };
+  return { label: ext.replace(".", "").toUpperCase() || "File" };
 }
 
 function FileIcon({ name }) {
@@ -40,29 +40,17 @@ function FileIcon({ name }) {
   const isPdf  = ext === "pdf";
 
   if (isPcap) return (
-    <span style={{
-      display:"inline-flex", alignItems:"center", justifyContent:"center",
-      width:30, height:30, borderRadius:7, flexShrink:0,
-      background:"rgba(37,99,235,.10)", color:"#2563eb",
-    }}>
+    <span className="inline-flex items-center justify-center w-[30px] h-[30px] rounded-[7px] shrink-0 bg-[rgba(37,99,235,0.10)] text-[#2563eb] dark:bg-[rgba(59,130,246,0.13)] dark:text-[#3b82f6]">
       <File size={14} />
     </span>
   );
   if (isPdf) return (
-    <span style={{
-      display:"inline-flex", alignItems:"center", justifyContent:"center",
-      width:30, height:30, borderRadius:7, flexShrink:0,
-      background:"rgba(220,38,38,.09)", color:"#dc2626",
-    }}>
+    <span className="inline-flex items-center justify-center w-[30px] h-[30px] rounded-[7px] shrink-0 bg-[rgba(220,38,38,0.09)] text-[#dc2626] dark:bg-[rgba(248,113,113,0.09)] dark:text-[#f87171]">
       <FileText size={14} />
     </span>
   );
   return (
-    <span style={{
-      display:"inline-flex", alignItems:"center", justifyContent:"center",
-      width:30, height:30, borderRadius:7, flexShrink:0,
-      background:"rgba(75,107,154,.10)", color:"#4b6b9a",
-    }}>
+    <span className="inline-flex items-center justify-center w-[30px] h-[30px] rounded-[7px] shrink-0 bg-[rgba(75,107,154,0.10)] text-[#4b6b9a] dark:bg-[rgba(148,163,184,0.10)] dark:text-[#94a3b8]">
       <File size={14} />
     </span>
   );
@@ -247,456 +235,135 @@ export default function UploadPage() {
     if (e.dataTransfer.files.length) uploadFiles(e.dataTransfer.files);
   };
 
-  /* ── render ───────────────────────────────────── */
+  /* ── shared class fragments ─────────────────────
+     Tailwind can't express CSS custom properties directly,
+     so light/dark pairs are inlined as arbitrary values with
+     a `dark:` variant. This assumes dark mode is toggled via
+     a `dark` class on a parent element (Tailwind's default
+     class strategy) — swap the variant selector in
+     tailwind.config.js if your app instead toggles
+     `data-theme="dark"`.
+  ── */
+  const border = "border-[rgba(30,58,95,0.10)] dark:border-[rgba(59,130,246,0.13)]";
+  const borderAcc = "border-[rgba(37,99,235,0.22)] dark:border-[rgba(59,130,246,0.28)]";
+  const cardBg = "bg-white dark:bg-[#0f172a]";
+  const card2Bg = "bg-[#e8eef7] dark:bg-[#1e293b]";
+  const pageBg = "bg-[#f0f4f8] dark:bg-[#0a0f1e]";
+  const acc10 = "bg-[rgba(37,99,235,0.10)] dark:bg-[rgba(59,130,246,0.13)]";
+  const acc05 = "bg-[rgba(37,99,235,0.05)] dark:bg-[rgba(59,130,246,0.06)]";
+  const fg = "text-[#0f1f3d] dark:text-[#e2e8f0]";
+  const fgm = "text-[#4b6b9a] dark:text-[#94a3b8]";
+  const fgd = "text-[#a8bcd4] dark:text-[#1e3a5f]";
+  const accText = "text-[#2563eb] dark:text-[#3b82f6]";
+  const shadowSm = "shadow-[0_1px_3px_rgba(30,58,95,0.07),0_4px_16px_rgba(30,58,95,0.06)] dark:shadow-[0_1px_4px_rgba(0,0,0,0.3),0_4px_16px_rgba(0,0,0,0.25)]";
+
   return (
     <>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap');
-
-        /* ══ Light theme ══ */
-        .up-root {
-          --acc:         #2563eb;
-          --acc-h:       #1d4ed8;
-          --acc-deep:    #1e3a5f;
-          --bg:          #f0f4f8;
-          --card:        #ffffff;
-          --card2:       #e8eef7;
-          --bdr:         rgba(30,58,95,.10);
-          --bdr-b:       rgba(37,99,235,.22);
-          --acc10:       rgba(37,99,235,.10);
-          --acc05:       rgba(37,99,235,.05);
-          --green:       #059669;
-          --red:         #dc2626;
-          --red-h:       #b91c1c;
-          --red08:       rgba(220,38,38,.08);
-          --red15:       rgba(220,38,38,.15);
-          --red25:       rgba(220,38,38,.22);
-          --fg:          #0f1f3d;
-          --fgm:         #4b6b9a;
-          --fgd:         #a8bcd4;
-          --row-h:       rgba(37,99,235,.04);
-          --shadow-sm:   0 1px 3px rgba(30,58,95,.07), 0 4px 16px rgba(30,58,95,.06);
-          --shadow-md:   0 4px 24px rgba(30,58,95,.09);
-
-          font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-          font-size: 17px;
-          -webkit-font-smoothing: antialiased;
-          background: var(--bg);
-          color: var(--fg);
-          min-height: 100vh;
-          padding: 28px;
-        }
-
-        /* ══ Dark theme ══ */
-        [data-theme='dark'] .up-root {
-          --acc:         #3b82f6;
-          --acc-h:       #2563eb;
-          --acc-deep:    #0f172a;
-          --bg:          #0a0f1e;
-          --card:        #0f172a;
-          --card2:       #1e293b;
-          --bdr:         rgba(59,130,246,.13);
-          --bdr-b:       rgba(59,130,246,.28);
-          --acc10:       rgba(59,130,246,.13);
-          --acc05:       rgba(59,130,246,.06);
-          --green:       #00e5a0;
-          --red:         #f87171;
-          --red-h:       #ef4444;
-          --red08:       rgba(248,113,113,.08);
-          --red15:       rgba(248,113,113,.15);
-          --red25:       rgba(248,113,113,.25);
-          --fg:          #e2e8f0;
-          --fgm:         #94a3b8;
-          --fgd:         #1e3a5f;
-          --row-h:       rgba(59,130,246,.06);
-          --shadow-sm:   0 1px 4px rgba(0,0,0,.3), 0 4px 16px rgba(0,0,0,.25);
-          --shadow-md:   0 6px 28px rgba(0,0,0,.4);
-        }
-
-        /* ── Page header ── */
-        .up-header {
-          background: var(--acc-deep);
-          border-radius: 16px;
-          padding: 24px 30px;
-          margin-bottom: 20px;
-          display: flex; align-items: center; gap: 14px;
-          position: relative; overflow: hidden;
-          box-shadow: var(--shadow-md);
-        }
-        .up-header::after {
-          content:''; position:absolute; top:-60px; right:-60px;
-          width:220px; height:220px;
-          background: radial-gradient(circle, rgba(37,99,235,.22) 0%, transparent 65%);
-          pointer-events: none;
-        }
-        .up-hicon {
-          width:46px; height:46px; border-radius:12px; flex-shrink:0;
-          background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.16);
-          display:flex; align-items:center; justify-content:center;
-          position: relative; z-index:1;
-        }
-        .up-htitle {
-          font-size:1.3rem; font-weight:600; color:#fff;
-          letter-spacing:-0.02em; position:relative; z-index:1;
-        }
-
-        /* ── Layout grid ── */
-        .up-grid {
-          display: grid;
-          grid-template-columns: 256px 1fr;
-          gap: 18px;
-          align-items: start;
-        }
-        @media(max-width:860px){ .up-grid { grid-template-columns:1fr; } }
-
-        /* ── Sidebar ── */
-        .up-sidebar {
-          background:var(--card);
-          border:1px solid var(--bdr);
-          border-radius:16px;
-          padding:20px;
-          box-shadow:var(--shadow-sm);
-        }
-        .up-eye   { font-size:.75rem; text-transform:uppercase; letter-spacing:.12em; color:var(--fgm); font-weight:600; margin-bottom:3px; }
-        .up-stitle{ font-size:1.05rem; font-weight:600; color:var(--fg); letter-spacing:-0.02em; margin-bottom:12px; }
-
-        .up-blist { display:flex; flex-direction:column; gap:3px; margin-bottom:12px; }
-        .up-bbtn  {
-          width:100%; text-align:left; padding:8px 10px;
-          border-radius:9px; border:1px solid transparent;
-          background:transparent; color:var(--fgm);
-          cursor:pointer; font-family:inherit; font-size:.95rem; font-weight:400;
-          display:flex; align-items:center; justify-content:space-between;
-          transition:all .15s; letter-spacing:-0.01em;
-        }
-        .up-bbtn:hover { background:var(--card2); color:var(--fg); }
-        .up-bbtn.on    { background:var(--acc10); border-color:var(--bdr-b); color:var(--acc); font-weight:500; }
-        .up-bdot       { width:6px; height:6px; border-radius:50%; background:currentColor; opacity:.35; flex-shrink:0; margin-right:8px; }
-        .up-bbtn.on .up-bdot { opacity:1; }
-        .up-bmain      { display:flex; align-items:center; min-width:0; flex:1; }
-        .up-bname      { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-        .up-bactions   { display:flex; align-items:center; gap:5px; flex-shrink:0; }
-        .up-bmeta      { font-size:.8rem; color:var(--fgm); opacity:.65; }
-        .up-bdel       {
-          display:inline-flex; align-items:center; justify-content:center;
-          width:22px; height:22px; border:1px solid transparent;
-          border-radius:5px; background:transparent; color:var(--fgm);
-          opacity:.35; transition:all .15s; cursor:pointer;
-        }
-        .up-bbtn:hover .up-bdel { opacity:.7; }
-        .up-bdel:hover { color:var(--red); border-color:var(--red25); background:var(--red08); opacity:1; }
-        .up-bempty { font-size:.9rem; color:var(--fgm); text-align:center; padding:14px 0; border:1px dashed var(--bdr); border-radius:8px; }
-
-        .up-nb-row { display:flex; gap:7px; padding-top:12px; border-top:1px solid var(--bdr); }
-        .up-nb-inp {
-          flex:1; background:var(--bg); border:1px solid var(--bdr);
-          color:var(--fg); padding:7px 10px; border-radius:8px;
-          font-size:.9rem; font-family:inherit; transition:border-color .2s;
-        }
-        .up-nb-inp:focus        { outline:none; border-color:var(--acc); }
-        .up-nb-inp::placeholder { color:var(--fgd); }
-        .up-btn-cr {
-          background:var(--acc); color:#fff; border:none;
-          border-radius:8px; padding:7px 14px;
-          font-size:1rem; font-weight:600; cursor:pointer;
-          font-family:inherit; transition:all .15s;
-        }
-        .up-btn-cr:hover    { background:var(--acc-h); }
-        .up-btn-cr:disabled { opacity:.4; cursor:not-allowed; }
-
-        /* ── Main panel ── */
-        .up-main {
-          background:var(--card);
-          border:1px solid var(--bdr);
-          border-radius:16px;
-          padding:24px;
-          display:flex; flex-direction:column; gap:18px;
-          box-shadow:var(--shadow-sm);
-        }
-        .up-main-head {
-          display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;
-        }
-        .up-bucket-name { font-size:1.15rem; font-weight:600; color:var(--fg); letter-spacing:-0.02em; }
-        .up-status {
-          display:inline-flex; align-items:center; gap:7px;
-          background:var(--bg); border:1px solid var(--bdr);
-          border-radius:20px; padding:5px 12px;
-          font-size:.9rem; color:var(--fgm);
-        }
-        .up-sdot     { width:7px; height:7px; border-radius:50%; background:var(--fgd); transition:background .3s; }
-        .up-sdot.on  { background:var(--green); box-shadow:0 0 5px var(--green); }
-        .up-sval     { color:var(--fg); font-weight:500; font-size:.92rem; letter-spacing:-0.01em; }
-
-        /* ── Drop zone ── */
-        .up-dz {
-          border:1.5px dashed var(--bdr-b); border-radius:12px;
-          padding:38px 24px; text-align:center; cursor:pointer;
-          transition:all .2s; background:var(--bg); position:relative; overflow:hidden;
-        }
-        .up-dz::before {
-          content:''; position:absolute; inset:0;
-          background:radial-gradient(ellipse at 50% 0%, var(--acc05) 0%, transparent 65%);
-          pointer-events:none;
-        }
-        .up-dz.over { border-color:var(--acc); background:var(--acc05); }
-        .up-dz-icon  { color:var(--acc); opacity:.65; margin-bottom:10px; }
-        .up-dz-title { font-size:1.05rem; font-weight:600; color:var(--fg); margin-bottom:4px; letter-spacing:-0.02em; }
-        .up-dz-sub   { font-size:.9rem; color:var(--fgm); }
-        .up-dz-link  { color:var(--acc); cursor:pointer; }
-        .up-dz-link:hover { text-decoration:underline; }
-        .up-dz-hint  { font-size:.82rem; color:var(--fgd); margin-top:6px; }
-
-        /* ── Progress ── */
-        .up-prog { background:var(--bg); border:1px solid var(--bdr); border-radius:10px; padding:12px 15px; }
-        .up-prog-row  { display:flex; justify-content:space-between; margin-bottom:7px; font-size:.9rem; }
-        .up-prog-lbl  { color:var(--fgm); }
-        .up-prog-pct  { color:var(--acc); font-weight:600; }
-        .up-prog-track{ height:3px; background:var(--bdr); border-radius:2px; overflow:hidden; }
-        .up-prog-fill { height:100%; background:linear-gradient(90deg,var(--acc-deep),var(--acc)); transition:width .2s ease; }
-
-        /* ══════════════════════════════════════════
-           FILE TABLE
-        ══════════════════════════════════════════ */
-        .up-files { border:1px solid var(--bdr); border-radius:12px; overflow:hidden; background:var(--card); }
-
-        .up-fhead {
-          display:flex; align-items:center; justify-content:space-between;
-          padding:12px 18px; border-bottom:1px solid var(--bdr);
-          background: var(--card);
-        }
-        .up-ftitle { font-size:1rem; font-weight:600; color:var(--fg); letter-spacing:-0.01em; }
-        .up-fcount {
-          font-size:.78rem; color:var(--acc); background:var(--acc10);
-          padding:2px 8px; border-radius:10px; margin-left:7px; font-weight:500;
-        }
-        .up-btn-ic {
-          display:inline-flex; align-items:center; justify-content:center;
-          width:30px; height:30px; background:var(--card2); border:1px solid var(--bdr);
-          border-radius:7px; cursor:pointer; color:var(--fgm); transition:all .15s;
-        }
-        .up-btn-ic:hover { border-color:var(--acc); color:var(--acc); }
-
-        .up-tbl-wrap { overflow-x:auto; }
-        .up-tbl {
-          width:100%; border-collapse:collapse;
-          font-size:.95rem; table-layout:fixed;
-        }
-        .up-tbl colgroup col:nth-child(1) { width:32%; }
-        .up-tbl colgroup col:nth-child(2) { width:11%; }
-        .up-tbl colgroup col:nth-child(3) { width:10%; }
-        .up-tbl colgroup col:nth-child(4) { width:22%; }
-        .up-tbl colgroup col:nth-child(5) { width:25%; }
-
-        .up-tbl thead tr {
-          background: var(--bg);
-          border-bottom: 1px solid var(--bdr);
-        }
-        .up-tbl thead th {
-          padding: 10px 18px;
-          text-align: left;
-          font-size: .88rem;
-          font-weight: 500;
-          color: var(--fgm);
-          letter-spacing: 0;
-          white-space: nowrap;
-        }
-        .up-tbl thead th:last-child { text-align:right; }
-
-        .up-tbl tbody tr {
-          border-bottom: 1px solid var(--bdr);
-          transition: background .12s;
-        }
-        .up-tbl tbody tr:last-child { border-bottom:none; }
-        .up-tbl tbody tr:hover { background: var(--row-h); }
-
-        .up-tbl tbody td {
-          padding: 12px 18px;
-          vertical-align: middle;
-        }
-        .up-tbl tbody td:last-child { text-align:right; }
-
-        /* name cell */
-        .up-name-cell {
-          display:flex; align-items:center; gap:10px;
-          overflow:hidden;
-        }
-        .up-fname {
-          font-size:.95rem; font-weight:500; color:var(--fg);
-          letter-spacing:-0.01em;
-          overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
-        }
-        .up-fext-badge {
-          flex-shrink:0;
-          font-size:.62rem; font-weight:600; text-transform:uppercase; letter-spacing:.05em;
-          padding:2px 6px; border-radius:5px;
-        }
-        .up-fext-badge.pcap  { background:rgba(37,99,235,.10); color:var(--acc); }
-        .up-fext-badge.pdf   { background:rgba(220,38,38,.09); color:var(--red); }
-        .up-fext-badge.other { background:rgba(75,107,154,.10); color:var(--fgm); }
-
-        /* type column */
-        .up-ftype { font-size:.78rem; font-weight:400; color:var(--fgm); }
-        .type-pcap, .type-arc, .type-log, .type-other { background:none; border:none; padding:0; }
-
-        /* size / date cells */
-        .up-fsize { font-size:.92rem; color:var(--fgm); font-variant-numeric: tabular-nums; }
-        .up-fdate { font-size:.9rem; color:var(--fgm); }
-
-        /* action buttons */
-        .up-acts { display:flex; gap:6px; align-items:center; justify-content:flex-end; }
-
-        .up-btn-dl {
-          display:inline-flex; align-items:center; gap:5px;
-          padding:5px 12px; border-radius:7px;
-          font-size:.88rem; font-weight:500; cursor:pointer;
-          font-family:inherit; letter-spacing:-0.01em; transition:all .15s;
-          border:1px solid rgba(37,99,235,.22);
-          background:rgba(37,99,235,.07); color:var(--acc);
-        }
-        .up-btn-dl:hover {
-          background:var(--acc); color:#fff; border-color:var(--acc);
-          transform:translateY(-1px); box-shadow:0 3px 8px var(--acc10);
-        }
-        .up-btn-del {
-          display:inline-flex; align-items:center; gap:5px;
-          padding:5px 12px; border-radius:7px;
-          font-size:.88rem; font-weight:500; cursor:pointer;
-          font-family:inherit; letter-spacing:-0.01em; transition:all .15s;
-          border:1px solid var(--red25); background:var(--red08); color:var(--red);
-        }
-        .up-btn-del:hover {
-          background:var(--red); color:#fff; border-color:var(--red);
-          transform:translateY(-1px); box-shadow:0 3px 8px var(--red15);
-        }
-
-        /* ── Empty state ── */
-        .up-empty {
-          display:flex; flex-direction:column; align-items:center; padding:48px 24px; gap:10px;
-        }
-        .up-empty-icon {
-          width:50px; height:50px; border-radius:13px; margin-bottom:4px;
-          background:var(--acc10); border:1px solid var(--bdr-b);
-          display:flex; align-items:center; justify-content:center;
-          color:var(--acc); opacity:.75;
-        }
-        .up-empty-title { font-size:1rem; font-weight:600; color:var(--fg); letter-spacing:-0.01em; }
-        .up-empty-sub   { font-size:.9rem; color:var(--fgm); text-align:center; max-width:260px; line-height:1.55; }
-
-        /* ── Delete Modal ── */
-        .up-overlay {
-          position:fixed; inset:0; z-index:500;
-          background:rgba(15,31,63,.48); backdrop-filter:blur(4px);
-          display:flex; align-items:center; justify-content:center;
-          animation:up-fade .18s ease;
-        }
-        [data-theme='dark'] .up-overlay { background:rgba(0,0,0,.65); }
-        .up-modal {
-          background:var(--card); border:1px solid var(--red25);
-          border-radius:16px; padding:28px; width:100%; max-width:390px;
-          box-shadow:0 20px 48px rgba(0,0,0,.16),0 0 0 1px var(--red15);
-          animation:up-pop .22s cubic-bezier(.34,1.56,.64,1);
-        }
-        .up-modal-icon  { width:46px; height:46px; border-radius:11px; margin-bottom:16px; background:var(--red08); border:1px solid var(--red25); display:flex; align-items:center; justify-content:center; color:var(--red); }
-        .up-modal-title { font-size:1.15rem; font-weight:600; color:var(--fg); margin-bottom:7px; letter-spacing:-0.02em; }
-        .up-modal-body  { font-size:.92rem; color:var(--fgm); line-height:1.6; margin-bottom:22px; }
-        .up-modal-file  { display:inline-block; background:var(--red08); border:1px solid var(--red15); border-radius:5px; padding:3px 7px; font-size:.75rem; color:var(--red); word-break:break-all; margin-top:5px; font-weight:600; }
-        .up-modal-acts  { display:flex; gap:8px; justify-content:flex-end; }
-        .up-modal-cancel{
-          padding:8px 17px; border-radius:8px; font-size:.92rem; font-weight:500;
-          cursor:pointer; font-family:inherit; transition:all .15s;
-          background:var(--card2); border:1px solid var(--bdr); color:var(--fgm); letter-spacing:-0.01em;
-        }
-        .up-modal-cancel:hover { color:var(--fg); border-color:var(--acc); }
-        .up-modal-confirm{
-          padding:8px 18px; border-radius:8px; font-size:.92rem; font-weight:600;
-          cursor:pointer; font-family:inherit; transition:all .15s;
-          background:var(--red); border:none; color:#fff;
-          box-shadow:0 3px 9px var(--red15); letter-spacing:-0.01em;
-        }
-        .up-modal-confirm:hover    { background:var(--red-h); transform:translateY(-1px); }
-        .up-modal-confirm:disabled { opacity:.5; cursor:not-allowed; transform:none; }
-
-        /* ── Toast ── */
-        .up-toast {
-          position:fixed; bottom:24px; right:24px; z-index:1000;
-          background:var(--acc-deep); border:1px solid rgba(37,99,235,.35);
-          border-radius:10px; padding:11px 15px; font-size:.92rem;
-          display:flex; align-items:center; gap:9px;
-          max-width:320px; box-shadow:var(--shadow-md);
-          animation:up-slide .25s ease; color:#dbeafe;
-          font-weight:400; letter-spacing:-0.01em;
-        }
-        [data-theme='dark'] .up-toast { background:var(--card); color:var(--fg); }
-        .up-toast.error { border-color:rgba(220,38,38,.35); }
-
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap');
         @keyframes up-slide { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
         @keyframes up-fade  { from{opacity:0} to{opacity:1} }
         @keyframes up-pop   { from{opacity:0;transform:scale(.93)} to{opacity:1;transform:scale(1)} }
+        .up-slide { animation: up-slide .25s ease; }
+        .up-fade  { animation: up-fade .18s ease; }
+        .up-pop   { animation: up-pop .22s cubic-bezier(.34,1.56,.64,1); }
       `}</style>
 
-      <div className="up-root">
+      <div className={`font-[DM_Sans,-apple-system,BlinkMacSystemFont,sans-serif] text-[17px] antialiased min-h-screen p-7 ${pageBg} ${fg}`}>
 
         {/* header */}
-        <div className="up-header">
-          <div className="up-hicon"><UploadCloud size={21} color="#fff" /></div>
-          <div className="up-htitle">Upload PCAPs &amp; Related Files</div>
+        <div className="relative overflow-hidden flex items-center gap-3.5 rounded-2xl px-[30px] py-6 mb-5 bg-[#1e3a5f] dark:bg-[#0f172a] shadow-[0_4px_24px_rgba(30,58,95,0.09)] dark:shadow-[0_6px_28px_rgba(0,0,0,0.4)]">
+          <div className="absolute -top-[60px] -right-[60px] w-[220px] h-[220px] pointer-events-none bg-[radial-gradient(circle,rgba(37,99,235,0.22)_0%,transparent_65%)]" />
+          <div className="relative z-10 w-[46px] h-[46px] rounded-xl shrink-0 bg-white/10 border border-white/15 flex items-center justify-center">
+            <UploadCloud size={21} color="#fff" />
+          </div>
+          <div className="relative z-10 text-[1.3rem] font-semibold text-white tracking-[-0.02em]">
+            Upload PCAPs &amp; Related Files
+          </div>
         </div>
 
-        <div className="up-grid">
+        <div className="grid grid-cols-[256px_1fr] gap-[18px] items-start max-[860px]:grid-cols-1">
 
           {/* sidebar */}
-          <div className="up-sidebar">
-            <div className="up-eye">PCAP Dataset Management</div>
-            <div className="up-stitle">Select or create a dataset</div>
-            <div className="up-blist">
-              {buckets.length === 0 ? (
-                <div className="up-bempty">No datasets yet</div>
-              ) : buckets.map((b) => (
-                <div
-                  key={b.name} role="button" tabIndex={0}
-                  className={`up-bbtn${activeBucket === b.name ? " on" : ""}`}
-                  onClick={() => setActiveBucket(b.name)}
-                  onKeyDown={(e) => { if (e.key==="Enter"||e.key===" ") setActiveBucket(b.name); }}
-                >
-                  <span className="up-bmain">
-                    <span className="up-bdot" />
-                    <span className="up-bname">{b.name}</span>
-                  </span>
-                  <span className="up-bactions">
-                    <span className="up-bmeta">
-                      {b.created ? new Date(b.created).toLocaleDateString() : "—"}
-                    </span>
-                    <span role="button" tabIndex={0} className="up-bdel"
-                      title={`Delete ${b.name}`}
-                      onClick={(e) => confirmDeleteBucket(b.name, e)}
-                      onKeyDown={(e) => { if (e.key==="Enter"||e.key===" ") confirmDeleteBucket(b.name, e); }}
-                    >
-                      <Trash2 size={11} />
-                    </span>
-                  </span>
-                </div>
-              ))}
+          <div className={`rounded-2xl p-5 border ${border} ${cardBg} ${shadowSm}`}>
+            <div className={`text-xs uppercase tracking-[0.12em] font-semibold mb-[3px] ${fgm}`}>
+              PCAP Dataset Management
             </div>
-            <div className="up-nb-row">
-              <input className="up-nb-inp" type="text" placeholder="new-dataset-name"
+            <div className={`text-[1.05rem] font-semibold tracking-[-0.02em] mb-3 ${fg}`}>
+              Select or create a dataset
+            </div>
+
+            <div className="flex flex-col gap-[3px] mb-3">
+              {buckets.length === 0 ? (
+                <div className={`text-[0.9rem] text-center py-3.5 border border-dashed rounded-lg ${border} ${fgm}`}>
+                  No datasets yet
+                </div>
+              ) : buckets.map((b) => {
+                const on = activeBucket === b.name;
+                return (
+                  <div
+                    key={b.name} role="button" tabIndex={0}
+                    className={`group w-full text-left px-2.5 py-2 rounded-[9px] border cursor-pointer text-[0.95rem] flex items-center justify-between transition-all tracking-[-0.01em]
+                      ${on
+                        ? `${acc10} ${borderAcc} ${accText} font-medium`
+                        : `border-transparent ${fgm} hover:${card2Bg} hover:${fg}`}`}
+                    onClick={() => setActiveBucket(b.name)}
+                    onKeyDown={(e) => { if (e.key==="Enter"||e.key===" ") setActiveBucket(b.name); }}
+                  >
+                    <span className="flex items-center min-w-0 flex-1">
+                      <span className={`w-1.5 h-1.5 rounded-full bg-current shrink-0 mr-2 ${on ? "opacity-100" : "opacity-35"}`} />
+                      <span className="overflow-hidden text-ellipsis whitespace-nowrap">{b.name}</span>
+                    </span>
+                    <span className="flex items-center gap-[5px] shrink-0">
+                      <span className={`text-[0.8rem] opacity-65 ${fgm}`}>
+                        {b.created ? new Date(b.created).toLocaleDateString() : "—"}
+                      </span>
+                      <span role="button" tabIndex={0}
+                        className={`inline-flex items-center justify-center w-[22px] h-[22px] border border-transparent rounded-[5px] bg-transparent opacity-35 group-hover:opacity-70 transition-all cursor-pointer ${fgm}
+                          hover:!opacity-100 hover:text-[#dc2626] hover:border-[rgba(220,38,38,0.22)] hover:bg-[rgba(220,38,38,0.08)]
+                          dark:hover:text-[#f87171] dark:hover:border-[rgba(248,113,113,0.25)] dark:hover:bg-[rgba(248,113,113,0.08)]`}
+                        title={`Delete ${b.name}`}
+                        onClick={(e) => confirmDeleteBucket(b.name, e)}
+                        onKeyDown={(e) => { if (e.key==="Enter"||e.key===" ") confirmDeleteBucket(b.name, e); }}
+                      >
+                        <Trash2 size={11} />
+                      </span>
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className={`flex gap-[7px] pt-3 border-t ${border}`}>
+              <input
+                className={`flex-1 rounded-lg px-2.5 py-[7px] text-[0.9rem] transition-colors border ${border} ${pageBg} ${fg} placeholder:${fgd} focus:outline-none focus:border-[#2563eb] dark:focus:border-[#3b82f6]`}
+                type="text" placeholder="new-dataset-name"
                 value={newBucketName}
                 onChange={(e) => setNewBucketName(e.target.value)}
                 onKeyDown={(e) => e.key==="Enter" && createBucket()}
               />
-              <button className="up-btn-cr" onClick={createBucket} disabled={isCreatingBucket}>
+              <button
+                className="rounded-lg px-3.5 py-[7px] text-base font-semibold text-white bg-[#2563eb] hover:bg-[#1d4ed8] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                onClick={createBucket} disabled={isCreatingBucket}
+              >
                 {isCreatingBucket ? "…" : "+"}
               </button>
             </div>
           </div>
 
           {/* main */}
-          <div className="up-main">
+          <div className={`rounded-2xl p-6 flex flex-col gap-[18px] border ${border} ${cardBg} ${shadowSm}`}>
 
-            <div className="up-main-head">
-              <div className="up-bucket-name">{activeBucket || "No dataset selected"}</div>
-              <div className="up-status">
-                <span className={`up-sdot${(files.length > 0 || uploading) ? " on" : ""}`} />
-                <span className="up-sval">
+            <div className="flex items-center justify-between flex-wrap gap-2.5">
+              <div className={`text-[1.15rem] font-semibold tracking-[-0.02em] ${fg}`}>
+                {activeBucket || "No dataset selected"}
+              </div>
+              <div className={`inline-flex items-center gap-[7px] rounded-full px-3 py-[5px] text-[0.9rem] border ${border} ${pageBg} ${fgm}`}>
+                <span className={`w-[7px] h-[7px] rounded-full transition-colors ${
+                  (files.length > 0 || uploading)
+                    ? "bg-[#059669] shadow-[0_0_5px_#059669] dark:bg-[#00e5a0] dark:shadow-[0_0_5px_#00e5a0]"
+                    : "bg-[#a8bcd4] dark:bg-[#1e3a5f]"
+                }`} />
+                <span className={`font-medium text-[0.92rem] tracking-[-0.01em] ${fg}`}>
                   {uploading ? "Uploading…"
                     : files.length ? `${files.length} file${files.length !== 1 ? "s" : ""}`
                     : "No files uploaded"}
@@ -708,22 +375,29 @@ export default function UploadPage() {
             <div
               role="button"
               tabIndex={0}
-              className={`up-dz${isDragOver ? " over" : ""}`}
+              className={`relative overflow-hidden rounded-xl px-6 py-[38px] text-center cursor-pointer transition-all border-[1.5px] border-dashed ${
+                isDragOver
+                  ? `border-[#2563eb] dark:border-[#3b82f6] ${acc05}`
+                  : `${borderAcc} ${pageBg}`
+              }`}
               onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
               onDragLeave={() => setIsDragOver(false)}
               onDrop={handleDrop}
               onClick={() => fileInputRef.current?.click()}
               onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && fileInputRef.current?.click()}
             >
-              <div className="up-dz-icon"><UploadCloud size={34} /></div>
-              <div className="up-dz-title">Drop files here to upload</div>
-              <div className="up-dz-sub">
-                or <span className="up-dz-link">browse files</span>
+              <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_50%_0%,rgba(37,99,235,0.05)_0%,transparent_65%)] dark:bg-[radial-gradient(ellipse_at_50%_0%,rgba(59,130,246,0.06)_0%,transparent_65%)]" />
+              <div className={`mb-2.5 opacity-65 ${accText}`}><UploadCloud size={34} /></div>
+              <div className={`text-[1.05rem] font-semibold mb-1 tracking-[-0.02em] ${fg}`}>Drop files here to upload</div>
+              <div className={`text-[1rem] ${fgm}`}>
+                or <span className={`cursor-pointer hover:underline ${accText}`}>browse files</span>
               </div>
-              <div className="up-dz-hint">
+              <div className={`text-[1rem] mt-1.5 ${fgd}`}>
                 Accepted: .pcap, .pcapng, .tar, .zip, .rar, .log
+                <br /> <div className={`text-[1rem] ${accText}`}>Maximum upload size: <strong >10 GB</strong></div>
               </div>
-              <input ref={fileInputRef} type="file" multiple style={{ display:"none" }}
+              
+              <input ref={fileInputRef} type="file" multiple className="hidden"
                 accept=".pcap,.pcapng,.zip,.tar,.gz,.tgz,.bz2,.tbz2,.xz,.txz,.zst,.7z,.rar,.log"
                 onChange={(e) => { if (e.target.files?.length) uploadFiles(e.target.files); }}
               />
@@ -731,25 +405,33 @@ export default function UploadPage() {
 
             {/* progress */}
             {uploading && (
-              <div className="up-prog">
-                <div className="up-prog-row">
-                  <span className="up-prog-lbl">{progressLabel}</span>
-                  <span className="up-prog-pct">{progress}%</span>
+              <div className={`rounded-[10px] px-[15px] py-3 border ${border} ${pageBg}`}>
+                <div className="flex justify-between mb-[7px] text-[0.9rem]">
+                  <span className={fgm}>{progressLabel}</span>
+                  <span className={`font-semibold ${accText}`}>{progress}%</span>
                 </div>
-                <div className="up-prog-track">
-                  <div className="up-prog-fill" style={{ width:`${progress}%` }} />
+                <div className={`h-[3px] rounded overflow-hidden ${border} bg-[rgba(30,58,95,0.10)] dark:bg-[rgba(59,130,246,0.13)]`}>
+                  <div
+                    className="h-full bg-gradient-to-r from-[#1e3a5f] to-[#2563eb] dark:from-[#0f172a] dark:to-[#3b82f6] transition-[width] duration-200 ease-out"
+                    style={{ width:`${progress}%` }}
+                  />
                 </div>
               </div>
             )}
 
             {/* files table */}
-            <div className="up-files">
-              <div className="up-fhead">
-                <div style={{ display:"flex", alignItems:"center" }}>
-                  <span className="up-ftitle">Uploaded Files</span>
-                  {files.length > 0 && <span className="up-fcount">{files.length}</span>}
+            <div className={`rounded-xl overflow-hidden border ${border} ${cardBg}`}>
+              <div className={`flex items-center justify-between px-[18px] py-3 border-b ${border} ${cardBg}`}>
+                <div className="flex items-center">
+                  <span className={`text-base font-semibold tracking-[-0.01em] ${fg}`}>Uploaded Files</span>
+                  {files.length > 0 && (
+                    <span className={`text-[0.78rem] font-medium ml-[7px] px-2 py-[2px] rounded-[10px] ${acc10} ${accText}`}>
+                      {files.length}
+                    </span>
+                  )}
                 </div>
-                <button className="up-btn-ic"
+                <button
+                  className={`inline-flex items-center justify-center w-[30px] h-[30px] rounded-[7px] border transition-all ${border} ${card2Bg} ${fgm} hover:text-[#2563eb] hover:border-[#2563eb] dark:hover:text-[#3b82f6] dark:hover:border-[#3b82f6]`}
                   onClick={() => activeBucket && loadFiles(activeBucket)}
                   title="Refresh files"
                 >
@@ -757,66 +439,74 @@ export default function UploadPage() {
                 </button>
               </div>
 
-              <div className="up-tbl-wrap">
+              <div className="overflow-x-auto">
                 {files.length === 0 ? (
-                  <div className="up-empty">
-                    <div className="up-empty-icon"><FileX size={22} /></div>
-                    <div className="up-empty-title">No files uploaded yet</div>
-                    <div className="up-empty-sub">
+                  <div className="flex flex-col items-center py-12 px-6 gap-2.5">
+                    <div className={`w-[50px] h-[50px] rounded-[13px] mb-1 flex items-center justify-center border ${acc10} ${borderAcc} ${accText} opacity-75`}>
+                      <FileX size={22} />
+                    </div>
+                    <div className={`text-base font-semibold tracking-[-0.01em] ${fg}`}>No files uploaded yet</div>
+                    <div className={`text-[0.9rem] text-center max-w-[260px] leading-[1.55] ${fgm}`}>
                       {activeBucket
                         ? `Drop files above to upload them to "${activeBucket}"`
                         : "Select a dataset first, then drop files to upload"}
                     </div>
                   </div>
                 ) : (
-                  <table className="up-tbl">
-                    <colgroup><col /><col /><col /><col /><col /></colgroup>
+                  <table className="w-full border-collapse text-[0.95rem] table-fixed">
+                    <colgroup>
+                      <col className="w-[32%]" /><col className="w-[11%]" /><col className="w-[10%]" /><col className="w-[22%]" /><col className="w-[25%]" />
+                    </colgroup>
                     <thead>
-                      <tr>
-                        <th>Name</th>
-                        <th>Type</th>
-                        <th>Size</th>
-                        <th>Modified</th>
-                        <th>Actions</th>
+                      <tr className={`border-b ${border} ${pageBg}`}>
+                        <th className={`px-[18px] py-2.5 text-left text-[0.88rem] font-medium whitespace-nowrap ${fgm}`}>Name</th>
+                        <th className={`px-[18px] py-2.5 text-left text-[0.88rem] font-medium whitespace-nowrap ${fgm}`}>Type</th>
+                        <th className={`px-[18px] py-2.5 text-left text-[0.88rem] font-medium whitespace-nowrap ${fgm}`}>Size</th>
+                        <th className={`px-[18px] py-2.5 text-left text-[0.88rem] font-medium whitespace-nowrap ${fgm}`}>Modified</th>
+                        <th className={`px-[18px] py-2.5 text-right text-[0.88rem] font-medium whitespace-nowrap ${fgm}`}>Actions</th>
                       </tr>
                     </thead>
                     <tbody>
                       {files.map((f) => {
                         const fileType = getFileType(f.key);
                         return (
-                          <tr key={f.key}>
+                          <tr key={f.key} className={`border-b last:border-b-0 transition-colors hover:bg-[rgba(37,99,235,0.04)] dark:hover:bg-[rgba(59,130,246,0.06)] ${border}`}>
                             {/* name */}
-                            <td>
-                              <div className="up-name-cell">
+                            <td className="px-[18px] py-3 align-middle">
+                              <div className="flex items-center gap-2.5 overflow-hidden">
                                 <FileIcon name={f.key} />
-                                <span className="up-fname" title={f.key}>
+                                <span className={`text-[0.95rem] font-medium tracking-[-0.01em] overflow-hidden text-ellipsis whitespace-nowrap ${fg}`} title={f.key}>
                                   {f.key}
                                 </span>
                               </div>
                             </td>
                             {/* type */}
-                            <td>
-                              <span className={`up-ftype ${fileType.cls}`}>
-                                {fileType.label}
-                              </span>
+                            <td className="px-[18px] py-3 align-middle">
+                              <span className={`text-[0.78rem] font-normal ${fgm}`}>{fileType.label}</span>
                             </td>
                             {/* size */}
-                            <td><span className="up-fsize">{formatSize(f.size)}</span></td>
+                            <td className="px-[18px] py-3 align-middle">
+                              <span className={`text-[0.92rem] tabular-nums ${fgm}`}>{formatSize(f.size)}</span>
+                            </td>
                             {/* modified */}
-                            <td>
-                              <span className="up-fdate">
-                                {f.last_modified
-                                  ? new Date(f.last_modified).toLocaleString()
-                                  : "—"}
+                            <td className="px-[18px] py-3 align-middle">
+                              <span className={`text-[0.9rem] ${fgm}`}>
+                                {f.last_modified ? new Date(f.last_modified).toLocaleString() : "—"}
                               </span>
                             </td>
                             {/* actions */}
-                            <td>
-                              <div className="up-acts">
-                                <button className="up-btn-dl" onClick={() => downloadFile(f.key)}>
+                            <td className="px-[18px] py-3 align-middle text-right">
+                              <div className="flex gap-1.5 items-center justify-end">
+                                <button
+                                  className="inline-flex items-center gap-[5px] px-3 py-[5px] rounded-[7px] text-[0.88rem] font-medium tracking-[-0.01em] transition-all border border-[rgba(37,99,235,0.22)] bg-[rgba(37,99,235,0.07)] text-[#2563eb] hover:bg-[#2563eb] hover:text-white hover:border-[#2563eb] hover:-translate-y-px hover:shadow-[0_3px_8px_rgba(37,99,235,0.10)]"
+                                  onClick={() => downloadFile(f.key)}
+                                >
                                   <Download size={12} /> Download
                                 </button>
-                                <button className="up-btn-del" onClick={() => confirmDeleteFile(f.key)}>
+                                <button
+                                  className="inline-flex items-center gap-[5px] px-3 py-[5px] rounded-[7px] text-[0.88rem] font-medium tracking-[-0.01em] transition-all border border-[rgba(220,38,38,0.22)] bg-[rgba(220,38,38,0.08)] text-[#dc2626] hover:bg-[#dc2626] hover:text-white hover:border-[#dc2626] hover:-translate-y-px hover:shadow-[0_3px_8px_rgba(220,38,38,0.15)]"
+                                  onClick={() => confirmDeleteFile(f.key)}
+                                >
                                   <Trash2 size={12} /> Delete
                                 </button>
                               </div>
@@ -835,20 +525,38 @@ export default function UploadPage() {
 
         {/* delete modal */}
         {deleteModal && (
-          <div role="presentation" className="up-overlay" onClick={() => !isDeleting && setDeleteModal(null)}>
-            <div role="dialog" aria-modal="true" className="up-modal" onClick={(e) => e.stopPropagation()}>
-              <div className="up-modal-icon"><Trash2 size={20} /></div>
-              <div className="up-modal-title">Confirm Deletion</div>
-              <div className="up-modal-body">
+          <div
+            role="presentation"
+            className="up-fade fixed inset-0 z-[500] bg-[rgba(15,31,63,0.48)] dark:bg-black/65 backdrop-blur-sm flex items-center justify-center"
+            onClick={() => !isDeleting && setDeleteModal(null)}
+          >
+            <div
+              role="dialog" aria-modal="true"
+              className={`up-pop rounded-2xl p-7 w-full max-w-[390px] border border-[rgba(220,38,38,0.22)] dark:border-[rgba(248,113,113,0.25)] shadow-[0_20px_48px_rgba(0,0,0,0.16),0_0_0_1px_rgba(220,38,38,0.15)] ${cardBg}`}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="w-[46px] h-[46px] rounded-[11px] mb-4 flex items-center justify-center border border-[rgba(220,38,38,0.22)] bg-[rgba(220,38,38,0.08)] text-[#dc2626] dark:border-[rgba(248,113,113,0.25)] dark:bg-[rgba(248,113,113,0.08)] dark:text-[#f87171]">
+                <Trash2 size={20} />
+              </div>
+              <div className={`text-[1.15rem] font-semibold mb-[7px] tracking-[-0.02em] ${fg}`}>Confirm Deletion</div>
+              <div className={`text-[0.92rem] leading-[1.6] mb-[22px] ${fgm}`}>
                 This action cannot be undone. You are about to permanently delete:
                 <br />
-                <span className="up-modal-file">{deleteModal.name}</span>
+                <span className="inline-block rounded-[5px] px-[7px] py-[3px] text-[0.75rem] font-semibold mt-[5px] break-all bg-[rgba(220,38,38,0.08)] border border-[rgba(220,38,38,0.15)] text-[#dc2626] dark:bg-[rgba(248,113,113,0.08)] dark:border-[rgba(248,113,113,0.15)] dark:text-[#f87171]">
+                  {deleteModal.name}
+                </span>
               </div>
-              <div className="up-modal-acts">
-                <button className="up-modal-cancel" onClick={() => setDeleteModal(null)} disabled={isDeleting}>
+              <div className="flex gap-2 justify-end">
+                <button
+                  className={`px-[17px] py-2 rounded-lg text-[0.92rem] font-medium tracking-[-0.01em] transition-all border ${border} ${card2Bg} ${fgm} hover:text-[#0f1f3d] hover:border-[#2563eb] dark:hover:text-[#e2e8f0] dark:hover:border-[#3b82f6]`}
+                  onClick={() => setDeleteModal(null)} disabled={isDeleting}
+                >
                   Cancel
                 </button>
-                <button className="up-modal-confirm" onClick={handleConfirmDelete} disabled={isDeleting}>
+                <button
+                  className="px-[18px] py-2 rounded-lg text-[0.92rem] font-semibold tracking-[-0.01em] transition-all bg-[#dc2626] text-white shadow-[0_3px_9px_rgba(220,38,38,0.15)] hover:bg-[#b91c1c] hover:-translate-y-px disabled:opacity-50 disabled:cursor-not-allowed disabled:translate-y-0"
+                  onClick={handleConfirmDelete} disabled={isDeleting}
+                >
                   {isDeleting ? "Deleting…" : "Delete"}
                 </button>
               </div>
@@ -858,10 +566,14 @@ export default function UploadPage() {
 
         {/* toast */}
         {toast && (
-          <div className={`up-toast ${toast.type}`}>
+          <div className={`up-slide fixed bottom-6 right-6 z-[1000] rounded-[10px] px-[15px] py-[11px] text-[0.92rem] flex items-center gap-[9px] max-w-[320px] font-normal tracking-[-0.01em] border ${
+            toast.type === "error"
+              ? "border-[rgba(220,38,38,0.35)]"
+              : "border-[rgba(37,99,235,0.35)]"
+          } bg-[#1e3a5f] text-[#dbeafe] dark:bg-[#0f172a] dark:text-[#e2e8f0] shadow-[0_4px_24px_rgba(30,58,95,0.09)] dark:shadow-[0_6px_28px_rgba(0,0,0,0.4)]`}>
             {toast.type === "success"
-              ? <CheckCircle size={14} color="var(--green)" />
-              : <AlertCircle size={14} color="var(--red)" />}
+              ? <CheckCircle size={14} className="text-[#059669] dark:text-[#00e5a0]" />
+              : <AlertCircle size={14} className="text-[#dc2626] dark:text-[#f87171]" />}
             {toast.message}
           </div>
         )}
