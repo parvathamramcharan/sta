@@ -127,3 +127,4 @@ export async function fetchPcapDetails(pcapId, type, value) {
     throw error;
   }
 }
+
