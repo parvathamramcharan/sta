@@ -66,7 +66,11 @@ export default function CaptureSummary({
       return time;
     }
   };
+  const formatDuration =(sec)=>{
+    if (!sec || isNaN(sec)) return "0s";
+    return  `${Number(sec).toFixed(2)}s`;
 
+  }
 
   const session_timeline = (timelineData || []).map(item => ({
     label: formatTime(item.label),
@@ -197,6 +201,9 @@ export default function CaptureSummary({
                 </div>
               );
             })()}
+            <div>
+             <button onClick={()=>{}}>Download Connection Logs</button>
+            </div>
           </div>
         </div>
         <div className="overflow-x-auto relative">
@@ -213,6 +220,7 @@ export default function CaptureSummary({
                 <th className="px-8 py-4 font-bold font-black text-slate-700 dark:text-slate-300 text-left">Timestamp</th>
                 <th className="px-8 py-4 font-bold font-black text-slate-700 dark:text-slate-300 text-left">Source IP</th>
                 <th className="px-8 py-4 font-bold font-black text-slate-700 dark:text-slate-300 text-left">Dest IP</th>
+                <th className="px-8 py-4 font-bold font-black text-slate-700 dark:text-slate-300 text-left">Duration</th>
                 <th className="px-8 py-4 font-bold font-black text-slate-700 dark:text-slate-300 text-left">Port</th>
                 <th className="px-8 py-4 font-bold font-black text-slate-700 dark:text-slate-300 text-left">Protocol</th>
                 <th className="px-8 py-4 font-bold font-black text-slate-700 dark:text-slate-300 text-left">Service</th>
@@ -250,6 +258,9 @@ export default function CaptureSummary({
                       >
                         {conn.dest_ip || conn["id.resp_h"] || conn.destination_ip}
                       </button>
+                    </td>
+                    <td className="px-8 py-3.5">
+                      <span className="text-[14px]  dark:text-slate-400">{formatDuration(conn.duration || conn["id.duration"] || 0)}</span>
                     </td>
                     <td className="px-8 py-3.5">
                       <span className="text-[14px] text-orange-500">{conn.resp_port || conn["id.resp_p"] || conn.dest_port || conn.destination_port}</span>
