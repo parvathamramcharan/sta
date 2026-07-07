@@ -340,7 +340,7 @@ export default function TrafficDistribution({ data }) {
       </ChartContainer>
 
       {/* DNS Queries */}
-      <ChartContainer title="DNS Queries (Top 5)">
+      <ChartContainer title="Top 5 Queried Domains">
         {dnsData.length === 0 ? (
           <NoData text="No  Data Available" />
         ) : (
@@ -503,7 +503,7 @@ export default function TrafficDistribution({ data }) {
       </ChartContainer>
 
       {/* Server Domains */}
-      <ChartContainer title="Server Domains (Top 5)">
+      <ChartContainer title="Top 5 SSL Server Domains">
         {sslData.length === 0 ? (
           <NoData text="No Data Available" />
         ) : (
