@@ -58,6 +58,23 @@ export async function fetchPcapConnections(pcapId, page = 1, period = "") {
 }
 
 
+export async function downloadPcapConnectionsCsv(pcapId) {
+  try {
+    const url = `${BASE_URL}/pcaps/${pcapId}/connections`;
+
+    const res = await fetchWithTimeout(url);
+
+    if (!res.ok) {
+      throw new Error(`Failed to download connection logs: ${res.status}`);
+    }
+
+    return res;
+  } catch (error) {
+    console.error("API Error downloading connection logs:", error);
+    throw error;
+  }
+}
+
 export async function fetchPcapInsights(pcapId) {
   try {
     const res = await fetchWithTimeout(`${BASE_URL}/pcaps/${pcapId}/insights`);
