@@ -78,18 +78,49 @@ echo "✔ Required actions disabled"
 
 # ── Create client ─────────────────────────────────────────────────────────────
 
+CLIENT_SECRET="$KEYCLOAK_CLIENT_SECRET"
+
 curl -s -X POST "$BASE/$REALM/clients" \
   -H "$AUTH" -H "Content-Type: application/json" \
   -d "{
     \"clientId\": \"$CLIENT_ID\",
     \"enabled\": true,
-    \"publicClient\": true,
+    \"publicClient\": false,
+    \"clientAuthenticatorType\": \"client-secret\",
+    \"secret\": \"$CLIENT_SECRET\",
     \"directAccessGrantsEnabled\": true,
+    \"serviceAccountsEnabled\": true,
     \"standardFlowEnabled\": true,
     \"redirectUris\": [\"*\"],
     \"webOrigins\": [\"*\"]
   }" > /dev/null
-echo "✔ Client '$CLIENT_ID' created"
+echo "✔ Client '$CLIENT_ID' created (confidential, service accounts enabled)"
+
+# ── Assign realm-management/view-users to service account ────────────────────
+# This allows the client to call the token introspection endpoint
+
+# Get the internal UUID of the sinkhole client
+SINKHOLE_CLIENT_UUID=$(curl -s "$BASE/$REALM/clients?clientId=$CLIENT_ID" \
+  -H "$AUTH" | grep -o '"id":"[^"]*' | head -1 | cut -d'"' -f4)
+
+# Get the service account user ID for the sinkhole client
+SA_USER_ID=$(curl -s "$BASE/$REALM/clients/$SINKHOLE_CLIENT_UUID/service-account-user" \
+  -H "$AUTH" | grep -o '"id":"[^"]*' | head -1 | cut -d'"' -f4)
+
+# Get the realm-management client UUID
+RM_CLIENT_UUID=$(curl -s "$BASE/$REALM/clients?clientId=realm-management" \
+  -H "$AUTH" | grep -o '"id":"[^"]*' | head -1 | cut -d'"' -f4)
+
+# Get the view-users role ID from realm-management
+VIEW_USERS_ROLE=$(curl -s "$BASE/$REALM/clients/$RM_CLIENT_UUID/roles/view-users" \
+  -H "$AUTH")
+VIEW_USERS_ID=$(echo "$VIEW_USERS_ROLE" | grep -o '"id":"[^"]*' | head -1 | cut -d'"' -f4)
+
+# Assign view-users client role to the service account
+curl -s -X POST "$BASE/$REALM/users/$SA_USER_ID/role-mappings/clients/$RM_CLIENT_UUID" \
+  -H "$AUTH" -H "Content-Type: application/json" \
+  -d "[{\"id\":\"$VIEW_USERS_ID\",\"name\":\"view-users\"}]" > /dev/null
+echo "✔ Service account granted 'realm-management/view-users' (introspection allowed)"
 
 # ── Create roles ──────────────────────────────────────────────────────────────
 
