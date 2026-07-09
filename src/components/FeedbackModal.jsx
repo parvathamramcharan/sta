@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { X, Send, MessageSquare } from "lucide-react";
 
 export function FeedbackModal({ isOpen, onClose, user }) {
@@ -12,6 +12,20 @@ export function FeedbackModal({ isOpen, onClose, user }) {
   });
   const [status, setStatus] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      // Reset any previous status when opening fresh
+      setStatus(null);
+      // Prefill name/email if available from user prop
+      setFormData({
+        name: user?.name || "",
+        email: user?.email || "",
+        organisation: "",
+        message: "",
+      });
+    }
+  }, [isOpen, user]);
 
   if (!isOpen) return null;
 
