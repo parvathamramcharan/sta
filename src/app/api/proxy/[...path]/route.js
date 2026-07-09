@@ -10,7 +10,7 @@ async function handleRequest(request, { params }) {
   const baseUrl = (process.env.BACKEND_URL || '').replace(/\/+$/g, '');
   const cleanPath = String(path).replace(/^\/+/, '');
   const backendUrl = `${baseUrl}/${cleanPath}${searchParams ? '?' + searchParams : ''}`;
-  
+
   console.log(`[Proxy Route] ${request.method} -> ${backendUrl}`);
 
   try {
@@ -31,22 +31,57 @@ async function handleRequest(request, { params }) {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000);
 
-    const res = await fetch(backendUrl, { 
-      ...fetchOptions, 
-      signal: controller.signal 
+    const res = await fetch(backendUrl, {
+      ...fetchOptions,
+      signal: controller.signal
     });
-    
+
     clearTimeout(timeoutId);
 
+    const contentType = res.headers.get('content-type') || '';
+
     if (!res.ok) {
-      return new NextResponse(res.body, { 
+      const errorBody = await res.text();
+      if (contentType.includes('application/json')) {
+        try {
+          return NextResponse.json(JSON.parse(errorBody), { status: res.status });
+        } catch {
+          return new NextResponse(errorBody, {
+            status: res.status,
+            headers: { 'Content-Type': contentType || 'application/json' }
+          });
+        }
+      }
+
+      return new NextResponse(errorBody, {
         status: res.status,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': contentType || 'text/plain' }
       });
     }
 
-    const data = await res.json();
-    return NextResponse.json(data);
+    if (contentType.includes('application/json')) {
+      const rawBody = await res.text();
+      try {
+        return NextResponse.json(JSON.parse(rawBody));
+      } catch {
+        return new NextResponse(rawBody, {
+          headers: { 'Content-Type': contentType || 'application/json' }
+        });
+      }
+    }
+
+    const body = await res.arrayBuffer();
+    const responseHeaders = new Headers();
+    const contentDisposition = res.headers.get('content-disposition');
+    if (contentDisposition) {
+      responseHeaders.set('Content-Disposition', contentDisposition);
+    }
+    responseHeaders.set('Content-Type', contentType || 'application/octet-stream');
+
+    return new NextResponse(body, {
+      status: res.status,
+      headers: responseHeaders
+    });
   } catch (error) {
     console.error(`[Proxy Route] Error fetching ${backendUrl}:`, error);
     const msg = error?.message || 'Proxy fetch failed';

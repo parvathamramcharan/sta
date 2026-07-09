@@ -780,6 +780,7 @@ export default function PcapClientView({ setId, initialResponse, session }) {
                           setTimeFilter={setTimeFilter}
                           isLoadingConnections={isLoadingConnections}
                           onIpClick={handleIpClick}
+                          pcapId={selectedFile?.pcap_id || pcapIdQuery}
                         />
                     ) : activeTab === "Traffic Distribution" && overviewData ? (
                       <TrafficDistribution
