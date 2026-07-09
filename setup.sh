@@ -22,6 +22,7 @@ echo "✔ Written: src/.env.local"
 {
   echo "# Next.js / NextAuth"
   echo "AUTH_SECRET=${AUTH_SECRET}"
+  echo "KEYCLOAK_CLIENT_SECRET=${AUTH_SECRET}"
   echo "AUTH_URL=http://$HOSTNAME:6080"
   echo "KEYCLOAK_CLIENT_ID=sinkhole"
   echo "KEYCLOAK_ISSUER=http://keycloak:8080/realms/cdac"
