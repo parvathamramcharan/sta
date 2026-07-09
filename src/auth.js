@@ -56,6 +56,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             email: payload.email,
             roles: allRoles.length > 0 ? allRoles : ["user"],
             accessToken: accessToken,
+            refreshToken: data.refresh_token,
+            accessTokenExpires: Date.now() + data.expires_in * 1000,
             pdfPassword: pdfPassword
           };
         } catch (error) {
@@ -70,9 +72,35 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (user) {
         token.roles = user.roles;
         token.accessToken = user.accessToken;
+        token.refreshToken = user.refreshToken;
+        token.accessTokenExpires = user.accessTokenExpires;
         token.pdfPassword = user.pdfPassword;
+        return token;
       }
-      return token;
+      if (Date.now() < token.accessTokenExpires) return token;
+      try {
+        const res = await fetch(`${process.env.KEYCLOAK_ISSUER}/protocol/openid-connect/token`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams({
+            grant_type: 'refresh_token',
+            client_id: process.env.KEYCLOAK_CLIENT_ID,
+            client_secret: process.env.KEYCLOAK_CLIENT_SECRET || '',
+            refresh_token: token.refreshToken,
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw data;
+        return {
+          ...token,
+          accessToken: data.access_token,
+          refreshToken: data.refresh_token ?? token.refreshToken,
+          accessTokenExpires: Date.now() + data.expires_in * 1000,
+        };
+      } catch (e) {
+        console.error('Token refresh failed:', e);
+        return { ...token, error: 'RefreshTokenError' };
+      }
     },
     async session({ session, token }) {
       if (session.user) {

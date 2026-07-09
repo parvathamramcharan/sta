@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
+import { auth } from '@/auth';
 
 async function handleRequest(request, { params }) {
+  const session = await auth();
   const pathParts = await params;
   const path = pathParts.path.join('/');
   const searchParams = request.nextUrl.searchParams.toString();
@@ -16,7 +18,7 @@ async function handleRequest(request, { params }) {
       method: request.method,
       headers: {
         'Content-Type': request.headers.get('Content-Type') || 'application/json',
-        ...(request.headers.get('Authorization') && { 'Authorization': request.headers.get('Authorization') }),
+        ...(session?.accessToken && { 'Authorization': `Bearer ${session.accessToken}` }),
       },
       cache: 'no-store'
     };

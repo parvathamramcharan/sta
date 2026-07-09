@@ -12,6 +12,10 @@ export const middleware = auth((req) => {
   const isPcapRoute = nextUrl.pathname.startsWith("/pcaps");
   const isReportsRoute = nextUrl.pathname.startsWith("/reports");
 
+  if (req.auth?.error === 'RefreshTokenError') {
+    return NextResponse.redirect(new URL('/', nextUrl));
+  }
+
   if (!isLoggedIn && (isDashboardRoute || isPcapRoute || isReportsRoute)) {
     return NextResponse.redirect(new URL("/", nextUrl));
   }

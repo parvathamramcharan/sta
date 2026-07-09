@@ -1,4 +1,3 @@
-
 export const USE_MOCK_DATA = false;
 export const BASE_URL = typeof window === 'undefined' 
   ? process.env.BACKEND_URL
@@ -13,11 +12,12 @@ const fetchWithTimeout = async (url, options = {}) => {
   return response;
 };
 
-export async function fetchPcapSet(setId) {
+export async function fetchPcapSet(setId, accessToken) {
   try {
     const res = await fetchWithTimeout(`${BASE_URL}/pcaps/set/${setId}`, {
       cache: "no-store",
-      timeout: 30000 
+      timeout: 30000,
+      headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
     });
     if (!res.ok) throw new Error(`Failed to fetch pcap set: ${res.status}`);
     const json = await res.json();
