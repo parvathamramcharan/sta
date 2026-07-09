@@ -14,6 +14,11 @@ import {
 } from "lucide-react";
 import { ConfirmModal } from "./ConfirmModal";
 
+// Stable identity for a feedback item — falls back to a composite of
+// fields that should be unique per submission if no server id exists.
+const getFeedbackKey = (feedback) =>
+  feedback.id ?? `${feedback.submitted_at || ""}|${feedback.email || feedback.name || ""}`;
+
 export function ViewFeedbackModal({ isOpen, onClose }) {
   const [feedbackList, setFeedbackList] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -22,6 +27,9 @@ export function ViewFeedbackModal({ isOpen, onClose }) {
   const [deleting, setDeleting] = useState(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [toDelete, setToDelete] = useState(null);
+  const [roleFilter, setRoleFilter] = useState("all");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
 
   useEffect(() => {
     if (isOpen) {
@@ -49,7 +57,6 @@ export function ViewFeedbackModal({ isOpen, onClose }) {
 
       clearTimeout(timeout);
 
-      // Try to read JSON body for more helpful server messages
       let json = null;
       try {
         json = await res.json();
@@ -58,7 +65,6 @@ export function ViewFeedbackModal({ isOpen, onClose }) {
       }
 
       if (!res.ok) {
-        // Prefer server-provided message when available
         const serverMsg = json && (json.error || json.message);
         if (res.status >= 500) {
           throw new Error(serverMsg || "Server error. Please try again later.");
@@ -74,7 +80,6 @@ export function ViewFeedbackModal({ isOpen, onClose }) {
       if (data.success && Array.isArray(data.data)) {
         setFeedbackList(data.data);
       } else if (Array.isArray(data)) {
-        // in case the API returns a raw array
         setFeedbackList(data);
       } else {
         setFeedbackList([]);
@@ -85,7 +90,6 @@ export function ViewFeedbackModal({ isOpen, onClose }) {
       if (err && err.name === "AbortError") {
         setError("Request timed out. Please try again.");
       } else {
-        // Show a friendly message without raw HTTP status text
         setError(err?.message || "Failed to fetch feedback. Please try again later.");
       }
     } finally {
@@ -93,25 +97,26 @@ export function ViewFeedbackModal({ isOpen, onClose }) {
     }
   };
 
-  const toggleExpand = (idx) => {
+  const toggleExpand = (key) => {
     setExpanded((prev) => {
       const next = new Set(prev);
-      if (next.has(idx)) next.delete(idx);
-      else next.add(idx);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
       return next;
     });
   };
 
-  const handleDelete = (feedback, idx) => {
-    setToDelete({ feedback, idx });
+  const handleDelete = (feedback) => {
+    setToDelete({ feedback });
     setConfirmOpen(true);
   };
 
   const performDelete = async () => {
     if (!toDelete) return;
-    const { feedback, idx } = toDelete;
+    const { feedback } = toDelete;
+    const key = getFeedbackKey(feedback);
     setConfirmOpen(false);
-    setDeleting(idx);
+    setDeleting(key);
     setError(null);
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 15000);
@@ -119,8 +124,10 @@ export function ViewFeedbackModal({ isOpen, onClose }) {
     try {
       const baseUrl = typeof window === "undefined" ? process.env.BACKEND_URL : "/api/proxy";
 
-      const nameId = encodeURIComponent(feedback.name || feedback.email || feedback.submitted_at);
-      const res = await fetch(`${baseUrl}/feedback/${nameId}`, {
+      const idOrKey = feedback.id
+        ? encodeURIComponent(feedback.id)
+        : encodeURIComponent(feedback.name || feedback.email || feedback.submitted_at);
+      const res = await fetch(`${baseUrl}/feedback/${idOrKey}`, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         signal: controller.signal,
@@ -136,9 +143,13 @@ export function ViewFeedbackModal({ isOpen, onClose }) {
         throw new Error(serverMsg || `Delete failed (${res.status}).`);
       }
 
-      // remove item from UI
-      setFeedbackList((prev) => prev.filter((_, i) => i !== idx));
-      setExpanded((s) => { const n = new Set(s); n.delete(idx); return n; });
+      // Remove item from UI by stable key, not by index (indices shift on delete).
+      setFeedbackList((prev) => prev.filter((item) => getFeedbackKey(item) !== key));
+      setExpanded((s) => {
+        const n = new Set(s);
+        n.delete(key);
+        return n;
+      });
       setToDelete(null);
     } catch (err) {
       if (err && err.name === "AbortError") {
@@ -167,6 +178,25 @@ export function ViewFeedbackModal({ isOpen, onClose }) {
       return dateString;
     }
   };
+
+  const uniqueRoles = Array.from(new Set(feedbackList.map((f) => f.role).filter(Boolean)));
+  const filteredList = feedbackList.filter((f) => {
+    if (roleFilter && roleFilter !== "all") {
+      if ((f.role || "").toLowerCase() !== (roleFilter || "").toLowerCase()) return false;
+    }
+    if (dateFrom) {
+      const from = new Date(dateFrom);
+      const submitted = new Date(f.submitted_at);
+      if (isFinite(from.getTime()) && submitted < from) return false;
+    }
+    if (dateTo) {
+      const to = new Date(dateTo);
+      to.setHours(23, 59, 59, 999);
+      const submitted = new Date(f.submitted_at);
+      if (isFinite(to.getTime()) && submitted > to) return false;
+    }
+    return true;
+  });
 
   return (
     <div className="fixed inset-0 z-[100] bg-card dark:bg-slate-900 overflow-auto">
@@ -225,11 +255,43 @@ export function ViewFeedbackModal({ isOpen, onClose }) {
             </div>
           ) : (
             <div className="space-y-4">
-              {feedbackList.map((feedback, index) => (
-                <div
-                  key={index}
-                  className="bg-slate-500/5 border border-theme rounded-xl p-4 hover:border-blue-500/30 transition-colors"
-                >
+              {/* Filters and counts */}
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-2">
+                <div className="flex items-center gap-3">
+                  <div className="text-sm font-bold">Total:</div>
+                  <div className="text-sm text-foreground font-black">{feedbackList.length}</div>
+                  <div className="text-sm text-slate-500">(Showing {filteredList.length})</div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <select
+                    value={roleFilter}
+                    onChange={(e) => setRoleFilter(e.target.value)}
+                    className="px-3 py-2 rounded-xl border bg-card text-sm"
+                  >
+                    <option value="all">All roles</option>
+                    {uniqueRoles.map((r) => (
+                      <option key={r} value={r}>{r}</option>
+                    ))}
+                  </select>
+                  <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="px-3 py-2 rounded-xl border bg-card text-sm" />
+                  <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="px-3 py-2 rounded-xl border bg-card text-sm" />
+                  <button onClick={() => { setRoleFilter("all"); setDateFrom(""); setDateTo(""); }} className="px-3 py-2 bg-slate-500/10 rounded-xl text-sm font-bold">Clear</button>
+                </div>
+              </div>
+
+              {filteredList.length === 0 ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="text-center text-sm text-slate-500">No feedback matches the selected filters.</div>
+                </div>
+              ) : (
+                filteredList.map((feedback) => {
+                  const key = getFeedbackKey(feedback);
+                  return (
+                    <div
+                      key={key}
+                      className="bg-slate-500/5 border border-theme rounded-xl p-4 hover:border-blue-500/30 transition-colors"
+                    >
                   {/* User Info */}
                   <div className="grid md:grid-cols-2 grid-cols-1 gap-4 mb-3 items-start">
                     <div className="flex items-start gap-2">
@@ -275,6 +337,16 @@ export function ViewFeedbackModal({ isOpen, onClose }) {
                     </div>
 
                     <div className="flex items-start gap-2">
+                      <div className="p-1.5 bg-violet-500/10 rounded-lg flex-shrink-0 mt-0.5">
+                        <Building2 size={14} className="text-violet-500" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Role</p>
+                        <p className="text-sm font-bold text-foreground truncate">{feedback.role || "N/A"}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start gap-2">
                       <div className="p-1.5 bg-slate-500/10 rounded-lg flex-shrink-0 mt-0.5">
                         <Clock size={14} className="text-slate-500" />
                       </div>
@@ -293,28 +365,28 @@ export function ViewFeedbackModal({ isOpen, onClose }) {
                   <div className="flex items-center justify-between gap-3 mt-3">
                     <div className="flex items-center gap-3">
                       <button
-                        onClick={() => toggleExpand(index)}
+                        onClick={() => toggleExpand(key)}
                         className="flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-slate-700 px-3 py-1 rounded-md transition-colors"
                       >
-                        {expanded.has(index) ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                        {expanded.has(index) ? "Hide message" : "Show message"}
+                        {expanded.has(key) ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                        {expanded.has(key) ? "Hide message" : "Show message"}
                       </button>
                     </div>
 
                     <div className="flex items-center gap-2">
                       <button
-                        onClick={() => handleDelete(feedback, index)}
-                        disabled={deleting === index}
+                        onClick={() => handleDelete(feedback)}
+                        disabled={deleting === key}
                         className="flex items-center gap-2 text-sm font-bold text-rose-600 hover:text-white hover:bg-rose-600/10 px-3 py-1 rounded-md transition-colors"
                       >
                         <Trash size={14} />
-                        {deleting === index ? "Deleting..." : "Delete"}
+                        {deleting === key ? "Deleting..." : "Delete"}
                       </button>
                     </div>
                   </div>
 
                   {/* Message (collapsible) */}
-                  {expanded.has(index) && (
+                  {expanded.has(key) && (
                     <div className="mt-4 pt-3 border-t border-theme">
                       <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">
                         Message
@@ -325,7 +397,9 @@ export function ViewFeedbackModal({ isOpen, onClose }) {
                     </div>
                   )}
                 </div>
-              ))}
+                  );
+                })
+              )}
             </div>
           )}
         </div>
