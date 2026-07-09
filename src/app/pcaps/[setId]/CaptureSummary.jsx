@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Download, Lock, Copy, CheckCircle2, Loader2 } from 'lucide-react';
 import PropTypes from 'prop-types';
 import { formatBytes, formatDuration } from './PcapClientView';
+import { downloadPcapConnectionsExport } from './apiService';
 
 function KpiCard({ title, value, colorClass = "text-foreground" }) {
   return (
@@ -30,8 +32,13 @@ export default function CaptureSummary({
   timeFilter,
   setTimeFilter,
   isLoadingConnections,
-  onIpClick
+  onIpClick,
+  pcapId
 }) {
+  const [isExportingConnections, setIsExportingConnections] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [exportStatus, setExportStatus] = useState('');
+  const [isPasswordCopied, setIsPasswordCopied] = useState(false);
   if (!overviewData || !overviewData.capture_summary) {
     return <div className="p-4 text-slate-500">Loading capture summary...</div>;
   }
@@ -77,6 +84,57 @@ export default function CaptureSummary({
     value: item.value
   }));
 
+  const exportPassword = pcapId ? `admin1@${pcapId}` : 'admin1@pcapid';
+
+  const handleCopyPassword = async () => {
+    const passwordText = String(exportPassword);
+
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(passwordText);
+      } else {
+        const textarea = document.createElement('textarea');
+        textarea.value = passwordText;
+        textarea.setAttribute('readonly', '');
+        textarea.style.position = 'absolute';
+        textarea.style.left = '-9999px';
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+      }
+      setIsPasswordCopied(true);
+      setTimeout(() => setIsPasswordCopied(false), 1600);
+    } catch {
+      setExportStatus('Clipboard access was unavailable.');
+    }
+  };
+
+  const handleStartDownload = async () => {
+    if (!pcapId) return;
+
+    setShowPasswordModal(false);
+    setExportStatus('Preparing secure ZIP export...');
+    setIsExportingConnections(true);
+
+    try {
+      const { blob, filename } = await downloadPcapConnectionsExport(pcapId);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      setExportStatus('Download complete.');
+    } catch (error) {
+      console.error('Error downloading connection export:', error);
+      setExportStatus('Download failed. Please try again.');
+    } finally {
+      setIsExportingConnections(false);
+    }
+  };
 
   return (
     <div className="flex flex-col gap-8 pb-10">
@@ -201,8 +259,28 @@ export default function CaptureSummary({
                 </div>
               );
             })()}
-            <div>
-             <button onClick={()=>{}}>Download Connection Logs</button>
+            <div className="flex flex-col items-end gap-2">
+              <button
+                type="button"
+                onClick={() => setShowPasswordModal(true)}
+                disabled={isExportingConnections || !pcapId}
+                className="inline-flex items-center gap-2 px-4 py-2.5 border border-emerald-600/40 bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30 transition-all text-[11px] font-black uppercase tracking-[0.2em] disabled:cursor-not-allowed disabled:from-slate-400 disabled:to-slate-500 disabled:shadow-none"
+              >
+                {isExportingConnections ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />}
+                {isExportingConnections ? 'Preparing Export...' : 'Download'}
+              </button>
+              {exportStatus ? (
+                <div className={`flex items-center gap-2 text-[11px] font-semibold ${isExportingConnections ? 'text-blue-600' : 'text-emerald-600'}`}>
+                  {isExportingConnections ? (
+                    <div className="h-1.5 w-28 overflow-hidden rounded-full bg-blue-100">
+                      <div className="h-full w-2/3 animate-pulse rounded-full bg-gradient-to-r from-blue-600 to-indigo-500" />
+                    </div>
+                  ) : (
+                    <CheckCircle2 size={14} />
+                  )}
+                  <span>{exportStatus}</span>
+                </div>
+              ) : null}
             </div>
           </div>
         </div>
@@ -351,6 +429,62 @@ export default function CaptureSummary({
           );
         })()}
       </div>
+
+      {showPasswordModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/65 px-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-700 dark:bg-slate-900">
+            <div className="mb-5 flex items-start gap-3">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-600 dark:bg-blue-500/10 dark:text-blue-300">
+                <Lock size={20} />
+              </div>
+              <div>
+                <h4 className="text-lg font-black text-slate-900 dark:text-slate-100">Secure ZIP Password</h4>
+                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                  This export is password protected. Use the password below to open the archive.
+                </p>
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/70">
+              <div className="mb-2 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
+                Password pattern
+              </div>
+              <div className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+                admin1 + @ + pcap id
+              </div>
+              <div className="mt-3 flex items-center justify-between rounded-lg border border-blue-200 bg-white px-3 py-2.5 dark:border-blue-500/20 dark:bg-slate-900/80">
+                <span className="font-mono text-sm font-bold tracking-wide text-slate-800 dark:text-slate-100">{exportPassword}</span>
+                <button
+                  type="button"
+                  onClick={handleCopyPassword}
+                  className="inline-flex items-center gap-1 rounded-md border border-slate-200 px-2.5 py-1.5 text-[11px] font-black uppercase tracking-[0.16em] text-slate-600 transition-all hover:border-blue-500 hover:text-blue-600 dark:border-slate-700 dark:text-slate-300"
+                >
+                  {isPasswordCopied ? <CheckCircle2 size={14} /> : <Copy size={14} />}
+                  {isPasswordCopied ? 'Copied' : 'Copy'}
+                </button>
+              </div>
+            </div>
+
+            <div className="mt-6 flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setShowPasswordModal(false)}
+                className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 transition-all hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleStartDownload}
+                className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20 transition-all hover:shadow-emerald-500/30"
+              >
+                <Download size={16} />
+                Continue Download
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -381,4 +515,5 @@ CaptureSummary.propTypes = {
   setTimeFilter: PropTypes.func,
   isLoadingConnections: PropTypes.bool,
   onIpClick: PropTypes.func,
+  pcapId: PropTypes.string,
 };

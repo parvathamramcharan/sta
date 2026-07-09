@@ -70,6 +70,23 @@ export async function fetchPcapInsights(pcapId) {
   }
 }
 
+export async function downloadPcapConnectionsExport(pcapId) {
+  try {
+    const res = await fetchWithTimeout(`${BASE_URL}/pcaps/${pcapId}/connections/export`);
+    if (!res.ok) throw new Error(`Failed to export connections: ${res.status}`);
+
+    const blob = await res.blob();
+    const disposition = res.headers.get("content-disposition") || "";
+    const match = disposition.match(/filename="?([^";]+)"?/i);
+    const filename = match?.[1] || "connections-export.zip";
+
+    return { blob, filename };
+  } catch (error) {
+    console.error("API Error exporting connections:", error);
+    throw error;
+  }
+}
+
 export async function fetchPcapTimeline(pcapId) {
   try {
     const res = await fetchWithTimeout(`${BASE_URL}/pcaps/${pcapId}/timeline`);
