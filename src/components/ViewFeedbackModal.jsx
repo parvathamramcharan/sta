@@ -200,7 +200,7 @@ export function ViewFeedbackModal({ isOpen, onClose }) {
 
   return (
     <div className="fixed inset-0 z-[100] bg-card dark:bg-slate-900 overflow-auto">
-      <div className="max-w-6xl mx-auto w-full min-h-screen flex flex-col bg-card border border-theme rounded-2xl shadow-2xl m-6 overflow-hidden">
+      <div className="w-full h-screen flex flex-col bg-card border border-theme rounded-none overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-theme bg-slate-500/5 flex-shrink-0 sticky top-0 z-10">
           <div className="flex items-center gap-3">
@@ -285,120 +285,85 @@ export function ViewFeedbackModal({ isOpen, onClose }) {
                   <div className="text-center text-sm text-slate-500">No feedback matches the selected filters.</div>
                 </div>
               ) : (
-                filteredList.map((feedback) => {
-                  const key = getFeedbackKey(feedback);
-                  return (
-                    <div
-                      key={key}
-                      className="bg-slate-500/5 border border-theme rounded-xl p-4 hover:border-blue-500/30 transition-colors"
-                    >
-                  {/* User Info */}
-                  <div className="grid md:grid-cols-2 grid-cols-1 gap-4 mb-3 items-start">
-                    <div className="flex items-start gap-2">
-                      <div className="p-1.5 bg-blue-500/10 rounded-lg flex-shrink-0 mt-0.5">
-                        <MessageSquare size={14} className="text-blue-500" />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">
-                          Name
-                        </p>
-                        <p className="text-sm font-bold text-foreground truncate">
-                          {feedback.name || "N/A"}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-start gap-2">
-                      <div className="p-1.5 bg-emerald-500/10 rounded-lg flex-shrink-0 mt-0.5">
-                        <Mail size={14} className="text-emerald-500" />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">
-                          Email
-                        </p>
-                        <p className="text-sm font-bold text-foreground truncate">
-                          {feedback.email || "N/A"}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-start gap-2">
-                      <div className="p-1.5 bg-amber-500/10 rounded-lg flex-shrink-0 mt-0.5">
-                        <Building2 size={14} className="text-amber-500" />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">
-                          Organisation
-                        </p>
-                        <p className="text-sm font-bold text-foreground truncate">
-                          {feedback.organisation || "N/A"}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-start gap-2">
-                      <div className="p-1.5 bg-violet-500/10 rounded-lg flex-shrink-0 mt-0.5">
-                        <Building2 size={14} className="text-violet-500" />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Role</p>
-                        <p className="text-sm font-bold text-foreground truncate">{feedback.role || "N/A"}</p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-start gap-2">
-                      <div className="p-1.5 bg-slate-500/10 rounded-lg flex-shrink-0 mt-0.5">
-                        <Clock size={14} className="text-slate-500" />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">
-                          Submitted
-                        </p>
-                        <p className="text-sm font-bold text-foreground">
-                          {formatDate(feedback.submitted_at)}
-                        </p>
-                      </div>
-                    </div>
+                <div className="space-y-2">
+                  <div className="hidden md:grid grid-cols-[10fr_12fr_10fr_8fr_11fr_13fr] gap-4 rounded-xl bg-slate-100 px-4 py-3 text-[11px] font-bold uppercase tracking-[0.25em] text-slate-500">
+                    <div className="text-left">Name</div>
+                    <div className="text-left">Email</div>
+                    <div className="text-left">Organisation</div>
+                    <div className="text-left">Role</div>
+                    <div className="text-left">Submitted</div>
+                    <div className="text-right">Actions</div>
                   </div>
-
-                  {/* Actions row */}
-                  <div className="flex items-center justify-between gap-3 mt-3">
-                    <div className="flex items-center gap-3">
-                      <button
-                        onClick={() => toggleExpand(key)}
-                        className="flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-slate-700 px-3 py-1 rounded-md transition-colors"
+                  {filteredList.map((feedback) => {
+                    const key = getFeedbackKey(feedback);
+                    return (
+                      <div
+                        key={key}
+                        className="bg-slate-50 rounded-xl p-4 shadow-sm transition-colors hover:bg-slate-100"
                       >
-                        {expanded.has(key) ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                        {expanded.has(key) ? "Hide message" : "Show message"}
-                      </button>
-                    </div>
+                        <div className="grid grid-cols-[10fr_12fr_10fr_8fr_11fr_13fr] items-center gap-4">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <div className="p-1.5 bg-blue-500/10 rounded-lg flex-shrink-0">
+                              <MessageSquare size={16} className="text-blue-500" />
+                            </div>
+                            <p className="text-base font-normal text-foreground truncate">{feedback.name || "N/A"}</p>
+                          </div>
 
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => handleDelete(feedback)}
-                        disabled={deleting === key}
-                        className="flex items-center gap-2 text-sm font-bold text-rose-600 hover:text-white hover:bg-rose-600/10 px-3 py-1 rounded-md transition-colors"
-                      >
-                        <Trash size={14} />
-                        {deleting === key ? "Deleting..." : "Delete"}
-                      </button>
-                    </div>
-                  </div>
+                          <div className="flex items-center gap-2 min-w-0">
+                            <div className="p-1.5 bg-emerald-500/10 rounded-lg flex-shrink-0">
+                              <Mail size={16} className="text-emerald-500" />
+                            </div>
+                            <p className="text-base font-normal text-foreground truncate">{feedback.email || "N/A"}</p>
+                          </div>
 
-                  {/* Message (collapsible) */}
-                  {expanded.has(key) && (
-                    <div className="mt-4 pt-3 border-t border-theme">
-                      <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">
-                        Message
-                      </p>
-                      <p className="text-sm text-foreground break-words whitespace-pre-wrap">
-                        {feedback.message || "No message provided"}
-                      </p>
-                    </div>
-                  )}
+                          <div className="flex items-center gap-2 min-w-0">
+                            <div className="p-1.5 bg-amber-500/10 rounded-lg flex-shrink-0">
+                              <Building2 size={16} className="text-amber-500" />
+                            </div>
+                            <p className="text-base font-normal text-foreground truncate">{feedback.organisation || "N/A"}</p>
+                          </div>
+
+                          <div className="flex items-center gap-2 min-w-0">
+                            <div className="p-1.5 bg-violet-500/10 rounded-lg flex-shrink-0">
+                              <Building2 size={16} className="text-violet-500" />
+                            </div>
+                            <p className="text-base font-normal text-foreground truncate">{feedback.role || "N/A"}</p>
+                          </div>
+
+                          <div className="flex items-center gap-2 min-w-0">
+                            <div className="p-1.5 bg-slate-500/10 rounded-lg flex-shrink-0">
+                              <Clock size={16} className="text-slate-500" />
+                            </div>
+                            <p className="text-base font-normal text-foreground truncate">{formatDate(feedback.submitted_at)}</p>
+                          </div>
+
+                          <div className="flex items-center justify-end gap-2">
+                            <button
+                              onClick={() => toggleExpand(key)}
+                              className="whitespace-nowrap rounded-xl border border-slate-300 bg-slate-100 px-3 py-1.5 text-sm font-bold text-slate-700 hover:bg-slate-200 transition-colors"
+                            >
+                              {expanded.has(key) ? "Hide" : "View"}
+                            </button>
+                            <button
+                              onClick={() => handleDelete(feedback)}
+                              disabled={deleting === key}
+                              className="whitespace-nowrap rounded-xl border border-rose-300 bg-rose-50 px-3 py-1.5 text-sm font-bold text-rose-600 hover:bg-rose-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              {deleting === key ? "Deleting..." : "Delete"}
+                            </button>
+                          </div>
+                        </div>
+
+                        {expanded.has(key) && (
+                          <div className="mt-4 pt-3 border-t border-theme">
+                            <p className="text-[12px] font-bold text-slate-500 uppercase tracking-widest mb-2">Message</p>
+                            <p className="text-base text-foreground break-words whitespace-pre-wrap">{feedback.message || "No message provided"}</p>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
-                  );
-                })
               )}
             </div>
           )}
