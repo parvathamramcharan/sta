@@ -253,6 +253,8 @@ export default function PcapClientView({ setId, initialResponse, session }) {
   const [isScanning, setIsScanning] = useState(false);
   const [scanError, setScanError] = useState("");
   const [timeFilter, setTimeFilter] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
   const [isLoadingDetails, setIsLoadingDetails] = useState(false);
   const [isLoadingConnections, setIsLoadingConnections] = useState(false);
   const [apiError, setApiError] = useState(null);
@@ -463,8 +465,29 @@ export default function PcapClientView({ setId, initialResponse, session }) {
     item.filename.toLowerCase().includes(search.toLowerCase())
   );
 
+  // Apply date range filtering when set
+  const filteredAndDated = filteredData.filter(item => {
+    if (!dateFrom && !dateTo) return true;
+    const itemStart = item.start_time ? new Date(item.start_time) : null;
+    const itemEnd = item.end_time ? new Date(item.end_time) : null;
+    if (!itemStart && !itemEnd) return true;
 
-  let sortedData = [...filteredData];
+    let fromOK = true;
+    let toOK = true;
+    if (dateFrom) {
+      const fromDate = new Date(dateFrom + 'T00:00:00Z');
+      fromOK = (itemEnd ? itemEnd >= fromDate : (itemStart ? itemStart >= fromDate : true));
+    }
+    if (dateTo) {
+      const toDate = new Date(dateTo + 'T23:59:59Z');
+      toOK = (itemStart ? itemStart <= toDate : (itemEnd ? itemEnd <= toDate : true));
+    }
+
+    return fromOK && toOK;
+  });
+
+
+  let sortedData = [...filteredAndDated];
   const orderMultiplier = sortOrder === "asc" ? 1 : -1;
 
   if (filter === "Random") {
@@ -564,6 +587,30 @@ export default function PcapClientView({ setId, initialResponse, session }) {
           <FilterBtn label="Duration" />
           <FilterBtn label="Packets" />
           <FilterBtn label="External IPs" />
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 bg-card rounded-md px-2 py-1 border border-theme">
+            <label className="text-[13px] font-bold text-slate-500">From</label>
+            <input
+              type="date"
+              value={dateFrom}
+              onChange={(e) => { setDateFrom(e.target.value); setCurrentPage(1); }}
+              className="text-[13px] font-bold px-2 py-1 bg-transparent border border-transparent rounded-md"
+            />
+            <label className="text-[13px] font-bold text-slate-500">To</label>
+            <input
+              type="date"
+              value={dateTo}
+              onChange={(e) => { setDateTo(e.target.value); setCurrentPage(1); }}
+              className="text-[13px] font-bold px-2 py-1 bg-transparent border border-transparent rounded-md"
+            />
+            <button
+              onClick={() => { setDateFrom(""); setDateTo(""); setCurrentPage(1); }}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-bold rounded-md border transition-all bg-card border-theme text-slate-500 hover:text-foreground hover:bg-slate-500/5`}
+            >
+              Clear
+            </button>
+          </div>
         </div>
         <div className="px-4 text-[11px] font-black text-foreground uppercase tracking-widest border-l border-theme ml-2">
           <span className="text-blue-600">{(currentPage - 1) * itemsPerPage + 1}-{Math.min(currentPage * itemsPerPage, sortedData.length)}</span> <span className="text-slate-400 px-1 normal-case font-bold">of</span> <span className="text-foreground">{sortedData.length}</span> PCAPs
@@ -781,6 +828,7 @@ export default function PcapClientView({ setId, initialResponse, session }) {
                           isLoadingConnections={isLoadingConnections}
                           onIpClick={handleIpClick}
                           pcapId={selectedFile?.pcap_id || pcapIdQuery}
+                          onTimelineClick={(from, to) => { setDateFrom(from); setDateTo(to); setCurrentPage(1); }}
                         />
                     ) : activeTab === "Traffic Distribution" && overviewData ? (
                       <TrafficDistribution
