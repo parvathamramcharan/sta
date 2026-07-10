@@ -34,6 +34,7 @@ export default function CaptureSummary({
   isLoadingConnections,
   onIpClick,
   pcapId
+  , onTimelineClick
 }) {
   const [isExportingConnections, setIsExportingConnections] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
@@ -81,7 +82,8 @@ export default function CaptureSummary({
 
   const session_timeline = (timelineData || []).map(item => ({
     label: formatTime(item.label),
-    value: item.value
+    value: item.value,
+    rawLabel: item.label
   }));
 
   const exportPassword = pcapId ? `admin1@${pcapId}` : 'admin1@pcapid';
@@ -214,7 +216,18 @@ export default function CaptureSummary({
                 contentStyle={{ backgroundColor: 'hsl(var(--card))', borderRadius: '0', border: '1px solid hsl(var(--border))', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
                 itemStyle={{ color: 'hsl(var(--foreground))', fontWeight: 'black', textTransform: 'uppercase', fontSize: '10px' }}
               />
-              <Area type="monotone" dataKey="value" stroke="#3b82f6" strokeWidth={3.5} fillOpacity={1} fill="url(#colorValue)" animationDuration={1500} />
+              <Area type="monotone" dataKey="value" stroke="#3b82f6" strokeWidth={3.5} fillOpacity={1} fill="url(#colorValue)" animationDuration={1500}
+                onClick={(payload, index) => {
+                  try {
+                    const item = timelineData?.[index];
+                    if (item && onTimelineClick) {
+                      const d = new Date(item.label);
+                      const ymd = d.toISOString().slice(0, 10);
+                      onTimelineClick(ymd, ymd);
+                    }
+                  } catch (e) {}
+                }}
+              />
             </AreaChart>
           </ResponsiveContainer>
         </div>
@@ -513,4 +526,5 @@ CaptureSummary.propTypes = {
   isLoadingConnections: PropTypes.bool,
   onIpClick: PropTypes.func,
   pcapId: PropTypes.string,
+  onTimelineClick: PropTypes.func,
 };
