@@ -66,7 +66,7 @@ const PaginatedTable = ({ data, headers, renderRow, icon: Icon, title }) => {
               {paginatedData.length > 0 ? (
                 paginatedData.map((item, idx) => (
                   <tr key={idx} className="hover:bg-slate-500/5 transition-colors group/row">
-                    {renderRow(item, idx)}
+                    {renderRow(item, idx, startIndex + idx)}
                   </tr>
                 ))
               ) : (
@@ -138,6 +138,8 @@ export default function PcapInsights({ data, onIpClick }) {
   if (!data || !data.pcap_insights) {
     return <div className="p-4 text-slate-500">No insights data available.</div>;
   }
+
+  const [hoveredRtIndex, setHoveredRtIndex] = useState(null);
 
   const {
     dns_queries = [],
@@ -214,17 +216,111 @@ export default function PcapInsights({ data, onIpClick }) {
             { label: "Type", className: "text-center" },
             { label: "Count" }
           ]}
-          renderRow={(dns) => (
-            <>
-              <td className="px-8 py-4  text-foreground max-w-[200px] truncate" title={dns.domain}>{dns.domain}</td>
-              <td className="px-8 py-4 text-center">
-                <span className="bg-pink-500/10 text-pink-500 px-2 py-0.5 rounded-none text-[10px] font-black border border-pink-500/10">
-                  {dns.record_type}
-                </span>
-              </td>
-              <td className="px-8 py-4  text-foreground ">{dns.count}</td>
-            </>
-          )}
+          renderRow={(dns, idx, globalIdx) => {
+            // Improved: each record type now carries a category + accent color
+            // so the tooltip can be color-coded and better organized.
+            const recordTypeMeanings = {
+              A:      { num: 1,   desc: 'Maps a hostname to an IPv4 address', category: 'Address', color: '#3b82f6' },
+              NS:     { num: 2,   desc: 'Authoritative name server for the zone', category: 'Delegation', color: '#8b5cf6' },
+              CNAME:  { num: 5,   desc: 'Alias pointing to another domain name', category: 'Alias', color: '#06b6d4' },
+              SOA:    { num: 6,   desc: 'Start of Authority for a DNS zone', category: 'Zone', color: '#8b5cf6' },
+              PTR:    { num: 12,  desc: 'Reverse DNS lookup (IP → hostname)', category: 'Reverse', color: '#06b6d4' },
+              MX:     { num: 15,  desc: 'Mail server responsible for a domain', category: 'Mail', color: '#f59e0b' },
+              TXT:    { num: 16,  desc: 'Text records (SPF, verification, etc.)', category: 'Text', color: '#64748b' },
+              AAAA:   { num: 28,  desc: 'Maps a hostname to an IPv6 address', category: 'Address', color: '#3b82f6' },
+              SRV:    { num: 33,  desc: 'Service location record (host + port)', category: 'Service', color: '#f59e0b' },
+              NAPTR:  { num: 35,  desc: 'Naming Authority Pointer for rewriting', category: 'Service', color: '#f59e0b' },
+              DS:     { num: 43,  desc: 'Delegation Signer used in DNSSEC', category: 'Security', color: '#ef4444' },
+              RRSIG:  { num: 46,  desc: 'DNSSEC digital signature for a record set', category: 'Security', color: '#ef4444' },
+              NSEC:   { num: 47,  desc: 'DNSSEC authenticated denial of existence', category: 'Security', color: '#ef4444' },
+              DNSKEY: { num: 48,  desc: 'Public key used to verify DNSSEC signatures', category: 'Security', color: '#ef4444' },
+              NSEC3:  { num: 50,  desc: 'DNSSEC authenticated denial (hashed)', category: 'Security', color: '#ef4444' },
+              SVCB:   { num: 64,  desc: 'General-purpose service binding record', category: 'Service', color: '#f59e0b' },
+              HTTPS:  { num: 65,  desc: 'HTTPS-specific service binding record', category: 'Service', color: '#f59e0b' },
+              CAA:    { num: 257, desc: 'Restricts which CAs may issue certificates', category: 'Security', color: '#ef4444' },
+              ANY:    { num: 255, desc: 'Requests all available records (rarely supported)', category: 'Query', color: '#64748b' }
+            };
+
+            const rt = String(dns.record_type || '').toUpperCase();
+            const rec = recordTypeMeanings[rt];
+            const accent = rec?.color || '#64748b';
+            const tooltipId = `rt-meaning-${globalIdx}`;
+            const isOpen = hoveredRtIndex === globalIdx;
+
+            return (
+              <>
+                <td className="px-8 py-4  text-foreground max-w-[200px] truncate" title={dns.domain}>{dns.domain}</td>
+                <td className="px-8 py-4 text-center">
+                  <div
+                    className="relative inline-block"
+                    onMouseEnter={() => setHoveredRtIndex(globalIdx)}
+                    onMouseLeave={() => setHoveredRtIndex(null)}
+                    onFocus={() => setHoveredRtIndex(globalIdx)}
+                    onBlur={() => setHoveredRtIndex(null)}
+                  >
+                    <button
+                      type="button"
+                      tabIndex={0}
+                      className="bg-pink-500/10 text-pink-500 px-2 py-0.5 rounded-md text-[10px] font-black border border-pink-500/10 cursor-help outline-none focus:ring-2 focus:ring-pink-500/30"
+                      aria-describedby={tooltipId}
+                    >
+                      {dns.record_type}
+                    </button>
+
+                    <div
+                      id={tooltipId}
+                      role="tooltip"
+                      className={`absolute z-[100] bottom-full mb-3 left-1/2 -translate-x-1/2 w-56 rounded-xl shadow-2xl border overflow-hidden transform transition-all duration-200 origin-bottom ${
+                        isOpen
+                          ? 'opacity-100 translate-y-0 scale-100 pointer-events-auto'
+                          : 'opacity-0 translate-y-2 scale-95 pointer-events-none'
+                      }`}
+                      style={{ backgroundColor: '#eaf1ff', borderColor: '#c7dbfe' }}
+                    >
+                      {/* accent top bar */}
+                      <div className="h-[3px] w-full" style={{ backgroundColor: accent }} />
+
+                      <div className="px-3.5 py-3" style={{ backgroundColor: '#eaf1ff' }}>
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2">
+                            <span
+                              className="text-[13px] font-black tracking-wide"
+                              style={{ color: accent }}
+                            >
+                              {rt || 'Unknown'}
+                            </span>
+                            {rec && (
+                              <span
+                                className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full"
+                                style={{ color: accent, backgroundColor: `${accent}22` }}
+                              >
+                                {rec.category}
+                              </span>
+                            )}
+                          </div>
+                          {rec?.num !== undefined && (
+                            <span className="text-[10px] font-mono font-bold" style={{ color: accent, opacity: 0.75 }}>
+                              Type {rec.num}
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="text-[11.5px] leading-snug text-slate-700 mt-1.5">
+                          {rec?.desc || 'No description available for this record type.'}
+                        </div>
+                      </div>
+
+                      <div
+                        className="absolute left-1/2 top-full -translate-x-1/2 w-2.5 h-2.5 rotate-45 border-r border-b"
+                        style={{ backgroundColor: '#eaf1ff', borderColor: '#c7dbfe', marginTop: '-6px' }}
+                      />
+                    </div>
+                  </div>
+                </td>
+                <td className="px-8 py-4  text-foreground ">{dns.count}</td>
+              </>
+            );
+          }}
         />
 
         <PaginatedTable 
