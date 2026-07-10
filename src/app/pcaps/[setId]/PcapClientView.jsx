@@ -594,15 +594,19 @@ export default function PcapClientView({ setId, initialResponse, session }) {
             <input
               type="date"
               value={dateFrom}
+              max={dateTo || undefined}
               onChange={(e) => { setDateFrom(e.target.value); setCurrentPage(1); }}
               className="text-[13px] font-bold px-2 py-1 bg-transparent border border-transparent rounded-md"
+              placeholder="dd/mm/yyyy"
             />
             <label className="text-[13px] font-bold text-slate-500">To</label>
             <input
               type="date"
               value={dateTo}
+              min={dateFrom || undefined}
               onChange={(e) => { setDateTo(e.target.value); setCurrentPage(1); }}
               className="text-[13px] font-bold px-2 py-1 bg-transparent border border-transparent rounded-md"
+              placeholder="dd/mm/yyyy"
             />
             <button
               onClick={() => { setDateFrom(""); setDateTo(""); setCurrentPage(1); }}
