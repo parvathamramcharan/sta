@@ -139,7 +139,7 @@ export default function CaptureSummary({
   return (
     <div className="flex flex-col gap-8 pb-10">
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 border-l border-t border-theme">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 auto-rows-fr border-l border-t border-theme">
         <KpiCard title="Total Packets" value={total_packets?.toLocaleString() || "0"} colorClass="text-blue-600" />
         <KpiCard title="Total Bytes" value={total_bytes ? formatBytes(total_bytes) : "0 B"} colorClass="text-emerald-600" />
         <KpiCard title="Total Duration" value={duration_seconds ? formatDuration(duration_seconds) : "0s"} colorClass="text-amber-600" />
@@ -237,7 +237,7 @@ export default function CaptureSummary({
                   setTimeFilter(e.target.value);
                   setConnectionsPage(1);
                 }}
-                className="bg-card border border-theme rounded-none px-4 py-2 text-[10px] font-black text-foreground outline-none focus:border-blue-600 transition-all cursor-pointer appearance-none hover:bg-slate-500/10"
+                className="h-[42px] bg-card border border-theme rounded-none px-4 text-[10px] font-black text-foreground outline-none focus:border-blue-600 transition-all cursor-pointer appearance-none hover:bg-slate-500/10"
               >
                 <option value="" className="bg-card">All Temporal Records</option>
                 <option value="1d" className="bg-card">Last 24 Hours</option>
@@ -251,20 +251,17 @@ export default function CaptureSummary({
               const total = connectionsPagination.total || 0;
               const tp = connectionsPagination.total_pages || Math.ceil(total / 100);
               return (
-                <div className="flex flex-col items-end gap-1">
-                  <div className="px-3 py-1 bg-blue-500/10 border border-blue-500/20 rounded-none text-[10px] font-black text-blue-600 uppercase tracking-widest">
-                    {total} Records Total
-                  </div>
-
+                <div className="h-[42px] flex items-center px-4 bg-blue-500/10 border border-blue-500/20 rounded-none text-[10px] font-black text-blue-600 uppercase tracking-widest">
+                  {total} Records Total
                 </div>
               );
             })()}
-            <div className="flex flex-col items-end gap-2">
+            <div className="flex items-center gap-3">
               <button
                 type="button"
                 onClick={() => setShowPasswordModal(true)}
                 disabled={isExportingConnections || !pcapId}
-                className="inline-flex items-center gap-2 px-4 py-2.5 border border-emerald-600/40 bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30 transition-all text-[11px] font-black uppercase tracking-[0.2em] disabled:cursor-not-allowed disabled:from-slate-400 disabled:to-slate-500 disabled:shadow-none"
+                className="h-[42px] inline-flex items-center gap-2 px-4 border border-emerald-600/40 bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30 transition-all text-[11px] font-black uppercase tracking-[0.2em] disabled:cursor-not-allowed disabled:from-slate-400 disabled:to-slate-500 disabled:shadow-none"
               >
                 {isExportingConnections ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />}
                 {isExportingConnections ? 'Preparing Export...' : 'Download'}
