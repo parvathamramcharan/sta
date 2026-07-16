@@ -468,20 +468,16 @@ export default function PcapClientView({ setId, initialResponse, session }) {
   // Apply date range filtering when set
   const filteredAndDated = filteredData.filter(item => {
     if (!dateFrom && !dateTo) return true;
-    const itemStart = item.start_time ? new Date(item.start_time) : null;
-    const itemEnd = item.end_time ? new Date(item.end_time) : null;
-    if (!itemStart && !itemEnd) return true;
 
-    let fromOK = true;
-    let toOK = true;
-    if (dateFrom) {
-      const fromDate = new Date(dateFrom + 'T00:00:00Z');
-      fromOK = (itemEnd ? itemEnd >= fromDate : (itemStart ? itemStart >= fromDate : true));
-    }
-    if (dateTo) {
-      const toDate = new Date(dateTo + 'T23:59:59Z');
-      toOK = (itemStart ? itemStart <= toDate : (itemEnd ? itemEnd <= toDate : true));
-    }
+    const itemStartDate = item.start_time ? item.start_time.slice(0, 10) : null;
+    const itemEndDate = item.end_time ? item.end_time.slice(0, 10) : null;
+    if (!itemStartDate && !itemEndDate) return false;
+
+    const fromDate = dateFrom || null;
+    const toDate = dateTo || null;
+
+    const fromOK = !fromDate || (itemStartDate ? itemStartDate >= fromDate : itemEndDate ? itemEndDate >= fromDate : false);
+    const toOK = !toDate || (itemEndDate ? itemEndDate <= toDate : itemStartDate ? itemStartDate <= toDate : false);
 
     return fromOK && toOK;
   });
@@ -501,6 +497,13 @@ export default function PcapClientView({ setId, initialResponse, session }) {
   if (filter === "Size") sortedData.sort((a, b) => (a.size - b.size) * orderMultiplier);
   if (filter === "Duration") sortedData.sort((a, b) => (a.duration - b.duration) * orderMultiplier);
   if (filter === "Packets") sortedData.sort((a, b) => (a.packets - b.packets) * orderMultiplier);
+  if (filter === "Date") {
+    sortedData.sort((a, b) => {
+      const aDate = a.start_time || a.end_time || "";
+      const bDate = b.start_time || b.end_time || "";
+      return (new Date(aDate) - new Date(bDate)) * orderMultiplier;
+    });
+  }
   if (filter === "External IPs") sortedData.sort((a, b) => (a.ip_count - b.ip_count) * orderMultiplier);
 
   const handleFilterClick = (label) => {
@@ -587,6 +590,7 @@ export default function PcapClientView({ setId, initialResponse, session }) {
           <FilterBtn label="Duration" />
           <FilterBtn label="Packets" />
           <FilterBtn label="External IPs" />
+          <FilterBtn label="Date" />
         </div>
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-2 bg-card rounded-md px-2 py-1 border border-theme">
