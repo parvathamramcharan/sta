@@ -1,16 +1,16 @@
 "use client";
 
-import { useState, useEffect, useMemo, memo } from "react";
+import { useState, useEffect, useMemo, useCallback, memo } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { Search, Filter, HardDrive, Clock, Activity, Hash, ArrowUp, ArrowDown, Shield, Globe, Shuffle, Terminal, ArrowRight, X, ChevronDown, FileText, ChevronLeft, ChevronRight, LayoutDashboard, Zap } from "lucide-react";
+import { Search, Filter, HardDrive, Clock, Activity, Hash, ArrowUp, ArrowDown, Shield, Globe, Shuffle, X, ChevronDown, FileText, ChevronLeft, ChevronRight, LayoutDashboard, Zap } from "lucide-react";
 import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
 import CaptureSummary from "./CaptureSummary";
 import TrafficDistribution from "./TrafficDistribution";
 import PcapInsights from "./PcapInsights";
-import { fetchPcapOverview, fetchPcapInsights, fetchPcapTimeline, fetchPcapConnections, fetchIpScan, fetchPcapGeoReport, fetchPcapDetails, fetchPcapMap } from "./apiService";
+import IpSearchPanel from "./IpSearchPanel";
+import { fetchPcapOverview, fetchPcapInsights, fetchPcapTimeline, fetchPcapConnections, fetchPcapGeoReport, fetchPcapDetails, fetchPcapMap } from "./apiService";
 import PropTypes from "prop-types";
 import { DashboardReports } from "../../dashboard/DashboardReports";
-import { Server, User, Cpu, MapPin, ExternalLink, RefreshCw, AlertTriangle, CheckCircle2 } from "lucide-react";
 import dynamic from "next/dynamic";
 const WorldMapLeaflet = dynamic(() => import("../../dashboard/WorldMapLeaflet").then(mod => mod.WorldMapLeaflet), { ssr: false });
 
@@ -31,7 +31,6 @@ export function formatDuration(seconds) {
   return `${s}s`;
 }
 
-// Anti-gravity motion constants
 const ANTIGRAVITY_SPRING = {
   type: "spring",
   stiffness: 140,
@@ -207,6 +206,15 @@ PcapCard.propTypes = {
   onClick: PropTypes.func,
 };
 
+const TABS = [
+  { id: "Pcap Summary", icon: LayoutDashboard, color: "blue" },
+  { id: "IP Geomap", icon: Globe, color: "emerald" },
+  { id: "Traffic Distribution", icon: Activity, color: "purple" },
+  { id: "Pcap Insights", icon: Zap, color: "amber" },
+  { id: "Reports", icon: FileText, color: "slate" },
+  { id: "IP Search", icon: Search, color: "rose" },
+];
+
 export default function PcapClientView({ setId, initialResponse, session }) {
   const initialData = initialResponse.data || [];
   const stats = initialResponse.repository_stats || {};
@@ -230,14 +238,6 @@ export default function PcapClientView({ setId, initialResponse, session }) {
   const activeTab = searchParams.get('tab') || "Pcap Summary";
 
   const selectedFile = initialData.find(f => f.pcap_id === pcapIdQuery) || null;
-  const tabs = [
-    { id: "Pcap Summary", icon: LayoutDashboard, color: "blue" },
-    { id: "IP Geomap", icon: Globe, color: "emerald" },
-    { id: "Traffic Distribution", icon: Activity, color: "purple" },
-    { id: "Pcap Insights", icon: Zap, color: "amber" },
-    { id: "Reports", icon: FileText, color: "slate" },
-    { id: "IP Search", icon: Search, color: "rose" },
-  ];
 
 
   const [overviewData, setOverviewData] = useState(null);
@@ -247,39 +247,29 @@ export default function PcapClientView({ setId, initialResponse, session }) {
   const [insightsData, setInsightsData] = useState(null);
   const [mapData, setMapData] = useState([]);
   const [timelineData, setTimelineData] = useState(null);
-  const [ipSearchTerm, setIpSearchTerm] = useState("");
   const [reportInitialMode, setReportInitialMode] = useState("country");
-  const [scanResults, setScanResults] = useState(null);
-  const [isScanning, setIsScanning] = useState(false);
-  const [scanError, setScanError] = useState("");
   const [timeFilter, setTimeFilter] = useState("");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [isLoadingDetails, setIsLoadingDetails] = useState(false);
   const [isLoadingConnections, setIsLoadingConnections] = useState(false);
   const [apiError, setApiError] = useState(null);
-  const [history, setHistory] = useState([]);
 
-  useEffect(() => {
-    const saved = localStorage.getItem('ipSearchHistory');
-    if (saved) {
-      try { setHistory(JSON.parse(saved)); } catch (e) {}
-    }
-  }, []);
-
-  const saveToHistory = (searchIp) => {
-    const newHistory = [searchIp, ...history.filter(h => h !== searchIp)].slice(0, 5);
-    setHistory(newHistory);
-    localStorage.setItem('ipSearchHistory', JSON.stringify(newHistory));
-  };
-
-  const updateUrl = (pcapId, tab) => {
+  const updateUrl = useCallback((pcapId, tab) => {
     const params = new URLSearchParams(searchParams);
     if (pcapId) params.set('pcap', pcapId);
     else params.delete('pcap');
     if (tab) params.set('tab', tab);
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-  };
+  }, [searchParams, pathname, router]);
+
+  const handleCardClick = useCallback((pcapId, isSelected) => {
+    if (isSelected) {
+      updateUrl(null, activeTab);
+    } else {
+      updateUrl(pcapId, "Pcap Summary");
+    }
+  }, [updateUrl, activeTab]);
 
   useEffect(() => {
     if (!selectedFile) {
@@ -419,92 +409,61 @@ export default function PcapClientView({ setId, initialResponse, session }) {
     loadConnections();
   }, [selectedFile?.pcap_id, connectionsPage, timeFilter, activeTab, overviewData?.capture_summary?.connections]);
 
-  const handleIpClick = (ip) => {
-    setIpSearchTerm(ip);
-    updateUrl(selectedFile.pcap_id, "IP Search");
-    handleScan(ip);
-  };
+  const [selectedIpForSearch, setSelectedIpForSearch] = useState("");
 
-  const handleScan = async (targetIp) => {
-    const ipToScan = targetIp || ipSearchTerm;
-    if (!ipToScan) return;
-
-    const ipv4Regex = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
-    if (!ipv4Regex.test(ipToScan)) {
-       setScanError("Please enter a valid IPv4 address.");
-       setScanResults(null);
-       return;
+  const handleIpClick = useCallback((ip) => {
+    updateUrl(selectedFile?.pcap_id, "IP Search");
+    if (ip) {
+      setSelectedIpForSearch(ip);
     }
+  }, [selectedFile?.pcap_id, updateUrl]);
 
-    saveToHistory(ipToScan);
-    setIpSearchTerm(ipToScan);
+  const sortedData = useMemo(() => {
+    const filteredData = initialData.filter(item =>
+      item.filename.toLowerCase().includes(search.toLowerCase())
+    );
 
-    setIsScanning(true);
-    setScanResults(null);
-    setScanError("");
-    try {
-      const data = await fetchIpScan(ipToScan);
-      if (data && data.success) {
-        setScanResults(data.data);
-      } else {
-        setScanError(data.message || "Failed to retrieve IP intelligence.");
-      }
-    } catch (err) {
-      console.error("Scan failed:", err);
-      setScanError("Unable to connect to the intelligence server.");
-    } finally {
-      setIsScanning(false);
+    // Apply date range filtering when set
+    const filteredAndDated = filteredData.filter(item => {
+      if (!dateFrom && !dateTo) return true;
+
+      const itemStartDate = item.start_time ? item.start_time.slice(0, 10) : null;
+      const itemEndDate = item.end_time ? item.end_time.slice(0, 10) : null;
+      if (!itemStartDate && !itemEndDate) return false;
+
+      const fromDate = dateFrom || null;
+      const toDate = dateTo || null;
+
+      const fromOK = !fromDate || (itemStartDate ? itemStartDate >= fromDate : itemEndDate ? itemEndDate >= fromDate : false);
+      const toOK = !toDate || (itemEndDate ? itemEndDate <= toDate : itemStartDate ? itemStartDate <= toDate : false);
+
+      return fromOK && toOK;
+    });
+
+    const result = [...filteredAndDated];
+    const orderMultiplier = sortOrder === "asc" ? 1 : -1;
+
+    if (filter === "Random") {
+      result.sort((a, b) => {
+        const seedA = (Number.parseInt(a.pcap_id.substring(0, 4), 16) || 0) + randomSeed;
+        const seedB = (Number.parseInt(b.pcap_id.substring(0, 4), 16) || 0) + randomSeed;
+        return (Math.sin(seedA) - Math.sin(seedB));
+      });
     }
-  };
+    if (filter === "Size") result.sort((a, b) => (a.size - b.size) * orderMultiplier);
+    if (filter === "Duration") result.sort((a, b) => (a.duration - b.duration) * orderMultiplier);
+    if (filter === "Packets") result.sort((a, b) => (a.packets - b.packets) * orderMultiplier);
+    if (filter === "Date") {
+      result.sort((a, b) => {
+        const aDate = a.start_time || a.end_time || "";
+        const bDate = b.start_time || b.end_time || "";
+        return (new Date(aDate) - new Date(bDate)) * orderMultiplier;
+      });
+    }
+    if (filter === "External IPs") result.sort((a, b) => (a.ip_count - b.ip_count) * orderMultiplier);
 
-
-
-
-
-  const filteredData = initialData.filter(item =>
-    item.filename.toLowerCase().includes(search.toLowerCase())
-  );
-
-  // Apply date range filtering when set
-  const filteredAndDated = filteredData.filter(item => {
-    if (!dateFrom && !dateTo) return true;
-
-    const itemStartDate = item.start_time ? item.start_time.slice(0, 10) : null;
-    const itemEndDate = item.end_time ? item.end_time.slice(0, 10) : null;
-    if (!itemStartDate && !itemEndDate) return false;
-
-    const fromDate = dateFrom || null;
-    const toDate = dateTo || null;
-
-    const fromOK = !fromDate || (itemStartDate ? itemStartDate >= fromDate : itemEndDate ? itemEndDate >= fromDate : false);
-    const toOK = !toDate || (itemEndDate ? itemEndDate <= toDate : itemStartDate ? itemStartDate <= toDate : false);
-
-    return fromOK && toOK;
-  });
-
-
-  let sortedData = [...filteredAndDated];
-  const orderMultiplier = sortOrder === "asc" ? 1 : -1;
-
-  if (filter === "Random") {
-
-    sortedData.sort((a, b) => {
-      const seedA = (Number.parseInt(a.pcap_id.substring(0, 4), 16) || 0) + randomSeed;
-      const seedB = (Number.parseInt(b.pcap_id.substring(0, 4), 16) || 0) + randomSeed;
-      return (Math.sin(seedA) - Math.sin(seedB));
-    });
-  }
-  if (filter === "Size") sortedData.sort((a, b) => (a.size - b.size) * orderMultiplier);
-  if (filter === "Duration") sortedData.sort((a, b) => (a.duration - b.duration) * orderMultiplier);
-  if (filter === "Packets") sortedData.sort((a, b) => (a.packets - b.packets) * orderMultiplier);
-  if (filter === "Date") {
-    sortedData.sort((a, b) => {
-      const aDate = a.start_time || a.end_time || "";
-      const bDate = b.start_time || b.end_time || "";
-      return (new Date(aDate) - new Date(bDate)) * orderMultiplier;
-    });
-  }
-  if (filter === "External IPs") sortedData.sort((a, b) => (a.ip_count - b.ip_count) * orderMultiplier);
+    return result;
+  }, [initialData, search, dateFrom, dateTo, filter, sortOrder, randomSeed]);
 
   const handleFilterClick = (label) => {
     if (label === "Random") {
@@ -645,13 +604,7 @@ export default function PcapClientView({ setId, initialResponse, session }) {
                     key={file.pcap_id}
                     file={file}
                     isSelected={isSelected}
-                    onClick={() => {
-                      if (isSelected) {
-                        updateUrl(null, activeTab);
-                      } else {
-                        updateUrl(file.pcap_id, "Pcap Summary");
-                      }
-                    }}
+                    onClick={() => handleCardClick(file.pcap_id, isSelected)}
                   />
                 );
               })}
@@ -730,7 +683,7 @@ export default function PcapClientView({ setId, initialResponse, session }) {
             <div className="flex-1 flex flex-col w-full bg-card border-t border-theme overflow-hidden">
               <div className="flex items-center gap-0 bg-emerald-500/10 border-b border-theme shrink-0">
                 <div className="flex-1 flex items-center gap-0">
-                  {tabs.map((tab) => {
+                  {TABS.map((tab) => {
                     if (tab.id === "Reports") {
                       return (
                         <div key={tab.id} className="flex-1 relative group">
@@ -854,259 +807,7 @@ export default function PcapClientView({ setId, initialResponse, session }) {
                         />
                       </div>
                     ) : activeTab === "IP Search" ? (
-                      <div className="space-y-8 animate-in fade-in duration-500 pb-10">
-                        <div className="flex justify-center mb-6 pt-16">
-                          <div className="relative w-full max-w-xl group">
-                            <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
-                            <input
-                              type="text"
-                              value={ipSearchTerm}
-                              onChange={(e) => {
-                                setIpSearchTerm(e.target.value);
-                                if (!e.target.value) {
-                                  setScanResults(null);
-                                  setScanError("");
-                                }
-                              }}
-                              onKeyDown={(e) => e.key === 'Enter' && handleScan()}
-                              placeholder="Enter IP Address for Deep Intelligence..."
-                              className="w-full pl-12 pr-12 py-4 bg-card border border-theme rounded-none text-[15px] font-medium text-foreground focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all shadow-sm placeholder:text-slate-500"
-                            />
-                            <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center">
-                              {isScanning ? (
-                                <Activity size={18} className="animate-spin text-blue-500" />
-                              ) : (
-                                <button onClick={() => handleScan()} disabled={!ipSearchTerm} className="text-slate-400 hover:text-blue-500 transition-colors disabled:opacity-0 p-1">
-                                  <ArrowRight size={20} />
-                                </button>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="flex flex-wrap items-center justify-center gap-2 -mt-2 mb-8 min-h-[24px]">
-                          <Clock size={13} className="" />
-                          <span className="text-[13px] font-black   mr-2">Recent:</span>
-                          {history.length > 0 ? (
-                            history.map((h, i) => (
-                              <button
-                                key={i}
-                                onClick={() => handleScan(h)}
-                                className="px-3 py-1  hover:bg-blue-500/10 border hover:border-blue-500/30 text-[11px] font-bold  hover:text-blue-500 rounded-none transition-all"
-                              >
-                                {h}
-                              </button>
-                            ))
-                          ) : (
-                            <span className="text-[11px]">No recent searches</span>
-                          )}
-                        </div>
-
-                        {scanError && (
-                          <motion.div
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="bg-rose-500/5 border border-rose-500/10 text-rose-500 p-6 rounded-none text-sm font-black flex items-center gap-3 mb-8 max-w-xl mx-auto"
-                          >
-                            <Shield size={20} />
-                            {scanError}
-                          </motion.div>
-                        )}
-                        <AnimatePresence mode="wait">
-                          {scanResults && (
-                            <motion.div
-                              initial={{ opacity: 0, y: 20 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              className="space-y-8"
-                            >
-                              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-
-                                <div className="lg:col-span-4 flex flex-col gap-8">
-                                  <div className="bg-card border border-theme p-8 rounded-none relative overflow-hidden">
-                                    <div className={`absolute top-6 right-6 px-3 py-1 rounded-none text-[10px] font-black uppercase tracking-widest ${scanResults.status === 'up' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' : 'bg-slate-500/10 text-slate-500 border border-slate-500/20'}`}>
-                                      {scanResults.status || 'Unknown'}
-                                    </div>
-                                    <div className="flex items-center gap-5 mb-8">
-                                      <div className="w-16 h-16 bg-blue-500/10 rounded-none flex items-center justify-center shrink-0">
-                                        <Server size={28} className="text-blue-500" />
-                                      </div>
-                                      <div className="min-w-0">
-                                        <div className="font-bold mb-1">Host Identity</div>
-                                        <div className="text-2xl font-black text-foreground truncate">{scanResults.ip}</div>
-                                      </div>
-                                    </div>
-
-                                    <div className="space-y-4">
-                                      <DetailRow icon={Globe} label="Autonomous System Number" value={scanResults.asn} color="blue" />
-                                      <DetailRow icon={Cpu} label="OS Match" value={scanResults.os_info?.best_match} subValue={`Confidence: ${scanResults.os_info?.confidence}%`} color="purple" />
-                                      <DetailRow icon={Shield} label="DNSBL Status" value={scanResults.dnsbl?.listed ? "Listed / At Risk" : "Clean"} color={scanResults.dnsbl?.listed ? "rose" : "emerald"} />
-                                      <DetailRow icon={Terminal} label="rDNS / Hostname" value={scanResults.rdns || (scanResults.hostnames?.length ? scanResults.hostnames.join(", ") : null)} color="slate" />
-                                      <DetailRow icon={Zap} label="Proxy Type" value={scanResults.proxy_type} color="amber" />
-
-                                    </div>
-                                  </div>
-
-
-
-
-
-
-                                  <div className="bg-card border border-theme p-8 rounded-none">
-                                    <div className="flex items-center gap-4 mb-6">
-                                      <div className="p-2 bg-orange-500/10 rounded-none">
-                                        <MapPin size={20} className="text-orange-500" />
-                                      </div>
-                                      <div className="font-bold font-black text-foreground">Geographic Intel</div>
-                                    </div>
-                                    <div className="space-y-6">
-                                      <div>
-                                        <div className="font-bold   mb-2">City / Region</div>
-                                        <div className="text-[14px] font-bold  break-words leading-tight text-slate-600">{scanResults.geo?.city || 'Unknown City'}</div>
-                                      </div>
-                                      <div>
-                                        <div className="fomt-bold font-black  mb-2">Country</div>
-                                        <div className="text-[14px] font-bold  break-words leading-tight text-slate-600">{scanResults.geo?.country || 'Unknown Country'}</div>
-                                      </div>
-                                      <div>
-                                        <div className="font-bold font-black  mb-2">Service Provider</div>
-                                        <div className="text-[14px] font-bold  break-words leading-tight text-slate-600">{scanResults.geo?.isp || 'Unknown ISP'}</div>
-                                      </div>
-                                      <div className="grid grid-cols-2 gap-4 pt-4">
-                                        <div>
-                                          <div className="font-bold font-black   mb-1">Latitude</div>
-                                          <div className="text-[14px] font-bold  break-words leading-tight text-slate-600">{scanResults.geo?.latitude || scanResults.location?.lat || 'N/A'}</div>
-                                        </div>
-                                        <div>
-                                          <div className="font-bold font-black   mb-1">Longitude</div>
-                                          <div className="text-[14px] font-bold  break-words leading-tight text-slate-600">{scanResults.geo?.longitude || scanResults.location?.lon || 'N/A'}</div>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </div>
-                                </div>
-
-
-                                <div className="lg:col-span-8 flex flex-col gap-8">
-                                  <div className="flex flex-col gap-4">
-
-                                    <div className="flex items-center justify-between px-4">
-                                      <div className="flex items-center gap-4">
-                                        <div className="p-3 bg-slate-500/[0.05] border border-theme rounded-none shadow-sm">
-                                          <Activity size={24} className="text-rose-500" />
-                                        </div>
-                                        <div>
-                                          <h3 className="text-lg font-black text-foreground">Ports & Service Detection</h3>
-                                          <p className="font-sm font-black text-slate-600   mt-0.5">Active Network Services</p>
-                                        </div>
-                                      </div>
-                                      <div className="flex flex-col items-end gap-1">
-                                        <div className="px-4 py-1.5 bg-blue-500/10 rounded-none text-[11px] font-black text-blue-500 border border-blue-500/20">
-                                          {scanResults.ports?.length || 0} Ports Found
-                                        </div>
-                                        <div className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">
-                                          Page <span className="text-foreground">1</span> of <span className="text-foreground">1</span>
-                                        </div>
-                                      </div>
-                                    </div>
-
-
-                                    <div className="bg-card rounded-none overflow-hidden flex flex-col shadow-sm">
-                                      <div className="overflow-x-auto">
-                                        <table className="w-full text-left">
-                                          <thead className="bg-slate-500/5">
-                                            <tr>
-                                              <th className="px-8 py-5 text-md font-black text-slate-600">Port</th>
-                                              <th className="px-8 py-5 text-md font-black text-slate-600">Service</th>
-                                              <th className="px-8 py-5 text-md font-black text-slate-600">Protocol</th>
-                                              <th className="px-8 py-5 text-md font-black text-slate-600">State</th>
-                                              <th className="px-8 py-5 text-md font-black text-slate-600 text-right">Reason</th>
-                                            </tr>
-                                          </thead>
-                                          <tbody>
-                                            {(scanResults.ports || []).map((p, i) => (
-                                              <tr key={i} className="group hover:bg-slate-500/5 transition-colors">
-                                                <td className="px-8 py-5">
-                                                  <div className="flex items-center gap-3">
-                                                    <span className="text-sm font-black text-foreground">{p.port}</span>
-                                                    {p.state === 'open' && <CheckCircle2 size={12} className="text-emerald-500" />}
-                                                  </div>
-                                                </td>
-                                                <td className="px-8 py-5">
-                                                  <div className="text-[11px] font-black text-blue-500 uppercase bg-blue-500/5 px-2 py-1 rounded-lg border border-blue-500/10 inline-block">
-                                                    {p.service || p.application || 'Unknown'}
-                                                  </div>
-                                                </td>
-                                                <td className="px-8 py-5 text-[11px] font-black text-slate-500 uppercase tracking-widest">{p.protocol}</td>
-                                                <td className="px-8 py-5">
-                                                  <span className={`text-[10px] font-black uppercase tracking-tighter px-2 py-1 rounded-md border ${p.state === 'open' ? 'text-emerald-500 bg-emerald-500/5 border-emerald-500/20' : 'text-slate-400 bg-slate-500/5 border-slate-500/20'}`}>
-                                                    {p.state}
-                                                  </span>
-                                                </td>
-                                                <td className="px-8 py-5 text-right">
-                                                  <span className="text-[10px] font-bold text-slate-400 uppercase italic">{p.reason || 'N/A'}</span>
-                                                </td>
-                                              </tr>
-                                            ))}
-                                            {(!scanResults.ports || scanResults.ports.length === 0) && (
-                                              <tr>
-                                                <td colSpan="5" className="px-8 py-20 text-center text-xs font-bold uppercase tracking-widest opacity-30">
-                                                  No Open Ports Discovered
-                                                </td>
-                                              </tr>
-                                            )}
-                                          </tbody>
-                                        </table>
-                                      </div>
-                                    </div>
-                                  </div>
-
-
-                                  <div className="bg-card p-8 rounded-none">
-                                    <div className="flex items-center gap-4 mb-8">
-                                      <div className="p-2 bg-emerald-500/10 rounded-none">
-                                        <User size={20} className="text-emerald-500" />
-                                      </div>
-                                      <div className="text-lg font-black text-foreground ">Ownership Details</div>
-                                    </div>
-
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
-                                      <WhoisSection title="Registrant Information" data={scanResults.whois?.contacts?.registrant} />
-                                      <WhoisSection title="Technical Contact" data={scanResults.whois?.contacts?.technical} />
-                                      <WhoisSection title="Abuse Contact" data={scanResults.whois?.contacts?.abuse} />
-                                      <WhoisSection title="Administrative Contact" data={scanResults.whois?.contacts?.administrative} />
-
-                                      <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-6 pt-10 border-t border-theme">
-                                        <WhoisField label="Organization" value={scanResults.whois?.org || scanResults.whois?.name} />
-                                        <WhoisField label="Network Owner" value={scanResults.whois?.network_owner} />
-                                        <WhoisField label="CIDR Range" value={scanResults.whois?.cidr} />
-                                        <WhoisField label="Registrar" value={scanResults.whois?.registrar} />
-                                        <WhoisField label="Registered Date" value={scanResults.whois?.registered} />
-                                        <WhoisField label="Top Level Domain" value={scanResults.whois?.tld} />
-                                        <WhoisField label="Website" value={scanResults.whois?.website} />
-                                      </div>
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-
-                        {isScanning && (
-                          <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[100] flex items-center justify-center p-10">
-                            <div className="bg-card border border-theme p-10 rounded-none shadow-2xl flex flex-col items-center gap-6 max-w-sm w-full animate-in zoom-in-95 duration-300">
-                              <div className="relative">
-                                <div className="w-20 h-20 border-4 border-blue-500/10 border-t-blue-500 rounded-none animate-spin" />
-                                <Search className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-blue-500" size={32} />
-                              </div>
-                              <div className="text-center">
-                                <div className="text-xl font-black text-foreground uppercase tracking-tight mb-2">Scanning Host</div>
-                                <div className="text-sm font-bold text-slate-500">Querying global intelligence databases for {ipSearchTerm}...</div>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </div>
+                      <IpSearchPanel initialIp={selectedIpForSearch} onScanComplete={() => setSelectedIpForSearch("")} />
                     ) : activeTab === "Reports" && selectedFile ? (
                       <DashboardReports
                         pcapId={selectedFile.pcap_id}
@@ -1132,56 +833,6 @@ export default function PcapClientView({ setId, initialResponse, session }) {
   );
 }
 
-function DetailRow({ icon: Icon, label, value, subValue, color }) {
-  const colorMap = {
-    blue: "text-blue-500 bg-blue-500/5 border-blue-500/10",
-    purple: "text-purple-500 bg-purple-500/5 border-purple-500/10",
-    rose: "text-rose-500 bg-rose-500/5 border-rose-500/10",
-    emerald: "text-emerald-500 bg-emerald-500/5 border-emerald-500/20",
-    slate: "text-slate-500 bg-slate-500/5 border-slate-500/10",
-    amber: "text-amber-500 bg-amber-500/5 border-amber-500/10",
-  };
-
-  return (
-    <div className={`flex flex-col p-6 rounded-none border ${colorMap[color] || colorMap.slate} space-y-3`}>
-      <div className="flex items-center gap-4">
-        <Icon size={20} className="shrink-0" />
-        <div className="text-bold font-black ">{label}</div>
-      </div>
-      <div className="min-w-0">
-        <div className="text-[15px] font-black text-foreground break-all leading-tight">{value || "N/A"}</div>
-        {subValue && <div className="text-[12px] font-bold opacity-60 mt-0.5">{subValue}</div>}
-      </div>
-    </div>
-  );
-}
-
-function WhoisSection({ title, data }) {
-  if (!data) return null;
-  return (
-    <div className="p-6 bg-slate-500/[0.03] border border-theme rounded-none space-y-6">
-      <h4 className="font-black text-blue-500 
-        border-b border-blue-500/10 pb-3">{title}</h4>
-      <div className="space-y-4">
-        <WhoisField label="Name" value={data.name} />
-        <WhoisField label="Email" value={data.email} />
-        <WhoisField label="Phone" value={data.phone} />
-        <WhoisField label="Handle" value={data.handle} />
-        <WhoisField label="Address" value={data.address} />
-      </div>
-    </div>
-  );
-}
-
-function WhoisField({ label, value }) {
-  return (
-    <div>
-      <div className="font-bold font-black  mb-1">{label}</div>
-      <div className="text-[14px] font-bold  break-words leading-tight text-slate-600">{value || "N/A"}</div>
-    </div>
-  );
-}
-
 PcapClientView.propTypes = {
   setId: PropTypes.string,
   initialResponse: PropTypes.shape({
@@ -1191,26 +842,3 @@ PcapClientView.propTypes = {
   session: PropTypes.object,
 };
 
-DetailRow.propTypes = {
-  icon: PropTypes.elementType.isRequired,
-  label: PropTypes.string,
-  value: PropTypes.string,
-  subValue: PropTypes.string,
-  color: PropTypes.string,
-};
-
-WhoisSection.propTypes = {
-  title: PropTypes.string,
-  data: PropTypes.shape({
-    name: PropTypes.string,
-    email: PropTypes.string,
-    phone: PropTypes.string,
-    handle: PropTypes.string,
-    address: PropTypes.string,
-  }),
-};
-
-WhoisField.propTypes = {
-  label: PropTypes.string,
-  value: PropTypes.string,
-};
