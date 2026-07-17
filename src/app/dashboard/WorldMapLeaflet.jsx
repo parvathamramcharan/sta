@@ -120,6 +120,33 @@ function EnsureTopPane() {
 const DELHI_COORDS = [28.6139, 77.2090];
 const FOCUS_IP_RENDER_LIMIT = 180;
 
+// Tailwind class strings for the plain-HTML markers rendered inside Leaflet divIcons.
+// These are static strings (no interpolated class names) so Tailwind's JIT compiler
+// can pick them up and generate the corresponding utility CSS.
+const PCAP_MARKER_BASE_CLASSES =
+  "relative flex items-center justify-center rounded-full border-2 border-white text-white font-black text-[8px] [text-shadow:0_1px_2px_rgba(15,23,42,0.25)] transition-all duration-[250ms] ease-[cubic-bezier(0.2,0.9,0.2,1)] cursor-pointer hover:![transform:translateY(-6px)_scale(1.16)] hover:![box-shadow:0_0_0_8px_rgba(59,130,246,0.18),0_14px_26px_rgba(37,99,235,0.32)] hover:!z-[1000]";
+
+const PCAP_MARKER_FOCUS_CLASSES =
+  "!border-[2.5px] !shadow-[0_0_0_5px_rgba(37,99,235,0.12),0_8px_18px_rgba(30,64,175,0.22)]";
+
+const PCAP_SPRINKLE_ANIM_CLASSES =
+  "will-change-transform animate-[pcap-marker-sprinkle_460ms_cubic-bezier(0.16,1.15,0.28,1)_both]";
+
+const PCAP_SPRINKLE_RING_CLASSES =
+  "absolute inset-0 rounded-full opacity-0 pointer-events-none z-[1] animate-[pcap-sprinkle-ring_520ms_ease-out_both]";
+
+const PCAP_PULSE_CLASSES =
+  "absolute inset-0 rounded-full opacity-40 pointer-events-none z-[1] animate-[pcap-map-pulse_2s_cubic-bezier(0.4,0,0.6,1)_infinite]";
+
+const SUMMARY_DOT_CLASSES =
+  "rounded-full border-2 border-white bg-blue-600 shadow-[0_0_15px_rgba(37,99,235,0.4),0_0_30px_rgba(37,99,235,0.1)] transition-all duration-200 ease-out cursor-pointer animate-[summary-scale-breathe_2s_ease-in-out_infinite] hover:!bg-white hover:![transform:scale(3)] hover:![box-shadow:0_0_50px_rgba(37,99,235,1)] hover:!z-[1000] hover:!border-[2.5px] hover:!border-blue-600";
+
+const CENTER_DOT_CLASSES =
+  "w-3 h-3 rounded-full bg-red-500 border-2 border-white shadow-[0_6px_18px_rgba(239,68,68,0.28)]";
+
+const CONTINENT_LABEL_BASE_CLASSES =
+  "-translate-x-1/2 -translate-y-1/2 whitespace-pre-line text-center font-extrabold uppercase tracking-[0.03em] leading-[0.95] select-none pointer-events-none";
+
 const hasCoordinates = (ip) => {
   const lat = Number(ip.latitude);
   const lng = Number(ip.longitude);
@@ -371,15 +398,15 @@ const getPcapPointStyle = (count) => {
 };
 
 const CONTINENT_LABELS = [
-  { id: 'north-america', text: 'NORTH\nAMERICA', position: [49, -110], className: 'label-large' },
-  { id: 'europe', text: 'EUROPE', position: [53, 15], className: 'label-large' },
-  { id: 'china', text: 'CHINA', position: [35, 93], className: 'label-large' },
-  { id: 'russia', text: 'RUSSIA', position: [61, 95], className: 'label-large' },
-  { id: 'africa', text: 'AFRICA', position: [5, 15], className: 'label-large' },
-  { id: 'south-america', text: 'SOUTH AMERICA', position: [-14, -65], className: 'label-medium' },
-  { id: 'greenland', text: 'GREENLAND', position: [76, -54], className: 'label-medium' },
-  { id: 'oceania', text: 'OCEANIA', position: [-13, 152], className: 'label-large' },
-  { id: 'australia', text: 'AUSTRALIA', position: [-25, 116], className: 'label-large' },
+  { id: 'north-america', text: 'NORTH\nAMERICA', position: [49, -110], sizeClass: 'text-[17px]' },
+  { id: 'europe', text: 'EUROPE', position: [53, 15], sizeClass: 'text-[17px]' },
+  { id: 'china', text: 'CHINA', position: [35, 93], sizeClass: 'text-[17px]' },
+  { id: 'russia', text: 'RUSSIA', position: [61, 95], sizeClass: 'text-[17px]' },
+  { id: 'africa', text: 'AFRICA', position: [5, 15], sizeClass: 'text-[17px]' },
+  { id: 'south-america', text: 'SOUTH AMERICA', position: [-14, -65], sizeClass: 'text-[14px] leading-[0.92]' },
+  { id: 'greenland', text: 'GREENLAND', position: [76, -54], sizeClass: 'text-[14px] leading-[0.92]' },
+  { id: 'oceania', text: 'OCEANIA', position: [-13, 152], sizeClass: 'text-[17px]' },
+  { id: 'australia', text: 'AUSTRALIA', position: [-25, 116], sizeClass: 'text-[17px]' },
 ];
 
 const getPcapMarkerSize = (count, zoomLevel) => {
@@ -401,9 +428,15 @@ const getPcapLineStyle = (count, zoomLevel) => {
 function ContinentLabels({ theme, L }) {
   if (!L) return null;
 
+  const labelColor = theme === 'dark' ? 'rgba(255,255,255,0.62)' : 'rgba(70, 90, 122, 0.85)';
+  const labelTextShadow = theme === 'dark' ? '0 1px 0 rgba(0,0,0,0.85)' : '0 1px 0 rgba(255,255,255,0.65)';
+
   return CONTINENT_LABELS.map((label) => {
     const icon = L.divIcon({
-      html: `<div class="continent-label ${label.className}">${label.text.replace(/\n/g, '<br/>')}</div>`,
+      html: `<div class="${CONTINENT_LABEL_BASE_CLASSES} ${label.sizeClass}" style="color:${labelColor};text-shadow:${labelTextShadow};">${label.text.replace(/\n/g, '<br/>')}</div>`,
+      // "continent-label-marker" targets the Leaflet-generated wrapper element; its
+      // default background/border/shadow are stripped via an arbitrary Tailwind
+      // descendant selector applied on the map's outer container (see below).
       className: 'continent-label-marker',
       iconSize: [1, 1],
       iconAnchor: [0, 0]
@@ -789,15 +822,22 @@ export function WorldMapLeaflet({ externalIps = [], onIpClick, mode = 'pcap', co
       const jitterY = Math.cos(point.lng * 2.1 - point.lat) * 6;
       const sprinkleX = Math.round((deltaLng / flyMagnitude) * 34 + jitterX);
       const sprinkleY = Math.round((deltaLat / flyMagnitude) * 28 + jitterY);
+      const countLabelSizeClass = point.count > 999 ? 'text-[9px]' : 'text-[10px]';
+      const markerClasses = [
+        PCAP_MARKER_BASE_CLASSES,
+        PCAP_SPRINKLE_ANIM_CLASSES,
+        point.isFocusedReveal ? PCAP_MARKER_FOCUS_CLASSES : '',
+        'group'
+      ].filter(Boolean).join(' ');
 
       return {
         point,
         markerSize,
         icon: L.divIcon({
           html: `
-            <div class="pcap-marker ${point.isFocusedReveal ? 'pcap-marker-focus' : ''} pcap-marker-sprinkle group" style="width: ${markerSize}px; height: ${markerSize}px; --sprinkle-x: ${sprinkleX}px; --sprinkle-y: ${sprinkleY}px; background: ${pointStyle.marker}; box-shadow: 0 0 0 4px ${pointStyle.halo}, 0 6px 14px ${pointStyle.shadow}; animation-delay: ${jumpDelay}ms;">
-              <div class="pcap-sprinkle-ring" style="background: ${pointStyle.marker};"></div>
-              <span style="position: relative; z-index: 2; font-size: ${point.count > 999 ? 9 : 10}px;">${label}</span>
+            <div class="${markerClasses}" style="width: ${markerSize}px; height: ${markerSize}px; --sprinkle-x: ${sprinkleX}px; --sprinkle-y: ${sprinkleY}px; background: ${pointStyle.marker}; box-shadow: 0 0 0 4px ${pointStyle.halo}, 0 6px 14px ${pointStyle.shadow}; animation-delay: ${jumpDelay}ms;">
+              <div class="${PCAP_SPRINKLE_RING_CLASSES}" style="background: ${pointStyle.marker};"></div>
+              <span class="relative z-[2] ${countLabelSizeClass}">${label}</span>
             </div>
           `,
           className: '',
@@ -833,10 +873,17 @@ export function WorldMapLeaflet({ externalIps = [], onIpClick, mode = 'pcap', co
 
   const initialZoom = mode === 'reports' ? 8 : (mode === 'summary' ? 2 : 2.2);
 
+  // Drives the theme-dependent Leaflet base-map background via a CSS custom
+  // property, referenced by an arbitrary-value Tailwind class below.
+  const mapContainerStyle = { '--leaflet-bg': theme === 'dark' ? '#091224' : '#d8edf3' };
+
   if (!L) return <div className="w-full h-full bg-slate-900 animate-pulse rounded-none" />;
 
   return (
-    <div className="w-full h-full relative z-0 rounded-none overflow-hidden border border-theme transition-colors bg-card">
+    <div
+      className="w-full h-full relative z-0 rounded-none overflow-hidden border border-theme transition-colors bg-card [&_.leaflet-container]:!bg-[var(--leaflet-bg)] [&_.continent-label-marker]:!bg-transparent [&_.continent-label-marker]:!border-0 [&_.continent-label-marker]:!shadow-none [&_.leaflet-tooltip]:!bg-[hsl(var(--card)/0.7)] [&_.leaflet-tooltip]:!backdrop-blur-xl [&_.leaflet-tooltip]:!border [&_.leaflet-tooltip]:!border-[hsl(var(--border))] [&_.leaflet-tooltip]:!rounded-xl [&_.leaflet-tooltip]:!shadow-[0_20px_25px_-5px_rgb(0_0_0_/_0.1),0_8px_10px_-6px_rgb(0_0_0_/_0.1)] [&_.leaflet-tooltip]:!p-0 [&_.leaflet-tooltip]:!text-[hsl(var(--foreground))] [&_.leaflet-tooltip]:overflow-hidden [&_.leaflet-grab]:!cursor-pointer [&_.leaflet-dragging_.leaflet-grab]:!cursor-grabbing"
+      style={mapContainerStyle}
+    >
       <MapContainer
         center={initialCenter}
         zoom={initialZoom}
@@ -947,11 +994,12 @@ export function WorldMapLeaflet({ externalIps = [], onIpClick, mode = 'pcap', co
           reportsGroupedPoints.map((point, idx) => {
             const markerSize = getPcapMarkerSize(point.count, zoomLevel);
             const pointStyle = getPcapPointStyle(point.count);
+            const countLabelSizeClass = point.count > 999 ? 'text-[9px]' : 'text-[10px]';
             const icon = L.divIcon({
               html: `
-                <div class="pcap-marker group" style="width: ${markerSize}px; height: ${markerSize}px; background: ${pointStyle.marker}; box-shadow: 0 0 0 4px ${pointStyle.halo}, 0 6px 14px ${pointStyle.shadow};">
-                  <div class="pcap-pulse" style="background: ${pointStyle.marker};"></div>
-                  <span style="position: relative; z-index: 2; font-size: ${point.count > 999 ? 9 : 10}px;">${point.count.toLocaleString()}</span>
+                <div class="${PCAP_MARKER_BASE_CLASSES} group" style="width: ${markerSize}px; height: ${markerSize}px; background: ${pointStyle.marker}; box-shadow: 0 0 0 4px ${pointStyle.halo}, 0 6px 14px ${pointStyle.shadow};">
+                  <div class="${PCAP_PULSE_CLASSES}" style="background: ${pointStyle.marker};"></div>
+                  <span class="relative z-[2] ${countLabelSizeClass}">${point.count.toLocaleString()}</span>
                 </div>
               `,
               className: '',
@@ -1059,7 +1107,7 @@ export function WorldMapLeaflet({ externalIps = [], onIpClick, mode = 'pcap', co
         {mode === 'summary' && countryPoints.map((point, idx) => {
           const dotSize = 10;
           const icon = L.divIcon({
-            html: `<div class="custom-dot-marker summary-dot" style="width: ${dotSize}px; height: ${dotSize}px;"></div>`,
+            html: `<div class="${SUMMARY_DOT_CLASSES}" style="width: ${dotSize}px; height: ${dotSize}px;"></div>`,
             className: '',
             iconSize: [dotSize, dotSize],
             iconAnchor: [dotSize / 2, dotSize / 2]
@@ -1094,7 +1142,7 @@ export function WorldMapLeaflet({ externalIps = [], onIpClick, mode = 'pcap', co
             key="center-delhi"
             position={DELHI_COORDS}
             icon={L.divIcon({
-              html: `<div class="center-red-dot"></div>`,
+              html: `<div class="${CENTER_DOT_CLASSES}"></div>`,
               className: '',
               iconSize: [12, 12],
               iconAnchor: [6, 6]
@@ -1251,126 +1299,20 @@ export function WorldMapLeaflet({ externalIps = [], onIpClick, mode = 'pcap', co
         )}
       </AnimatePresence>
 
+      {/*
+        Only the pieces that Tailwind utility classes genuinely cannot express are left here:
+        - @keyframes definitions (Tailwind's arbitrary `animate-[...]` values need the keyframes
+          to exist somewhere in the stylesheet; they can't be authored as utility classes).
+        - The custom scrollbar's ::-webkit-scrollbar pseudo-elements (no core Tailwind utility
+          covers these without an extra plugin).
+        Everything else that used to live in this block (marker colors, borders, shadows,
+        hover states, leaflet-tooltip/leaflet-container/leaflet-grab theming, continent
+        label styling, etc.) has been moved into Tailwind classes above.
+      */}
       <style jsx global>{`
-        .custom-dot-marker {
-          background: #3b82f6;
-          border: 2px solid white;
-          border-radius: 50%;
-          box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
-          transition: all 0.2s ease-out;
-          cursor: pointer;
-        }
-        .summary-dot {
-          background: #2563eb;
-          width: 9px !important;
-          height: 9px !important;
-          box-shadow: 0 0 15px rgba(37, 99, 235, 0.4), 
-                      0 0 30px rgba(37, 99, 235, 0.1);
-          border: 2px solid white;
-          animation: summary-scale-breathe 2s ease-in-out infinite;
-        }
         @keyframes summary-scale-breathe {
           0%, 100% { transform: scale(0.9); opacity: 0.8; box-shadow: 0 0 10px rgba(37, 99, 235, 0.4); }
           50% { transform: scale(1.4); opacity: 1; box-shadow: 0 0 25px rgba(37, 99, 235, 0.7), 0 0 40px rgba(37, 99, 235, 0.2); }
-        }
-        .custom-dot-marker:hover {
-          transform: scale(3) !important;
-          background: #ffffff !important;
-          box-shadow: 0 0 40px rgba(37, 99, 235, 1), 0 0 80px rgba(37, 99, 235, 0.4);
-          z-index: 1000 !important;
-          border: 2.5px solid #2563eb;
-        }
-        .summary-dot:hover {
-          background: #ffffff !important;
-          box-shadow: 0 0 50px rgba(37, 99, 235, 1);
-        }
-        .center-red-dot {
-          width: 12px;
-          height: 12px;
-          background: #ef4444;
-          border-radius: 50%;
-          border: 2px solid white;
-          box-shadow: 0 6px 18px rgba(239,68,68,0.28);
-        }
-        .continent-label-marker {
-          background: transparent !important;
-          border: 0 !important;
-          box-shadow: none !important;
-        }
-        .continent-label {
-          transform: translate(-50%, -50%);
-          white-space: pre-line;
-          text-align: center;
-          font-weight: 800;
-          letter-spacing: 0.03em;
-          line-height: 0.95;
-          text-transform: uppercase;
-          user-select: none;
-          pointer-events: none;
-          color: ${theme === 'dark' ? 'rgba(255,255,255,0.62)' : 'rgba(70, 90, 122, 0.85)'};
-          text-shadow: ${theme === 'dark'
-            ? '0 1px 0 rgba(0,0,0,0.85)'
-            : '0 1px 0 rgba(255,255,255,0.65)'};
-        }
-        .continent-label.label-large {
-          font-size: 17px;
-        }
-        .continent-label.label-medium {
-          font-size: 14px;
-          line-height: 0.92;
-        }
-        .continent-label.label-small {
-          font-size: 11px;
-          opacity: 0.82;
-        }
-        .pcap-marker {
-          background: #3b82f6;
-          border: 2px solid white;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: white;
-          font-weight: 900;
-          font-size: 8px;
-          text-shadow: 0 1px 2px rgba(15, 23, 42, 0.25);
-          transition: transform 0.25s cubic-bezier(0.2, 0.9, 0.2, 1), box-shadow 0.25s ease;
-          cursor: pointer;
-          position: relative;
-          will-change: transform;
-        }
-        .pcap-marker-sprinkle {
-          animation: pcap-marker-sprinkle 460ms cubic-bezier(0.16, 1.15, 0.28, 1) both;
-        }
-        .pcap-marker-focus {
-          border-width: 2.5px;
-          box-shadow: 0 0 0 5px rgba(37, 99, 235, 0.12), 0 8px 18px rgba(30, 64, 175, 0.22) !important;
-        }
-        .pcap-marker:hover {
-          transform: translateY(-6px) scale(1.16) !important;
-          box-shadow: 0 0 0 8px rgba(59, 130, 246, 0.18), 0 14px 26px rgba(37, 99, 235, 0.32) !important;
-          z-index: 1000 !important;
-        }
-        .pcap-pulse {
-          position: absolute;
-          width: 100%;
-          height: 100%;
-          border-radius: 50%;
-          background: #3b82f6;
-          opacity: 0.4;
-          animation: pcap-map-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-          pointer-events: none;
-          z-index: 1;
-        }
-        .pcap-sprinkle-ring {
-          position: absolute;
-          width: 100%;
-          height: 100%;
-          border-radius: 50%;
-          opacity: 0;
-          pointer-events: none;
-          z-index: 1;
-          animation: pcap-sprinkle-ring 520ms ease-out both;
         }
         @keyframes pcap-map-pulse {
           0% { transform: scale(1); opacity: 0.4; }
@@ -1394,30 +1336,9 @@ export function WorldMapLeaflet({ externalIps = [], onIpClick, mode = 'pcap', co
           }
         }
         @keyframes pcap-sprinkle-ring {
-          0% {
-            opacity: 0.34;
-            transform: scale(0.5);
-          }
-          100% {
-            opacity: 0;
-            transform: scale(2.1);
-          }
+          0% { opacity: 0.34; transform: scale(0.5); }
+          100% { opacity: 0; transform: scale(2.1); }
         }
-        .leaflet-container {
-          background: ${theme === 'dark' ? '#091224' : '#d8edf3'} !important;
-        }
-        .leaflet-tooltip {
-          background: hsl(var(--card) / 0.7) !important;
-          backdrop-filter: blur(12px) !important;
-          border: 1px solid hsl(var(--border)) !important;
-          border-radius: 12px !important;
-          box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1) !important;
-          padding: 0 !important;
-          color: hsl(var(--foreground)) !important;
-          overflow: hidden;
-        }
-        .leaflet-grab { cursor: pointer !important; }
-        .leaflet-dragging .leaflet-grab { cursor: grabbing !important; }
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb {
