@@ -7,7 +7,7 @@ services:
     image: frontend:latest
     container_name: frontend
     ports:
-      - "6080:3000"
+      - "80:3000"
     environment:
       AUTH_SECRET: ${AUTH_SECRET}
       AUTH_URL: ${AUTH_URL}
