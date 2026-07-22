@@ -43,7 +43,6 @@ export async function fetchPcapOverview(pcapId) {
 
 export async function fetchPcapConnections(pcapId, page = 1, period = "") {
   try {
-    // Fetching a standard limit
     let url = `${BASE_URL}/pcaps/${pcapId}/connections?page=${page}&limit=50`;
     if (period) url += `&period=${period}`;
     
