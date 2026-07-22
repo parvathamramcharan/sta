@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useMemo, useCallback, memo } from "react";
-import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { Search, Filter, HardDrive, Clock, Activity, Hash, ArrowUp, ArrowDown, Shield, Globe, Shuffle, X, ChevronDown, FileText, ChevronLeft, ChevronRight, LayoutDashboard, Zap } from "lucide-react";
 import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
 import CaptureSummary from "./CaptureSummary";
@@ -219,10 +218,6 @@ export default function PcapClientView({ setId, initialResponse, session }) {
   const initialData = initialResponse.data || [];
   const stats = initialResponse.repository_stats || {};
 
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("Random");
   const [sortOrder, setSortOrder] = useState("desc");
@@ -233,12 +228,33 @@ export default function PcapClientView({ setId, initialResponse, session }) {
   // Optimized Cache Matrix
   const [dataCache, setDataCache] = useState({});
 
+  // Local UI state — the ONLY source of truth for selection/tab.
+  const [selectedPcapId, setSelectedPcapId] = useState(null);
+  const [activeTab, setActiveTab] = useState("Pcap Summary");
 
-  const pcapIdQuery = searchParams.get('pcap');
-  const activeTab = searchParams.get('tab') || "Pcap Summary";
+  const selectedFile = initialData.find(f => f.pcap_id === selectedPcapId) || null;
 
-  const selectedFile = initialData.find(f => f.pcap_id === pcapIdQuery) || null;
+  // -----------------------------------------------------------------
+  // URL MIRROR (dev-visibility only)
+  // This effect NEVER triggers App Router navigation. It only writes
+  // to window.history via replaceState, which is a pure browser API
+  // and is not intercepted by Next.js's Link/Router layer. React state
+  // above remains the single source of truth; this effect is a
+  // one-way mirror from state -> URL, never the other way around.
+  // -----------------------------------------------------------------
+  useEffect(() => {
+    const url = new URL(window.location.href);
 
+    if (selectedPcapId) {
+      url.searchParams.set("pcap", selectedPcapId);
+      url.searchParams.set("tab", activeTab);
+    } else {
+      url.searchParams.delete("pcap");
+      url.searchParams.delete("tab");
+    }
+
+    window.history.replaceState({}, "", url);
+  }, [selectedPcapId, activeTab]);
 
   const [overviewData, setOverviewData] = useState(null);
   const [connectionsData, setConnectionsData] = useState(null);
@@ -255,21 +271,14 @@ export default function PcapClientView({ setId, initialResponse, session }) {
   const [isLoadingConnections, setIsLoadingConnections] = useState(false);
   const [apiError, setApiError] = useState(null);
 
-  const updateUrl = useCallback((pcapId, tab) => {
-    const params = new URLSearchParams(searchParams);
-    if (pcapId) params.set('pcap', pcapId);
-    else params.delete('pcap');
-    if (tab) params.set('tab', tab);
-    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-  }, [searchParams, pathname, router]);
-
   const handleCardClick = useCallback((pcapId, isSelected) => {
     if (isSelected) {
-      updateUrl(null, activeTab);
+      setSelectedPcapId(null);
     } else {
-      updateUrl(pcapId, "Pcap Summary");
+      setSelectedPcapId(pcapId);
+      setActiveTab("Pcap Summary");
     }
-  }, [updateUrl, activeTab]);
+  }, []);
 
   useEffect(() => {
     if (!selectedFile) {
@@ -369,17 +378,17 @@ export default function PcapClientView({ setId, initialResponse, session }) {
       setIsLoadingConnections(true);
       try {
         const response = await fetchPcapConnections(selectedFile.pcap_id, connectionsPage, timeFilter);
-        
+
         // Robust data extraction
         let rawData = response.data || response.connections || response;
         if (rawData && !Array.isArray(rawData) && typeof rawData === 'object') {
           rawData = rawData.connections || rawData.data || rawData.results || [];
         }
         const data = Array.isArray(rawData) ? rawData : [];
-        
+
         // Prioritize API pagination if available
         let pagination = response.pagination || response.meta || null;
-        
+
         if (!pagination) {
           // Fallback to overview data or local count
           const total = overviewData?.capture_summary?.connections || data.length;
@@ -412,11 +421,11 @@ export default function PcapClientView({ setId, initialResponse, session }) {
   const [selectedIpForSearch, setSelectedIpForSearch] = useState("");
 
   const handleIpClick = useCallback((ip) => {
-    updateUrl(selectedFile?.pcap_id, "IP Search");
+    setActiveTab("IP Search");
     if (ip) {
       setSelectedIpForSearch(ip);
     }
-  }, [selectedFile?.pcap_id, updateUrl]);
+  }, []);
 
   const sortedData = useMemo(() => {
     const filteredData = initialData.filter(item =>
@@ -688,7 +697,7 @@ export default function PcapClientView({ setId, initialResponse, session }) {
                       return (
                         <div key={tab.id} className="flex-1 relative group">
                           <button
-                            onClick={() => { updateUrl(selectedFile.pcap_id, "Reports"); setReportInitialMode("country"); }}
+                            onClick={() => { setActiveTab("Reports"); setReportInitialMode("country"); }}
                             className={`w-full whitespace-nowrap px-4 py-4 font-bold font-black transition-all text-center border-r border-theme relative group flex items-center justify-center gap-2 ${activeTab === "Reports"
                                 ? "text-blue-600 bg-blue-500/10"
                                 : "text-slate-400 hover:text-foreground hover:bg-slate-500/5"
@@ -705,13 +714,13 @@ export default function PcapClientView({ setId, initialResponse, session }) {
                           {/* Discovery Mode Dropdown */}
                           <div className="absolute top-full left-0 w-full bg-card  border  border-theme shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-[60]">
                             <button
-                              onClick={() => { updateUrl(selectedFile.pcap_id, "Reports"); setReportInitialMode("country"); }}
+                              onClick={() => { setActiveTab("Reports"); setReportInitialMode("country"); }}
                               className="w-full px-4 py-3 font-semibold font-black text-slate-500 hover:text-blue-600 hover:bg-slate-500/10 transition-all text-center border-b border-theme "
                             >
                               Country
                             </button>
                             <button
-                              onClick={() => { updateUrl(selectedFile.pcap_id, "Reports"); setReportInitialMode("isp"); }}
+                              onClick={() => { setActiveTab("Reports"); setReportInitialMode("isp"); }}
                               className="w-full px-4 py-3 font-semibold font-black text-slate-500 hover:text-blue-600 hover:bg-slate-500/10 transition-all text-center "
                             >
                               ISP
@@ -723,7 +732,7 @@ export default function PcapClientView({ setId, initialResponse, session }) {
                     return (
                       <button
                         key={tab.id}
-                        onClick={() => updateUrl(selectedFile.pcap_id, tab.id)}
+                        onClick={() => setActiveTab(tab.id)}
                         className={`flex-1 whitespace-nowrap px-4 py-4 font-bold font-black  transition-all text-center border-r border-theme last:border-r-0 relative group flex items-center justify-center gap-2 ${activeTab === tab.id
                             ? "text-blue-600 bg-blue-500/10"
                             : "text-slate-400 hover:text-foreground hover:bg-slate-500/5"
@@ -740,7 +749,7 @@ export default function PcapClientView({ setId, initialResponse, session }) {
                 </div>
 
                 <button
-                  onClick={() => updateUrl(null, activeTab)}
+                  onClick={() => setSelectedPcapId(null)}
                   className="w-16 h-full flex items-center justify-center bg-rose-500/5 text-rose-500 hover:bg-rose-500 hover:text-white transition-all group shrink-0 border-l border-theme"
                 >
                   <X size={20} className="group-hover:rotate-90 transition-transform duration-300" />
@@ -788,7 +797,7 @@ export default function PcapClientView({ setId, initialResponse, session }) {
                           setTimeFilter={setTimeFilter}
                           isLoadingConnections={isLoadingConnections}
                           onIpClick={handleIpClick}
-                          pcapId={selectedFile?.pcap_id || pcapIdQuery}
+                          pcapId={selectedFile?.pcap_id}
                           onTimelineClick={(from, to) => { setDateFrom(from); setDateTo(to); setCurrentPage(1); }}
                         />
                     ) : activeTab === "Traffic Distribution" && overviewData ? (
@@ -841,4 +850,3 @@ PcapClientView.propTypes = {
   }),
   session: PropTypes.object,
 };
-
