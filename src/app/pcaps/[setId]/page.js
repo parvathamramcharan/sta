@@ -10,6 +10,10 @@ export default async function PcapSetPage({ params }) {
   
   if (!session) redirect("/");
   if (!session.user?.roles?.includes("admin")) redirect("/reports");
+  if (!session.accessToken) {
+    console.error("Missing access token while loading PCAP set page");
+    return <PcapErrorView />;
+  }
   
   const resolvedParams = await params;
   const setId = resolvedParams.setId;
@@ -21,6 +25,7 @@ export default async function PcapSetPage({ params }) {
   let pcapResponse;
   try {
     pcapResponse = await fetchPcapSet(actualId, session.accessToken);
+    console.log("PCAP set loaded successfully:", pcapResponse);
   } catch (error) {
     console.error("Failed to load PCAP set:", error);
     return <PcapErrorView />;

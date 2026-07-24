@@ -11,7 +11,7 @@ HOSTNAME=$(hostname -I | awk '{print $1}')
   echo "AUTH_URL=http://$HOSTNAME"
   echo "KEYCLOAK_CLIENT_ID=sinkhole"
   echo "KEYCLOAK_ISSUER=http://keycloak:8080/realms/cdac"
-  echo "BACKEND_URL=http://192.168.10.200:5000/api"
+  echo "BACKEND_URL=http://192.168.10.80:5000/api"
 
 } > "$SCRIPT_DIR/src/.env.local"
 
@@ -25,7 +25,7 @@ echo "✔ Written: src/.env.local"
   echo "AUTH_URL=http://$HOSTNAME"
   echo "KEYCLOAK_CLIENT_ID=sinkhole"
   echo "KEYCLOAK_ISSUER=http://keycloak:8080/realms/cdac"
-  echo "BACKEND_URL=http://192.168.10.200:5000/api"
+  echo "BACKEND_URL=http://192.168.10.80:5000/api"
   echo ""
   echo "# Postgres"
   echo "POSTGRES_DB=keycloak"

@@ -460,7 +460,7 @@ const COUNTRY_CENTROIDS = {
   "Federal Republic of Germany": [51.1657, 10.4515],
   "Japan": [36.2048, 138.2529],
   "Kingdom of the Netherlands": [52.1326, 5.2913],
-  "Republic of India": [20.5937, 78.9629],
+  "India": [20.5937, 78.9629],
   "French Republic": [46.2276, 2.2137],
   "Korea, Republic of": [35.9078, 127.7669],
   "Federative Republic of Brazil": [-14.2350, -51.9253],
@@ -719,6 +719,7 @@ const COUNTRY_CENTROIDS = {
 };
 
 
+//if no mode or no externalIps, or no countrydata , then return it will select here  pcap , null , null
 export function WorldMapLeaflet({ externalIps = [], onIpClick, mode = 'pcap', countryData = [], title }) {
   const { theme } = useTheme();
   const [selectedGroup, setSelectedGroup] = useState(null);
@@ -1286,7 +1287,7 @@ export function WorldMapLeaflet({ externalIps = [], onIpClick, mode = 'pcap', co
               </div>
               <div className="flex items-center justify-between p-4 bg-slate-500/5 rounded-none border border-theme">
                 <div className="text-[11px] font-black ">Captures seen</div>
-                <div className="text-lg font-black text-foreground">{(selectedCountry.captures || 0).toLocaleString()}</div>
+                <div className="text-lg font-black text-foreground">{(selectedCountry.captures_seen || 0).toLocaleString()}</div>
               </div>
               <div className="flex items-center justify-between p-4 bg-slate-500/5 rounded-none border border-theme">
                 <div className="text-[11px] font-black  ">Packet volume</div>
