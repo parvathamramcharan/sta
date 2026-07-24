@@ -181,7 +181,6 @@ export function DashboardReports({
     doc.setTextColor(slate[0], slate[1], slate[2]);
     doc.text(`GENERATED ON: ${new Date().toLocaleString()}`, 30, 145);
     doc.text(`TOTAL IDENTIFIERS: ${detailsData.length}`, 30, 155);
-
     doc.setFontSize(10);
     doc.setTextColor(blue[0], blue[1], blue[2]);
     doc.text("CDAC-Hyderabd", 30, pageHeight - 30);

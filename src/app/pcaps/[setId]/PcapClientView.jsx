@@ -233,15 +233,7 @@ export default function PcapClientView({ setId, initialResponse, session }) {
   const [activeTab, setActiveTab] = useState("Pcap Summary");
 
   const selectedFile = initialData.find(f => f.pcap_id === selectedPcapId) || null;
-
-  // -----------------------------------------------------------------
-  // URL MIRROR (dev-visibility only)
-  // This effect NEVER triggers App Router navigation. It only writes
-  // to window.history via replaceState, which is a pure browser API
-  // and is not intercepted by Next.js's Link/Router layer. React state
-  // above remains the single source of truth; this effect is a
-  // one-way mirror from state -> URL, never the other way around.
-  // -----------------------------------------------------------------
+  
   useEffect(() => {
     const url = new URL(window.location.href);
 

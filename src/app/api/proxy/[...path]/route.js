@@ -2,7 +2,9 @@ import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 
 async function handleRequest(request, { params }) {
+  console.time("auth");
   const session = await auth();
+  console.timeEnd("auth");
   const pathParts = await params;
   const path = pathParts.path.join('/');
   const searchParams = request.nextUrl.searchParams.toString();

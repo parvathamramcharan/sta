@@ -19,7 +19,10 @@ export async function fetchPcapSet(setId, accessToken) {
       timeout: 30000,
       headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
     });
-    if (!res.ok) throw new Error(`Failed to fetch pcap set: ${res.status}`);
+    if (!res.ok) {
+      const errorBody = await res.text();
+      throw new Error(`Failed to fetch pcap set: ${res.status}${errorBody ? ` - ${errorBody}` : ""}`);
+    }
     const json = await res.json();
     return json;
   } catch (error) {

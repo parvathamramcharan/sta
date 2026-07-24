@@ -3,21 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import PropTypes from "prop-types";
-import {
-  Activity,
-  ArrowRight,
-  CheckCircle2,
-  Clock,
-  Cpu,
-  Globe,
-  MapPin,
-  Search,
-  Server,
-  Shield,
-  Terminal,
-  User,
-  Zap,
-} from "lucide-react";
+import {  Activity,  ArrowRight,  CheckCircle2, Clock,  Cpu,  Globe,  MapPin,  Search,  Server,  Shield,  Terminal, User, Zap,} from "lucide-react";
 import { fetchIpScan } from "./apiService";
 
 function DetailRow({ icon: Icon, label, value, subValue, color }) {
