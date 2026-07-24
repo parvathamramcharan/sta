@@ -111,6 +111,18 @@ export async function fetchIpScan(ip) {
     throw error;
   }
 }
+export async function fetchPcapMap(pcapId) {
+  try {
+    const res = await fetchWithTimeout(`${BASE_URL}/map?pcap_id=${pcapId}`);
+    if (!res.ok) throw new Error(`Failed to fetch map data: ${res.status}`);
+    const json = await res.json();
+    return json.data || json;
+  } catch (error) {
+    console.error("Map Error:", error);
+    throw error;
+  }
+}
+
 export async function fetchPcapGeoReport(pcapId) {
   try {
     const res = await fetchWithTimeout(`${BASE_URL}/reports/geo?pcap_id=${pcapId}`);
@@ -123,17 +135,6 @@ export async function fetchPcapGeoReport(pcapId) {
   }
 }
 
-export async function fetchPcapMap(pcapId) {
-  try {
-    const res = await fetchWithTimeout(`${BASE_URL}/map?pcap_id=${pcapId}`);
-    if (!res.ok) throw new Error(`Failed to fetch map data: ${res.status}`);
-    const json = await res.json();
-    return json.data || json;
-  } catch (error) {
-    console.error("Map Error:", error);
-    throw error;
-  }
-}
 
 export async function fetchPcapDetails(pcapId, type, value) {
   try {
