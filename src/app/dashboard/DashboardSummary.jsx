@@ -79,7 +79,7 @@ export function DashboardSummary({ data }) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: index * 0.05 }}
-          className="bg-card rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow group relative overflow-hidden"
+          className="bg-card  p-6 shadow-sm hover:shadow-md transition-shadow group relative overflow-hidden"
         >
           <div className="flex items-center gap-5">
             <div className={`w-14 h-14 rounded-2xl ${getIconBgClass(kpi.color)} flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform`}>

@@ -26,6 +26,7 @@ import { useTheme } from "./ThemeProvider";
 import { MessageSquare } from "lucide-react";
 
 export function Navbar({ user }) {
+  
   const pathname = usePathname();
   const { theme, toggleTheme } = useTheme();
   const [feedbackMenuOpen, setFeedbackMenuOpen] = useState(false);
@@ -131,16 +132,22 @@ export function Navbar({ user }) {
                 </button>
 
                 {pcapMenuOpen && (
-                  <div className="absolute top-14 left-0 bg-card border border-theme rounded-xl shadow-xl min-w-[180px] p-1.5 z-50">
-                    <Link
-                      href="/pcaps/set-1"
-                      onClick={() => setPcapMenuOpen(false)}
-                      className="block px-3 py-2 text-[13px] font-bold text-slate-500 rounded-md hover:bg-blue-500/10 hover:text-blue-500 transition-colors"
-                    >
-                      Set 1
-                    </Link>
-                  </div>
-                )}
+  <div className="absolute top-14 bg-card text-center border border-theme shadow-xl min-w-[120px] z-50">
+    {[
+      { label: "Set 1", href: "/pcaps/set-1" },
+      { label: "Set 2", href: "/pcaps/set-2" },
+    ].map((set) => (
+      <Link
+        key={set.href}
+        href={set.href}
+        onClick={() => setPcapMenuOpen(false)}
+        className="block px-3 py-2 text-[14px] font-bold text-slate-500 rounded-md border border-transparent hover:border-blue-500/40 hover:bg-blue-500/10 hover:text-blue-500 transition-colors"
+      >
+        {set.label}
+      </Link>
+    ))}
+  </div>
+)}
               </div>
 
               <NavLink

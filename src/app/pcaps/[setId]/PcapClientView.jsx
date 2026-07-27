@@ -215,6 +215,9 @@ const TABS = [
 ];
 
 export default function PcapClientView({ setId, initialResponse, session }) {
+  // console.log("actual setId:", setId);
+  // console.log("Initial response received:", initialResponse);
+  // console.log("session:", session);
   const initialData = initialResponse.data || [];
   const stats = initialResponse.repository_stats || {};
 

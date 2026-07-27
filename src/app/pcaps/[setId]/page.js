@@ -25,7 +25,8 @@ export default async function PcapSetPage({ params }) {
   let pcapResponse;
   try {
     pcapResponse = await fetchPcapSet(actualId, session.accessToken);
-    console.log("PCAP set loaded successfully:", pcapResponse);
+    // console.log("PCAP set loaded successfully:", pcapResponse);
+    console.log("PCAP set ID:", actualId);
   } catch (error) {
     console.error("Failed to load PCAP set:", error);
     return <PcapErrorView />;
