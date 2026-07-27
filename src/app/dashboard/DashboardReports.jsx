@@ -10,6 +10,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { fetchReportsGeo, fetchReportsDetails, fetchIPScan } from "./dashboardApiService";
 import { WorldMapLeaflet } from "./WorldMapLeaflet";
+import { compareIspNames, getCountryDisplayName, getCountryFlagClass, getIspDisplayName, matchesCountrySearch, matchesIspSearch } from "./countryUtils";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import PropTypes from "prop-types";
@@ -45,18 +46,27 @@ export function DashboardReports({
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
-  const [discoveryMode, setDiscoveryMode] = useState(initialMode); // 'country' or 'isp'
   const [searchQuery, setSearchQuery] = useState("");
+  const discoveryMode = initialMode;
   
 
 
   useEffect(() => {
-    setDiscoveryMode(initialMode);
-    setSelectedItem(null);
-    setDetailsData([]);
-    setSelectedIp(null);
-    setIpIntelligence(null);
-    setCurrentPage(1);
+    let isActive = true;
+
+    queueMicrotask(() => {
+      if (!isActive) return;
+
+      setSelectedItem(null);
+      setDetailsData([]);
+      setSelectedIp(null);
+      setIpIntelligence(null);
+      setCurrentPage(1);
+    });
+
+    return () => {
+      isActive = false;
+    };
   }, [initialMode, pcapId]);
 
   const pageSize = 12;
@@ -82,7 +92,7 @@ export function DashboardReports({
       }
     };
     loadGeoData();
-  }, [pcapId]);
+  }, [pcapId, customFetchGeo]);
 
     const handleItemSelect = async (item) => {
     setSelectedItem(item);
@@ -174,8 +184,12 @@ export function DashboardReports({
     doc.setFontSize(12);
     doc.text("REPORT", 30, 45);
     
+    const reportTitle = discoveryMode === "country"
+      ? getCountryDisplayName(selectedItem.name)
+      : selectedItem.name;
+
     doc.setFontSize(48);
-    doc.text(selectedItem.name.toUpperCase(), 30, 75, { maxWidth: 160 });
+    doc.text(reportTitle.toUpperCase(), 30, 75, { maxWidth: 160 });
     
     doc.setFontSize(12);
     doc.setTextColor(slate[0], slate[1], slate[2]);
@@ -343,7 +357,7 @@ export function DashboardReports({
       }
     }
 
-    doc.save(`SINKHOLE_INTEL_${selectedItem.name.replace(/\s+/g, '_')}_${Date.now()}.pdf`);
+    doc.save(`SINKHOLE_INTEL_${reportTitle.replace(/\s+/g, '_')}_${Date.now()}.pdf`);
     setIsGeneratingPdf(false);
     setShowPasswordModal(true);
   };
@@ -360,6 +374,15 @@ export function DashboardReports({
   const sortedCountries = [...geoData.countries].sort((a, b) => a.name.localeCompare(b.name));
   const totalPages = Math.ceil(detailsData.length / pageSize);
   const paginatedIps = detailsData.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  const selectedCountryDisplayName = selectedItem && discoveryMode === "country"
+    ? getCountryDisplayName(selectedItem.name)
+    : selectedItem?.name;
+  const selectedCountryFlagClass = selectedItem && discoveryMode === "country"
+    ? getCountryFlagClass(selectedItem.name)
+    : null;
+  const selectedIspDisplayName = selectedItem && discoveryMode === "isp"
+    ? getIspDisplayName(selectedItem.name)
+    : selectedItem?.name;
 
   return (
     <div className="space-y-6 pb-20 animate-in fade-in duration-700">
@@ -400,21 +423,23 @@ export function DashboardReports({
       >
         <div className="p-10">
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 max-h-[300px] overflow-y-auto pr-6 custom-scrollbar">
-            {(discoveryMode === "country" ? sortedCountries : [...geoData.isps].sort((a, b) => a.name.localeCompare(b.name)))
-              .filter(item => item.name.toLowerCase().includes(searchQuery.toLowerCase()))
+            {(discoveryMode === "country" ? sortedCountries : [...geoData.isps].sort((a, b) => compareIspNames(a.name, b.name)))
+              .filter(item => discoveryMode === "country"
+                ? matchesCountrySearch(item.name, searchQuery)
+                : matchesIspSearch(item.name, searchQuery))
               .map((item, idx) => {
-              const colors = {
-                'bg-blue-500': 'hover:border-blue-500 hover:bg-blue-500/[0.03]',
-                'bg-rose-500': 'hover:border-rose-500 hover:bg-rose-500/[0.03]',
-                'bg-emerald-500': 'hover:border-emerald-500 hover:bg-emerald-500/[0.03]',
-                'bg-amber-500': 'hover:border-amber-500 hover:bg-amber-500/[0.03]',
-                'bg-indigo-500': 'hover:border-indigo-500 hover:bg-indigo-500/[0.03]',
-                'bg-violet-500': 'hover:border-violet-500 hover:bg-violet-500/[0.03]',
-                'bg-cyan-500': 'hover:border-cyan-500 hover:bg-cyan-500/[0.03]'
-              };
-              const colorKeys = Object.keys(colors);
-              const colorClass = colorKeys[idx % colorKeys.length];
-              const hoverStyles = colors[colorClass];
+              const isCountry = discoveryMode === "country";
+              const flagClass = isCountry ? getCountryFlagClass(item.name) : null;
+              const displayName = isCountry ? getCountryDisplayName(item.name) : getIspDisplayName(item.name);
+              const accentClass = [
+                'bg-blue-500',
+                'bg-rose-500',
+                'bg-emerald-500',
+                'bg-amber-500',
+                'bg-indigo-500',
+                'bg-violet-500',
+                'bg-cyan-500'
+              ][idx % 7];
               
               return (
                 <motion.button
@@ -432,9 +457,19 @@ export function DashboardReports({
                   <div className="absolute inset-0 border-2 border-transparent group-hover:border-blue-600 transition-colors pointer-events-none z-20" />
                   
                   <div className="flex items-center gap-4 relative z-10">
-                    <div className={`w-2 h-2 rounded-none ${selectedItem?.name === item.name ? 'bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)]' : `${colorClass} group-hover:scale-125 transition-all`} shrink-0 shadow-sm`} />
+                    {isCountry ? (
+                      <div className={`w-7 h-5 rounded-sm overflow-hidden border shrink-0 flex items-center justify-center ${selectedItem?.name === item.name ? 'border-white/30 bg-white/10 shadow-[0_0_10px_rgba(255,255,255,0.12)]' : 'border-slate-200/70 bg-slate-50'}`}>
+                        {flagClass ? (
+                          <span className={`${flagClass} scale-[1.15]`} aria-hidden="true" />
+                        ) : (
+                          <div className="w-full h-full bg-slate-300" aria-hidden="true" />
+                        )}
+                      </div>
+                    ) : (
+                      <div className={`w-2 h-2 rounded-none ${selectedItem?.name === item.name ? 'bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)]' : `${accentClass} group-hover:scale-125 transition-all`} shrink-0 shadow-sm`} />
+                    )}
                     <div className="text-[15px]  truncate group-hover:translate-x-0.5 transition-transform duration-300">
-                      {item.name}
+                      {displayName}
                     </div>
                   </div>
                 </motion.button>
@@ -455,7 +490,12 @@ export function DashboardReports({
             className="flex items-center justify-between px-10 py-8 bg-card border border-theme shadow-sm scroll-mt-20"
           >
             <div className="flex items-center gap-6">
-              <h3 className="text-3xl font-bold text-foreground  ">{selectedItem.name}</h3>
+              {selectedCountryFlagClass && (
+                <div className="w-10 h-7 rounded-sm overflow-hidden border border-slate-200/70 bg-slate-50 flex items-center justify-center shrink-0">
+                  <span className={`${selectedCountryFlagClass} scale-[1.15]`} aria-hidden="true" />
+                </div>
+              )}
+              <h3 className="text-3xl font-bold text-foreground  ">{discoveryMode === "country" ? selectedCountryDisplayName : selectedIspDisplayName}</h3>
             </div>
             
               <div className="flex items-center gap-3">
