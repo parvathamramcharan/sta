@@ -86,7 +86,7 @@ export default function CaptureSummary({
     rawLabel: item.label
   }));
 
-  const exportPassword = pcapId ? `admin1@${pcapId}` : 'admin1@pcapid';
+  const exportPassword = pcapId ? `sta#@${pcapId}` : 'admin1@pcapid';
 
   const handleCopyPassword = async () => {
     const passwordText = String(exportPassword);
@@ -460,7 +460,7 @@ export default function CaptureSummary({
                 Password pattern
               </div>
               <div className="text-sm font-semibold text-slate-700 dark:text-slate-200">
-                admin1 + @ + pcap id
+                sta# + @ + pcap id    
               </div>
               <div className="mt-3 flex items-center justify-between rounded-lg border border-blue-200 bg-white px-3 py-2.5 dark:border-blue-500/20 dark:bg-slate-900/80">
                 <span className="font-mono text-sm font-bold tracking-wide text-slate-800 dark:text-slate-100">{exportPassword}</span>
