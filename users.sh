@@ -11,8 +11,7 @@ if [ ! -f "$SCRIPT_DIR/.env" ]; then
 fi
 
 export $(grep -v '^#' "$SCRIPT_DIR/.env" | grep -v '^$' | xargs)
-
-KC_URL="http://${KC_HOSTNAME}:8080"
+KC_URL="http://${KC_HOSTNAME}:8081"
 KC_ADMIN_PASS="$KEYCLOAK_ADMIN_PASSWORD"
 KC_ADMIN="$KEYCLOAK_ADMIN"
 REALM="cdac"
@@ -196,4 +195,4 @@ echo "============================================"
 echo ""
 echo "  Admin user : admin1 / Adm!n@Sinkhole_26"
 echo "  User       : user1  / U\$er@Sinkhole_26"
-echo ""
+echo ""k6sZaIivE%2Ba8iQ6CtiwaAUeD%2BCbYrHdcE6gacCzi9XQ%3D

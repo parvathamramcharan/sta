@@ -3,11 +3,13 @@ import { Fragment, useState, useEffect, useMemo } from 'react';
 import { useMap } from 'react-leaflet';
 import dynamic from 'next/dynamic';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Search, Globe, MapPin } from 'lucide-react';
+import { X, Search, Globe, MapPin, Radio, Activity, Zap } from 'lucide-react';
 import 'leaflet/dist/leaflet.css';
 import 'react-leaflet-cluster/dist/assets/MarkerCluster.Default.css';
 import 'react-leaflet-cluster/dist/assets/MarkerCluster.css';
+import 'flag-icons/css/flag-icons.min.css';
 import { useTheme } from '@/components/ThemeProvider';
+import { getCountryDisplayName } from '@/constants/countryMapping';
 import PropTypes from 'prop-types';
 
 const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false });
@@ -330,56 +332,77 @@ const buildFocusedPcapPoints = (ips) => {
     }));
 };
 
-const getPcapPointStyle = (count) => {
-  if (count >= 200) {
-    return {
-      marker: '#fb923c',
-      halo: 'rgba(251, 146, 60, 0.14)',
-      pulse: 'rgba(251, 146, 60, 0.24)',
-      line: '#fb923c',
-      shadow: 'rgba(194, 65, 12, 0.28)'
-    };
-  }
-
-  if (count >= 10) {
-    return {
-      marker: '#f6d447',
-      halo: 'rgba(246, 212, 71, 0.16)',
-      pulse: 'rgba(246, 212, 71, 0.24)',
-      line: '#c58b00',
-      shadow: 'rgba(161, 98, 7, 0.24)'
-    };
-  }
-
-  if (count >= 2) {
-    return {
-      marker: '#8dd36f',
-      halo: 'rgba(141, 211, 111, 0.15)',
-      pulse: 'rgba(141, 211, 111, 0.23)',
-      line: '#39963f',
-      shadow: 'rgba(22, 101, 52, 0.22)'
-    };
-  }
-
-  return {
-    marker: '#4f7fe8',
-    halo: 'rgba(79, 127, 232, 0.14)',
-    pulse: 'rgba(79, 127, 232, 0.22)',
-    line: '#2f6bdb',
-    shadow: 'rgba(37, 99, 235, 0.20)'
-  };
+/* ---------------------------------------------------------------------- */
+/* Signal color system                                                     */
+/* ---------------------------------------------------------------------- */
+const SIGNAL_COLORS = {
+  cool: { marker: '#22d3ee', halo: 'rgba(34, 211, 238, 0.24)', pulse: 'rgba(34, 211, 238, 0.4)', line: '#06b6d4', shadow: 'rgba(8, 145, 178, 0.4)' },
+  mid: { marker: '#34d399', halo: 'rgba(52, 211, 153, 0.24)', pulse: 'rgba(52, 211, 153, 0.4)', line: '#059669', shadow: 'rgba(5, 150, 105, 0.4)' },
+  warm: { marker: '#fbbf24', halo: 'rgba(251, 191, 36, 0.26)', pulse: 'rgba(251, 191, 36, 0.42)', line: '#d97706', shadow: 'rgba(217, 119, 6, 0.42)' },
+  hot: { marker: '#f43f5e', halo: 'rgba(244, 63, 94, 0.26)', pulse: 'rgba(244, 63, 94, 0.42)', line: '#e11d48', shadow: 'rgba(225, 29, 72, 0.44)' }
 };
 
+// Builds a layered "neon bloom" box-shadow used by pcap/reports markers -
+// a tight halo ring, a wider soft glow, and a grounding drop shadow.
+const buildGlowShadow = (style) =>
+  `0 0 0 4px ${style.halo}, 0 0 26px 7px ${style.pulse}, 0 8px 18px ${style.shadow}`;
+
+// Summary-mode markers (dashboard) use a much smaller, quieter glow - a
+// small soft point of light rather than a sticker-like filled disc. This
+// is deliberately lighter-weight than buildGlowShadow above.
+const buildSummaryGlow = (style) =>
+  `0 0 3px 1px ${style.halo}, 0 0 8px 2px ${style.pulse}`;
+
+// Per-cluster tiers (pcap / reports groupings - counts are usually small,
+// tens to low hundreds).
+const getPcapPointStyle = (count) => {
+  if (count >= 200) return SIGNAL_COLORS.hot;
+  if (count >= 10) return SIGNAL_COLORS.warm;
+  if (count >= 2) return SIGNAL_COLORS.mid;
+  return SIGNAL_COLORS.cool;
+};
+
+
+    const SUMMARY_COLORS = {
+  low: {
+    marker: '#10b981',      // Emerald
+    halo: 'rgba(16,185,129,0.22)',
+    pulse: 'rgba(16,185,129,0.36)',
+  },
+  mid: {
+    marker: '#fbbf24',
+    halo: 'rgba(251,191,36,0.24)',
+    pulse: 'rgba(251,191,36,0.40)',
+  },
+  high: {
+    marker: '#f97316',
+    halo: 'rgba(249,115,22,0.25)',
+    pulse: 'rgba(249,115,22,0.42)',
+  },
+  critical: {
+    marker: '#ef4444',
+    halo: 'rgba(239,68,68,0.28)',
+    pulse: 'rgba(239,68,68,0.45)',
+  },
+};
+
+const getSummaryPointStyle = (count) => {
+  const n = Number(count) || 0;
+  if (n >= 20000) return SUMMARY_COLORS.critical;
+  if (n >= 2000)  return SUMMARY_COLORS.high;
+  if (n >= 200)   return SUMMARY_COLORS.mid;
+  return SUMMARY_COLORS.low;
+};
+
+// Continent-level labels only.
 const CONTINENT_LABELS = [
-  { id: 'north-america', text: 'NORTH\nAMERICA', position: [49, -110], className: 'label-large' },
+  { id: 'north-america', text: 'NORTH\nAMERICA', position: [48, -105], className: 'label-large' },
   { id: 'europe', text: 'EUROPE', position: [53, 15], className: 'label-large' },
-  { id: 'china', text: 'CHINA', position: [35, 93], className: 'label-large' },
-  { id: 'russia', text: 'RUSSIA', position: [61, 95], className: 'label-large' },
-  { id: 'africa', text: 'AFRICA', position: [5, 15], className: 'label-large' },
-  { id: 'south-america', text: 'SOUTH AMERICA', position: [-14, -65], className: 'label-medium' },
-  { id: 'greenland', text: 'GREENLAND', position: [76, -54], className: 'label-medium' },
-  { id: 'oceania', text: 'OCEANIA', position: [-13, 152], className: 'label-large' },
-  { id: 'australia', text: 'AUSTRALIA', position: [-25, 116], className: 'label-large' },
+  // { id: 'russia', text: 'RUSSIA', position: [61, 95], className: 'label-large' },
+  { id: 'africa', text: 'AFRICA', position: [5, 18], className: 'label-large' },
+  { id: 'asia', text: 'ASIA', position: [42, 78], className: 'label-large' },
+  { id: 'south-america', text: 'SOUTH AMERICA', position: [-14, -65], className: 'label-large' },
+  { id: 'australia', text: 'AUSTRALIA', position: [-25, 133], className: 'label-large' },
 ];
 
 const getPcapMarkerSize = (count, zoomLevel) => {
@@ -398,10 +421,11 @@ const getPcapLineStyle = (count, zoomLevel) => {
   };
 };
 
-function ContinentLabels({ theme, L }) {
+function ContinentLabels({ theme, L, labels, zoomLevel }) {
   if (!L) return null;
+  if (typeof zoomLevel === 'number' && zoomLevel >= 6) return null;
 
-  return CONTINENT_LABELS.map((label) => {
+  return labels.map((label) => {
     const icon = L.divIcon({
       html: `<div class="continent-label ${label.className}">${label.text.replace(/\n/g, '<br/>')}</div>`,
       className: 'continent-label-marker',
@@ -420,271 +444,273 @@ function ContinentLabels({ theme, L }) {
   });
 }
 
-const COUNTRY_CENTROIDS = {
-  "United States of America": [37.0902, -95.7129],
-  "People's Republic of China": [35.8617, 104.1954],
-  "United Kingdom of Great Britain and Northern Ireland": [55.3781, -3.4360],
-  "Federal Republic of Germany": [51.1657, 10.4515],
-  "Japan": [36.2048, 138.2529],
-  "Kingdom of the Netherlands": [52.1326, 5.2913],
-  "Republic of India": [20.5937, 78.9629],
-  "French Republic": [46.2276, 2.2137],
-  "Korea, Republic of": [35.9078, 127.7669],
-  "Federative Republic of Brazil": [-14.2350, -51.9253],
-  "Republic of Singapore": [1.3521, 103.8198],
-  "Hong Kong Special Administrative Region of China": [22.3193, 114.1694],
-  "Canada": [56.1304, -106.3468],
-  "Russian Federation": [61.5240, 105.3188],
-  "Taiwan, Province of China": [23.6978, 120.9605],
-  "Socialist Republic of Viet Nam": [14.0583, 108.2772],
-  "Australia": [-25.2744, 133.7751],
-  "Italian Republic": [41.8719, 12.5674],
-  "Republic of Indonesia": [-0.7893, 113.9213],
-  "Portuguese Republic": [39.3999, -8.2245],
-  "Kingdom of Thailand": [15.8700, 100.9925],
-  "United Mexican States": [23.6345, -102.5528],
-  "Republic of Bulgaria": [42.7339, 25.4858],
-  "Kingdom of Spain": [40.4637, -3.7492],
-  "Malaysia": [4.2105, 101.9758],
-  "Kingdom of Sweden": [60.1282, 18.6435],
-  "Republic of Türkiye": [38.9637, 35.2433],
-  "Republic of South Africa": [-30.5595, 22.9375],
-  "Ukraine": [48.3794, 31.1656],
-  "Ireland": [53.4129, -8.2439],
-  "Argentine Republic": [-38.4161, -63.6167],
-  "Republic of Poland": [51.9194, 19.1451],
-  "Swiss Confederation": [46.8182, 8.2275],
-  "Arab Republic of Egypt": [26.8206, 30.8025],
-  "Islamic Republic of Iran": [32.4279, 53.6880],
-  "Romania": [45.9432, 24.9668],
-  "Republic of the Philippines": [12.8797, 121.7740],
-  "Islamic Republic of Pakistan": [30.3753, 69.3451],
-  "Republic of Seychelles": [-4.6796, 55.4920],
-  "Republic of Colombia": [4.5709, -74.2973],
-  "Kingdom of Belgium": [50.5039, 4.4699],
-  "Federal Republic of Nigeria": [9.0820, 8.6753],
-  "Republic of Finland": [61.9241, 25.7482],
-  "Bolivarian Republic of Venezuela": [6.4238, -66.5897],
-  "United Arab Emirates": [23.4241, 53.8478],
-  "Kingdom of Saudi Arabia": [23.8859, 45.0792],
-  "Kingdom of Norway": [60.4720, 8.4689],
-  "Republic of Austria": [47.5162, 14.5501],
-  "Republic of Chile": [-35.6751, -71.5430],
-  "State of Israel": [31.0461, 34.8516],
-  "Kingdom of Morocco": [31.7917, -7.0926],
-  "Czech Republic": [49.8175, 15.4730],
-  "Kingdom of Denmark": [56.2639, 9.5018],
-  "Republic of Tunisia": [33.8869, 9.5375],
-  "People's Republic of Bangladesh": [23.6850, 90.3563],
-  "Republic of Kazakhstan": [48.0196, 66.9237],
-  "Republic of Kenya": [-0.0236, 37.9062],
-  "Republic of Lithuania": [55.1694, 23.8813],
-  "Hellenic Republic": [39.0742, 21.8243],
-  "New Zealand": [-40.9006, 174.8860],
-  "Hungary": [47.1625, 19.5033],
-  "Greenland": [74.7333, -41.6833],
-  "Republic of Palau": [7.5150, 134.5825],
-  "Independent State of Papua New Guinea": [-6.3150, 143.9555],
-  "Republic of Fiji": [-17.7134, 178.0650],
-  "Tokelau": [-9.2002, -171.8484],
-  "Republic of Peru": [-9.1900, -75.0152],
-  "Republic of Belarus": [53.7098, 27.9534],
-  "Republic of Uzbekistan": [41.3775, 64.5853],
-  "Republic of Iraq": [33.2232, 43.6793],
-  "Eastern Republic of Uruguay": [-32.5228, -55.7658],
-  "Republic of Latvia": [56.8796, 24.6032],
-  "Republic of Panama": [8.5380, -80.7821],
-  "Republic of Serbia": [44.0165, 21.0059],
-  "Dominican Republic": [18.7357, -70.1627],
-  "Georgia": [42.3154, 43.3569],
-  "Grand Duchy of Luxembourg": [49.8153, 6.1296],
-  "Kingdom of Cambodia": [12.5657, 104.9910],
-  "Republic of Slovenia": [46.1512, 14.9955],
-  "Republic of Cyprus": [35.1264, 33.4299],
-  "Republic of Angola": [-11.2027, 17.8739],
-  "Republic of Costa Rica": [9.7489, -83.7534],
-  "Slovak Republic": [48.6690, 19.6990],
-  "Republic of Paraguay": [-23.4425, -58.4438],
-  "Federal Democratic Republic of Ethiopia": [9.1450, 40.4897],
-  "Republic of Honduras": [15.2000, -86.2419],
-  "Republic of Croatia": [45.1000, 15.2000],
-  "Plurinational State of Bolivia": [-16.2902, -63.5887],
-  "Republic of Estonia": [58.5953, 25.0136],
-  "Republic of Armenia": [40.0691, 45.0382],
-  "Kyrgyz Republic": [41.2044, 74.7661],
-  "Hashemite Kingdom of Jordan": [30.5852, 36.2384],
-  "State of Kuwait": [29.3117, 47.4818],
-  "Republic of Ghana": [7.9465, -1.0232],
-  "Republic of Guatemala": [15.7835, -90.2308],
-  "State of Qatar": [25.3548, 51.1839],
-  "Kingdom of Swaziland": [-26.5225, 31.4659],
-  "Iceland": [64.9631, -19.0208],
-  "Republic of Namibia": [-22.9576, 18.4904],
-  "Republic of Zimbabwe": [-19.0154, 29.1549],
-  "Republic of Senegal": [14.4974, -14.4524],
-  "Republic of Rwanda": [-1.9403, 29.8739],
-  "United Republic of Tanzania": [-6.3690, 34.8888],
-  "Democratic Socialist Republic of Sri Lanka": [7.8731, 80.7718],
-  "Federal Democratic Republic of Nepal": [28.3949, 84.1240],
-  "Commonwealth of Australia": [-25.2744, 133.7751],
-  "Republic of Azerbaijan": [40.1431, 47.5769],
-  "People's Democratic Republic of Algeria": [28.0339, 1.6596],
-  "Mongolia": [46.8625, 103.8467],
-  "Republic of Ecuador": [-1.8312, -78.1834],
-  "Republic of Moldova": [47.4116, 28.3699],
-  "State of Libya": [26.3351, 17.2283],
-  "Republic of Madagascar": [-18.7669, 46.8691],
-  "Republic of Malawi": [-13.2543, 34.3015],
-  "Republic of Mozambique": [-18.6657, 35.5296],
-  "Republic of Cameroon": [7.3697, 12.3547],
-  "Republic of Cote d'Ivoire": [7.5400, -5.5471],
-  "Republic of the Sudan": [12.8628, 30.2176],
-  "Republic of Uganda": [1.3733, 32.2903],
-  "Republic of Yemen": [15.5527, 48.5164],
-  "Republic of Zambia": [-13.1339, 27.8493],
-  "Sultanate of Oman": [21.5126, 55.9233],
-  "Syrian Arab Republic": [34.8021, 38.9968],
-  "Republic of Tajikistan": [38.8610, 71.2761],
-  "Turkmenistan": [38.9697, 59.5563],
-  "Republic of Lebanon": [33.8547, 35.8623],
-  "Kyrgyzstan": [41.2044, 74.7661],
-  "Kingdom of Bhutan": [27.5142, 90.4336],
-  "Lao People's Democratic Republic": [19.8563, 102.4955],
-  "Republic of the Union of Myanmar": [21.9162, 95.9560],
-  "Republic of Albania": [41.1533, 20.1683],
-  "Bosnia and Herzegovina": [43.9159, 17.6791],
-  "Republic of North Macedonia": [41.6086, 21.7453],
-  "Republic of Malta": [35.9375, 14.3754],
-  "Principality of Monaco": [43.7333, 7.4167],
-  "Montenegro": [42.7087, 19.3744],
-  "Republic of San Marino": [43.9424, 12.4578],
-  "State of the Vatican City": [41.9029, 12.4534],
-  "Principality of Andorra": [42.5063, 1.5218],
-  "Principality of Liechtenstein": [47.1660, 9.5554],
-  "Republic of Mauritius": [-20.3484, 57.5522],
-  "Solomon Islands": [-9.6457, 160.1562],
-  "Vanuatu": [-15.3767, 166.9592],
-  "Samoa": [-13.7590, -172.1046],
-  "Kingdom of Tonga": [-21.1790, -175.1982],
-  "Republic of Kiribati": [-3.3704, -168.7340],
-  "Republic of the Marshall Islands": [7.1315, 171.1845],
-  "Federated States of Micronesia": [7.4256, 150.5508],
-  "Tuvalu": [-7.1095, 177.6493],
-  "Republic of Nauru": [-0.5228, 166.9315],
-  "Republic of Suriname": [3.9193, -56.0278],
-  "Co-operative Republic of Guyana": [4.8604, -58.9302],
-  "Republic of Trinidad and Tobago": [10.6918, -61.2225],
-  "Barbados": [13.1939, -59.5432],
-  "Saint Lucia": [13.9094, -60.9789],
-  "Saint Vincent and the Grenadines": [12.9843, -61.2872],
-  "Grenada": [12.1165, -61.6790],
-  "Antigua and Barbuda": [17.0608, -61.7964],
-  "Saint Kitts and Nevis": [17.3578, -62.7830],
-  "Commonwealth of the Bahamas": [25.0343, -77.3963],
-  "Belize": [17.1899, -88.4976],
-  "Jamaica": [18.1096, -77.2975],
-  "Republic of El Salvador": [13.7942, -88.8965],
-  "Republic of Nicaragua": [12.8654, -85.2072],
-  "Republic of Cabo Verde": [16.0020, -24.0131],
-  "Republic of Guinea": [9.9456, -9.6966],
-  "Republic of Guinea-Bissau": [11.8037, -15.1804],
-  "Republic of Sierra Leone": [8.4606, -11.7799],
-  "Republic of Liberia": [6.4281, -9.4295],
-  "Republic of Benin": [9.3077, 2.3158],
-  "Togolese Republic": [8.6195, 0.8248],
-  "Republic of the Niger": [17.6078, 8.0817],
-  "Republic of Mali": [17.5707, -3.9962],
-  "Burkina Faso": [12.2383, -1.5616],
-  "Republic of Chad": [15.4542, 18.7322],
-  "Central African Republic": [6.6111, 20.9394],
-  "Republic of Equatorial Guinea": [1.6508, 10.2679],
-  "Gabonese Republic": [-0.8037, 11.6094],
-  "Republic of the Congo": [-0.2280, 15.8277],
-  "Democratic Republic of the Congo": [-4.0383, 21.7587],
-  "State of Eritrea": [15.1794, 39.7823],
-  "Republic of Djibouti": [11.8251, 42.5903],
-  "Federal Republic of Somalia": [5.1521, 46.1996],
-  "Republic of Burundi": [-3.3731, 29.9189],
-  "Union of the Comoros": [-11.6455, 43.3333],
-  "Republic of the Gambia": [13.4432, -15.3101],
-  "Cook Islands": [-21.2367, -159.7777],
-  "Niue": [-19.0544, -169.8672],
-  "Wallis and Futuna": [-13.2970, -176.2040],
-  "French Polynesia": [-17.6797, -149.4068],
-  "New Caledonia": [-20.9043, 165.6180],
-  "American Samoa": [-14.2710, -170.1320],
-  "Guam": [13.4443, 144.7937],
-  "Puerto Rico": [18.2208, -66.5901],
-  "United States Virgin Islands": [18.3358, -64.8963],
-  "British Virgin Islands": [18.4207, -64.6400],
-  "Anguilla": [18.2206, -63.0686],
-  "Montserrat": [16.7425, -62.1873],
-  "Cayman Islands": [19.3133, -81.2546],
-  "Turks and Caicos Islands": [21.6940, -71.7979],
-  "Bermuda": [32.3078, -64.7505],
-  "Saint Pierre and Miquelon": [46.8852, -56.3159],
-  "Falkland Islands (Malvinas)": [-51.7963, -59.5236],
-  "South Georgia and the South Sandwich Islands": [-54.4295, -36.5879],
-  "Saint Helena, Ascension and Tristan da Cunha": [-15.9650, -5.7089],
-  "British Indian Ocean Territory": [-6.3431, 71.8765],
-  "Pitcairn": [-24.3768, -128.3242],
-  "Norfolk Island": [-29.0408, 167.9547],
-  "Christmas Island": [-10.4475, 105.6904],
-  "Cocos (Keeling) Islands": [-12.1642, 96.8710],
-  "Mayotte": [-12.8275, 45.1662],
-  "Reunion": [-21.1151, 55.5364],
-  "Guadeloupe": [16.2650, -61.5510],
-  "Martinique": [14.6415, -61.0242],
-  "French Guiana": [3.9339, -53.1258],
-  "Aruba": [12.5211, -69.9683],
-  "Curacao": [12.1696, -68.9900],
-  "Sint Maarten (Dutch part)": [18.0425, -63.0548],
-  "Bonaire, Sint Eustatius and Saba": [12.1784, -68.2385],
-  "Faeroe Islands": [61.8926, -6.9118],
-  "Holy See (Vatican City State)": [41.9029, 12.4534],
-  "Western Sahara": [24.2155, -12.8858],
-  "Palestine, State of": [31.9522, 35.2332],
-  "Bouvet Island": [-54.4232, 3.3464],
-  "Heard Island and McDonald Islands": [-53.0818, 73.5042],
-  "French Southern Territories": [-49.2800, 69.3481],
-  "United States Minor Outlying Islands": [19.2833, 166.6167],
-  "Antarctica": [-75.2510, -0.0714],
-  "Republic of Côte d'Ivoire": [7.5400, -5.5471],
-  "Republic of Bosnia and Herzegovina": [43.9159, 17.6791],
-  "Libya": [26.3351, 17.2283],
-  "the State of Palestine": [31.9522, 35.2332],
-  "Republic of Myanmar": [21.9162, 95.9560],
-  "Republic of Iceland": [64.9631, -19.0208],
-  "Kingdom of Bahrain": [26.0667, 50.5577],
-  "Lebanese Republic": [33.8547, 35.8623],
-  "XK": [42.6026, 20.9030],
-  "Réunion": [-21.1151, 55.5364],
-  "Rwandese Republic": [-1.9403, 29.8739],
-  "Macao Special Administrative Region of China": [22.1987, 113.5439],
-  "Republic of Vanuatu": [-15.3767, 166.9592],
-  "Republic of Guyana": [4.8604, -58.9302],
-  "Congo, The Democratic Republic of the": [-4.0383, 21.7587],
-  "Brunei Darussalam": [4.5353, 114.7277],
-  "Republic of Cuba": [21.5218, -77.7812],
-  "Islamic Republic of Afghanistan": [33.9391, 67.7100],
-  "Virgin Islands of the United States": [18.3358, -64.8963],
-  "Curaçao": [12.1696, -68.9900],
-  "Islamic Republic of Mauritania": [21.0079, -10.9408],
-  "Jersey": [49.2144, -2.1312],
-  "Republic of Botswana": [-22.3285, 24.6849],
-  "Kingdom of Lesotho": [-29.6100, 28.2336],
-  "Gibraltar": [36.1408, -5.3536],
-  "Faroe Islands": [61.8926, -6.9118],
-  "Isle of Man": [54.2361, -4.5481],
-  "Republic of Maldives": [3.2028, 73.2207],
-  "Republic of Haiti": [18.9712, -72.2852],
-  "Democratic Republic of Timor-Leste": [-8.8742, 125.7275],
-  "Guernsey": [49.4657, -2.5853],
-  "Commonwealth of the Northern Mariana Islands": [15.0979, 145.6739],
-  "Commonwealth of Dominica": [15.4150, -61.3710],
-  "Kingdom of Eswatini": [-26.5225, 31.4659],
+/* ---------------------------------------------------------------------- */
+/* Antimeridian handling                                                   */
+/* ---------------------------------------------------------------------- */
+const unwrapRingLongitudes = (ring) => {
+  let offset = 0;
+  let prevLng = null;
+  const unwrapped = ring.map(([lng, lat]) => {
+    if (prevLng !== null) {
+      const delta = (lng + offset) - prevLng;
+      if (delta > 180) offset -= 360;
+      else if (delta < -180) offset += 360;
+    }
+    const adjusted = lng + offset;
+    prevLng = adjusted;
+    return [adjusted, lat];
+  });
+
+  let min = Infinity;
+  let max = -Infinity;
+  for (const [lng] of unwrapped) {
+    if (lng < min) min = lng;
+    if (lng > max) max = lng;
+  }
+  if (max - min > 380) return ring;
+  return unwrapped;
 };
 
+const unwrapAntimeridianGeometry = (geometry) => {
+  if (!geometry) return geometry;
+  if (geometry.type === 'Polygon') {
+    return { ...geometry, coordinates: geometry.coordinates.map(unwrapRingLongitudes) };
+  }
+  if (geometry.type === 'MultiPolygon') {
+    return {
+      ...geometry,
+      coordinates: geometry.coordinates.map((poly) => poly.map(unwrapRingLongitudes))
+    };
+  }
+  return geometry;
+};
+
+const sanitizeWorldGeoJSON = (geojson) => {
+  if (!geojson || !Array.isArray(geojson.features)) return geojson;
+  return {
+    ...geojson,
+    features: geojson.features.map((feature) => ({
+      ...feature,
+      geometry: unwrapAntimeridianGeometry(feature.geometry)
+    }))
+  };
+};
+
+/* ---------------------------------------------------------------------- */
+/* Land styling                                                            */
+/* ---------------------------------------------------------------------- */
+const LAND_THEME = {
+  dark: {
+    fill: '#3d5977',
+    fillOpacity: 0.34,
+    hoverFillOpacity: 0.5,
+    border: '#7a9bbe',
+    borderOpacity: 0.38,
+    borderHover: '#bfdcfa',
+    hoverBorderOpacity: 0.8,
+    weight: 0.9,
+    hoverWeight: 1.4
+  },
+  light: {
+    fill: '#5b84b8',
+    fillOpacity: 0.52,
+    hoverFillOpacity: 0.68,
+    border: '#faf8f2',
+    borderOpacity: 0.75,
+    borderHover: '#ffffff',
+    hoverBorderOpacity: 1,
+    weight: 0.85,
+    hoverWeight: 1.3
+  }
+};
+
+const getLandStyle = (theme, hovered = false) => {
+  const t = LAND_THEME[theme] || LAND_THEME.dark;
+  return {
+    color: hovered ? t.borderHover : t.border,
+    weight: hovered ? t.hoverWeight : t.weight,
+    opacity: hovered ? t.hoverBorderOpacity : t.borderOpacity,
+    fillColor: t.fill,
+    fillOpacity: hovered ? t.hoverFillOpacity : t.fillOpacity,
+    lineCap: 'round',
+    lineJoin: 'round',
+    smoothFactor: 0
+  };
+};
+
+const formatCompactCount = (count) => {
+  const value = Number(count) || 0;
+  if (value >= 1_000_000) {
+    const scaled = value / 1_000_000;
+    return `${scaled >= 10 ? Math.round(scaled) : scaled.toFixed(1).replace(/\.0$/, '')}M`;
+  }
+  if (value >= 1_000) {
+    const scaled = value / 1_000;
+    return `${scaled >= 10 ? Math.round(scaled) : scaled.toFixed(1).replace(/\.0$/, '')}K`;
+  }
+  return `${Math.round(value)}`;
+};
+
+const normalizeForMatch = (name) => (name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+
+const countryNamesMatch = (a, b) => {
+  const na = normalizeForMatch(a);
+  const nb = normalizeForMatch(b);
+  if (!na || !nb) return false;
+  return na === nb || na.includes(nb) || nb.includes(na);
+};
+
+const GEOJSON_NAME_KEYS = ['ADMIN', 'admin', 'NAME', 'name', 'NAME_LONG', 'name_long', 'SOVEREIGNT', 'sovereignt', 'name_en'];
+
+const getFeatureNameCandidates = (properties) => {
+  if (!properties) return [];
+  return GEOJSON_NAME_KEYS.map((key) => properties[key]).filter(Boolean);
+};
+
+const buildCountryDataIndex = (countryData) => {
+  const exact = new Map();
+  (countryData || []).forEach((entry) => {
+    const key = normalizeForMatch(entry.name);
+    if (key) exact.set(key, entry);
+  });
+  return { exact, list: countryData || [] };
+};
+
+const getMappedCountryName = (name) => getCountryDisplayName(name || 'Unknown');
+
+const findCountryMatch = (featureProperties, countryIndex) => {
+  const candidates = getFeatureNameCandidates(featureProperties);
+  for (const candidate of candidates) {
+    const key = normalizeForMatch(candidate);
+    if (countryIndex.exact.has(key)) return countryIndex.exact.get(key);
+  }
+  for (const candidate of candidates) {
+    const match = countryIndex.list.find((entry) => countryNamesMatch(entry.name, candidate));
+    if (match) return match;
+  }
+  return null;
+};
+
+/* ---------------------------------------------------------------------- */
+/* Country flags                                                           */
+/* ---------------------------------------------------------------------- */
+const GEOJSON_ISO2_KEYS = ['ISO_A2_EH', 'iso_a2_eh', 'ISO_A2', 'iso_a2', 'WB_A2', 'wb_a2'];
+
+const getFeatureIso2 = (properties) => {
+  if (!properties) return null;
+  for (const key of GEOJSON_ISO2_KEYS) {
+    const value = properties[key];
+    if (value && typeof value === 'string' && value.length === 2 && value !== '-99') {
+      return value.toLowerCase();
+    }
+  }
+  return null;
+};
+
+const buildCountryIsoIndex = (worldCountries) => {
+  const map = new Map();
+  if (!worldCountries || !Array.isArray(worldCountries.features)) return map;
+
+  worldCountries.features.forEach((feature) => {
+    const props = feature.properties || {};
+    const iso2 = getFeatureIso2(props);
+    if (!iso2) return;
+    getFeatureNameCandidates(props).forEach((candidate) => {
+      const key = normalizeForMatch(candidate);
+      if (key && !map.has(key)) map.set(key, iso2);
+    });
+  });
+
+  return map;
+};
+
+const getCountryIso2 = (name, isoIndex) => {
+  if (!name || !isoIndex || !isoIndex.size) return null;
+  const key = normalizeForMatch(name);
+  if (isoIndex.has(key)) return isoIndex.get(key);
+  for (const [candidateKey, iso2] of isoIndex.entries()) {
+    if (candidateKey.includes(key) || key.includes(candidateKey)) return iso2;
+  }
+  return null;
+};
+
+function CountryFlag({ iso2, size = 20 }) {
+  if (!iso2) {
+    return <Globe size={size} className="text-blue-500" />;
+  }
+  return (
+    <span
+      className={`fi fi-${iso2}`}
+      style={{
+        width: size * 1.35,
+        height: size,
+        display: 'inline-block',
+        borderRadius: 4,
+        backgroundSize: 'cover'
+      }}
+    />
+  );
+}
+
+CountryFlag.propTypes = {
+  iso2: PropTypes.string,
+  size: PropTypes.number,
+};
+
+/* ---------------------------------------------------------------------- */
+/* Country centroids — used only for the India border layer placement      */
+/* ---------------------------------------------------------------------- */
+const ringSignedArea = (ring) => {
+  let area = 0;
+  for (let i = 0, len = ring.length, j = len - 1; i < len; j = i++) {
+    area += ring[j][0] * ring[i][1] - ring[i][0] * ring[j][1];
+  }
+  return area / 2;
+};
+
+const ringCentroid = (ring) => {
+  let x = 0, y = 0, area = 0;
+  for (let i = 0, len = ring.length, j = len - 1; i < len; j = i++) {
+    const [x0, y0] = ring[j];
+    const [x1, y1] = ring[i];
+    const cross = x0 * y1 - x1 * y0;
+    area += cross;
+    x += (x0 + x1) * cross;
+    y += (y0 + y1) * cross;
+  }
+  area *= 0.5;
+  if (!area) return null;
+  return [y / (6 * area), x / (6 * area)]; // [lat, lng]
+};
+
+const getPolygonCentroid = (geometry) => {
+  if (!geometry) return null;
+  if (geometry.type === 'Polygon') {
+    return ringCentroid(geometry.coordinates[0]);
+  }
+  if (geometry.type === 'MultiPolygon') {
+    let bestRing = null;
+    let bestArea = -Infinity;
+    geometry.coordinates.forEach((poly) => {
+      const ring = poly[0];
+      const area = Math.abs(ringSignedArea(ring));
+      if (area > bestArea) {
+        bestArea = area;
+        bestRing = ring;
+      }
+    });
+    return bestRing ? ringCentroid(bestRing) : null;
+  }
+  return null;
+};
+
+// Summary-mode markers (dashboard): small, quiet glowing points, one per
+// country with IPs > 0 - India included, placed via its own accurate
+// centroid (see indiaCentroid below) rather than the coarser world layer.
+// Every marker is the same fixed (small) size; only color communicates
+// volume. Detail only opens when the marker itself is clicked - the
+// underlying land is no longer clickable in summary mode.
+const SUMMARY_MARKER_SIZE = 8;
 
 export function WorldMapLeaflet({ externalIps = [], onIpClick, mode = 'pcap', countryData = [], title }) {
   const { theme } = useTheme();
@@ -702,18 +728,17 @@ export function WorldMapLeaflet({ externalIps = [], onIpClick, mode = 'pcap', co
       setL(leaflet);
     });
 
-    fetch('/india-border-simplified-0.01.json')
+    fetch('/india-border.json')
       .then(res => res.json())
       .then(data => setIndiaBorder(data))
       .catch(err => console.error('Failed to load India border:', err));
 
     fetch('/world-countries.json')
       .then(res => res.json())
-      .then(data => setWorldCountries(data))
+      .then(data => setWorldCountries(sanitizeWorldGeoJSON(data)))
       .catch(err => console.error('Failed to load world countries:', err));
   }, []);
 
-  // Keep raw valid IPs separate; PCAP mode aggregates them until a cluster is revealed.
   const validIps = useMemo(() => {
     if (mode === 'summary') return [];
     if (!externalIps.length) return [];
@@ -795,7 +820,7 @@ export function WorldMapLeaflet({ externalIps = [], onIpClick, mode = 'pcap', co
         markerSize,
         icon: L.divIcon({
           html: `
-            <div class="pcap-marker ${point.isFocusedReveal ? 'pcap-marker-focus' : ''} pcap-marker-sprinkle group" style="width: ${markerSize}px; height: ${markerSize}px; --sprinkle-x: ${sprinkleX}px; --sprinkle-y: ${sprinkleY}px; background: ${pointStyle.marker}; box-shadow: 0 0 0 4px ${pointStyle.halo}, 0 6px 14px ${pointStyle.shadow}; animation-delay: ${jumpDelay}ms;">
+            <div class="pcap-marker ${point.isFocusedReveal ? 'pcap-marker-focus' : ''} pcap-marker-sprinkle group" style="width: ${markerSize}px; height: ${markerSize}px; --sprinkle-x: ${sprinkleX}px; --sprinkle-y: ${sprinkleY}px; background: ${pointStyle.marker}; box-shadow: ${buildGlowShadow(pointStyle)}; animation-delay: ${jumpDelay}ms;">
               <div class="pcap-sprinkle-ring" style="background: ${pointStyle.marker};"></div>
               <span style="position: relative; z-index: 2; font-size: ${point.count > 999 ? 9 : 10}px;">${label}</span>
             </div>
@@ -808,16 +833,47 @@ export function WorldMapLeaflet({ externalIps = [], onIpClick, mode = 'pcap', co
     });
   }, [L, mode, pcapMapPoints, zoomLevel]);
 
-  const countryPoints = useMemo(() => {
-    if (mode !== 'summary') return [];
-    return countryData.map(c => ({
-      ...c,
-      coords: COUNTRY_CENTROIDS[c.name] || [0, 0]
-    })).filter(c => c.coords[0] !== 0);
-  }, [countryData, mode]);
+  const countryDataIndex = useMemo(() => buildCountryDataIndex(countryData), [countryData]);
+  const countryIsoIndex = useMemo(() => buildCountryIsoIndex(worldCountries), [worldCountries]);
 
   const indiaRenderer = useMemo(() => (L ? L.svg() : null), [L]);
   const worldRenderer = useMemo(() => (L ? L.svg() : null), [L]);
+
+  
+  // detail card — the land polygon is hover-only.
+  const summaryMarkerItems = useMemo(() => {
+    if (!L || mode !== 'summary') return [];
+
+    return countryData
+      .filter((entry) => {
+        const lat = Number(entry.latitude);
+        const lng = Number(entry.longitude);
+        return (Number(entry.count) || 0) > 0 && Number.isFinite(lat) && Number.isFinite(lng);
+      })
+      .map((entry) => {
+        const lat = Number(entry.latitude);
+        const lng = Number(entry.longitude);
+        const style = getSummaryPointStyle(entry.count);
+        const iso2 = getCountryIso2(entry.name, countryIsoIndex);
+
+        return {
+          entry,
+          iso2,
+          lat,
+          lng,
+          icon: L.divIcon({
+            html: `
+              <div class="summary-dot" style="width:${SUMMARY_MARKER_SIZE}px;height:${SUMMARY_MARKER_SIZE}px;box-shadow:${buildSummaryGlow(style)};">
+                <div class="summary-dot-core" style="background:${style.marker};"></div>
+              </div>
+            `,
+            className: '',
+            iconSize: [SUMMARY_MARKER_SIZE, SUMMARY_MARKER_SIZE],
+            iconAnchor: [SUMMARY_MARKER_SIZE / 2, SUMMARY_MARKER_SIZE / 2]
+          })
+        };
+      });
+  }, [L, mode, countryData, countryIsoIndex]);
 
   const initialCenter = useMemo(() => {
     if (mode === 'reports' && externalIps.length > 0) {
@@ -845,6 +901,7 @@ export function WorldMapLeaflet({ externalIps = [], onIpClick, mode = 'pcap', co
         style={{ height: '100%', width: '100%', background: 'transparent' }}
         zoomControl={false}
         attributionControl={false}
+        keyboard={false}
         worldCopyJump={true}
         preferCanvas={true}
         maxBounds={[[-90, -180], [90, 180]]}
@@ -852,39 +909,63 @@ export function WorldMapLeaflet({ externalIps = [], onIpClick, mode = 'pcap', co
       >
         {worldCountries && worldRenderer && (
           <GeoJSON
-            key={`world-${theme}`}
+            key={`world-${theme}-${mode}-${countryData.length}`}
             data={worldCountries}
             renderer={worldRenderer}
             pane="geoPane"
+            onEachFeature={mode === 'summary' ? (feature, layer) => {
+              const props = feature.properties || {};
+              const iso = (props.iso_a3 || props.ISO_A3 || props.adm0_a3 || '').toString().toUpperCase();
+
+              // India is rendered by the dedicated, full-resolution
+              // indiaBorder layer below - skip binding hover here so this
+              // coarser polygon never shows through India.
+              if (iso === 'IND') return;
+
+              const baseStyle = getLandStyle(theme);
+              layer.setStyle(baseStyle);
+
+              // Hover-only visual feedback. Country detail now opens
+              // exclusively via that country's marker (summaryMarkerItems)
+              // - clicking the land itself no longer opens anything, which
+              // avoids the old mis-attributed-click bug (e.g. clicking the
+              // US landmass popping up an unrelated country's data).
+              layer.on('mouseover', () => {
+                layer.setStyle(getLandStyle(theme, true));
+                layer.bringToFront();
+              });
+
+              layer.on('mouseout', () => {
+                layer.setStyle(baseStyle);
+              });
+            } : undefined}
             style={(feature) => {
               const props = feature && feature.properties ? feature.properties : {};
               const iso = (props.iso_a3 || props.ISO_A3 || props.adm0_a3 || '').toString().toUpperCase();
-              const indiaAndNeighbors = new Set(['IND', 'PAK', 'CHN', 'NPL', 'BTN', 'BGD', 'MMR', 'LKA']);
 
-              if (indiaAndNeighbors.has(iso)) {
+              if (mode === 'summary') {
+                if (iso === 'IND') {
+                  return { color: 'transparent', weight: 0, fillOpacity: 0, opacity: 0 };
+                }
+                return getLandStyle(theme);
+              }
+
+              if (iso === 'IND') {
+                const land = getLandStyle(theme);
                 return {
                   stroke: false,
-                  fillColor: theme === 'dark' ? '#233047' : '#fffdf9',
-                  fillOpacity: 1,
+                  fillColor: land.fillColor,
+                  fillOpacity: land.fillOpacity,
                   smoothFactor: 0
                 };
               }
 
-              return {
-                color: theme === 'dark' ? '#8ea0bb' : '#5d6573',
-                weight: 0.55,
-                opacity: 1,
-                fillColor: theme === 'dark' ? '#233047' : '#fffdf9',
-                fillOpacity: 1,
-                lineCap: 'round',
-                lineJoin: 'round',
-                smoothFactor: 0
-              };
+              return getLandStyle(theme);
             }}
           />
         )}
 
-        <ContinentLabels theme={theme} L={L} />
+        <ContinentLabels theme={theme} L={L} labels={CONTINENT_LABELS} zoomLevel={zoomLevel} />
         <EnsureTopPane />
 
         <MapZoomListener setZoomLevel={setZoomLevel} />
@@ -892,20 +973,45 @@ export function WorldMapLeaflet({ externalIps = [], onIpClick, mode = 'pcap', co
         <MapBoundsHelper ips={externalIps} mode={mode} />
         <PcapFocusController focusCluster={activeFocusedPcapCluster} mode={mode} />
 
-        {indiaBorder && indiaRenderer && (
+        {mode !== 'summary' && indiaBorder && indiaRenderer && (
           <GeoJSON
             key={`india-border-${theme}`}
             data={indiaBorder}
             renderer={indiaRenderer}
             pane="geoPane"
             style={{
-              color: theme === 'dark' ? '#8ea0bb' : '#5d6573',
-              weight: 0.55,
-              opacity: 1,
-              fillOpacity: 0,
-              lineCap: 'round',
-              lineJoin: 'round',
-              smoothFactor: 0
+              ...getLandStyle(theme),
+              fillOpacity: 0
+            }}
+          />
+        )}
+
+        {/* Accurate India layer for summary mode, using the dedicated
+            full-resolution India border rather than the coarser
+            world-countries.json India polygon. It uses the exact same
+            land styling as every other country (no special fill/glow),
+            and - like every other country in summary mode - the land
+            itself is hover-only; it does not open the detail panel on
+            click. Only India's marker (see summaryMarkerItems) does that,
+            same as any other country. */}
+        {mode === 'summary' && indiaBorder && indiaRenderer && (
+          <GeoJSON
+            key={`india-choropleth-${theme}`}
+            data={indiaBorder}
+            renderer={indiaRenderer}
+            pane="geoPane"
+            style={getLandStyle(theme)}
+            onEachFeature={(feature, layer) => {
+              const baseStyle = getLandStyle(theme);
+              layer.setStyle(baseStyle);
+
+              layer.on('mouseover', () => {
+                layer.setStyle(getLandStyle(theme, true));
+                layer.bringToFront();
+              });
+              layer.on('mouseout', () => {
+                layer.setStyle(baseStyle);
+              });
             }}
           />
         )}
@@ -949,7 +1055,7 @@ export function WorldMapLeaflet({ externalIps = [], onIpClick, mode = 'pcap', co
             const pointStyle = getPcapPointStyle(point.count);
             const icon = L.divIcon({
               html: `
-                <div class="pcap-marker group" style="width: ${markerSize}px; height: ${markerSize}px; background: ${pointStyle.marker}; box-shadow: 0 0 0 4px ${pointStyle.halo}, 0 6px 14px ${pointStyle.shadow};">
+                <div class="pcap-marker group" style="width: ${markerSize}px; height: ${markerSize}px; background: ${pointStyle.marker}; box-shadow: ${buildGlowShadow(pointStyle)};">
                   <div class="pcap-pulse" style="background: ${pointStyle.marker};"></div>
                   <span style="position: relative; z-index: 2; font-size: ${point.count > 999 ? 9 : 10}px;">${point.count.toLocaleString()}</span>
                 </div>
@@ -965,10 +1071,10 @@ export function WorldMapLeaflet({ externalIps = [], onIpClick, mode = 'pcap', co
                 position={[point.lat, point.lng]}
                 icon={icon}
                 eventHandlers={{
-                  click: () => setSelectedGroup({ 
-                    lat: point.lat, 
-                    lng: point.lng, 
-                    city: point.count === 1 ? point.city : `${point.count.toLocaleString()} IPs`, 
+                  click: () => setSelectedGroup({
+                    lat: point.lat,
+                    lng: point.lng,
+                    city: point.count === 1 ? point.city : `${point.count.toLocaleString()} IPs`,
                     country: point.country,
                     ips: point.ips,
                     count: point.count,
@@ -1053,40 +1159,27 @@ export function WorldMapLeaflet({ externalIps = [], onIpClick, mode = 'pcap', co
               </Marker>
             );
           })
+        ) : mode === 'summary' ? (
+          summaryMarkerItems.map(({ entry, iso2, lat, lng, icon }) => {
+            const displayName = getMappedCountryName(entry.name);
+            return (
+              <Marker pane="topPane"
+                key={`summary-${entry.name}`}
+                position={[lat, lng]}
+                icon={icon}
+                eventHandlers={{
+                  click: () => setSelectedCountry({
+                    name: displayName,
+                    iso2,
+                    count: entry.count || 0,
+                    captures: entry.captures_seen ?? entry.captures ?? 0,
+                    packets: entry.packets || 0
+                  })
+                }}
+              />
+            );
+          })
         ) : null}
-
-
-        {mode === 'summary' && countryPoints.map((point, idx) => {
-          const dotSize = 10;
-          const icon = L.divIcon({
-            html: `<div class="custom-dot-marker summary-dot" style="width: ${dotSize}px; height: ${dotSize}px;"></div>`,
-            className: '',
-            iconSize: [dotSize, dotSize],
-            iconAnchor: [dotSize / 2, dotSize / 2]
-          });
-
-          return (
-            <Marker pane="topPane"
-              key={`country-${idx}`}
-              position={point.coords}
-              icon={icon}
-              eventHandlers={{
-                click: () => setSelectedCountry(point)
-              }}
-            >
-              <Tooltip direction="top" offset={[0, -dotSize / 2]} opacity={1}>
-                <div className="p-2 text-[11px] font-bold bg-card text-foreground rounded-lg shadow-xl border border-theme">
-                  <div className="text-indigo-600 uppercase  mb-1 border-b border-theme pb-1">{point.name}</div>
-                  <div className="flex justify-between gap-4">
-                    <span className="text-slate-500 font-black  text-[12px]">Total IPs</span>
-                    <span className="text-foreground">{(point.count || 0).toLocaleString()}</span>
-                  </div>
-                </div>
-              </Tooltip>
-            </Marker>
-          );
-        })}
-
 
         {mode === 'pcap' && L && (
           <Marker
@@ -1104,6 +1197,7 @@ export function WorldMapLeaflet({ externalIps = [], onIpClick, mode = 'pcap', co
         )}
       </MapContainer>
 
+      <div className="map-atmosphere-vignette" aria-hidden="true" />
 
       {title && (
         <div className="absolute top-6 left-6 z-[1000] flex flex-col gap-2 pointer-events-none">
@@ -1144,9 +1238,6 @@ export function WorldMapLeaflet({ externalIps = [], onIpClick, mode = 'pcap', co
           </div>
         </motion.div>
       </div>
-
-      {/* Removed Cluster Reveal UI */}
-
 
       <AnimatePresence>
         {selectedGroup && (
@@ -1205,50 +1296,70 @@ export function WorldMapLeaflet({ externalIps = [], onIpClick, mode = 'pcap', co
         )}
       </AnimatePresence>
 
-
       <AnimatePresence>
-        {selectedCountry && (
+        {selectedCountry && (() => {
+          const accent = getSummaryPointStyle(selectedCountry.count);
+          return (
           <motion.div
             drag
             dragMomentum={false}
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            initial={{ opacity: 0, scale: 0.94, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="absolute top-32 right-10 z-[1001] w-80 bg-card border border-theme rounded-none shadow-2xl overflow-hidden p-6"
+            exit={{ opacity: 0, scale: 0.94, y: 20 }}
+            className="absolute top-28 right-10 z-[1001] w-[320px] bg-card border border-theme rounded-2xl overflow-hidden cursor-move"
+            style={{ boxShadow: `0 0 0 1px ${accent.halo}, 0 0 40px 4px ${accent.halo}, 0 20px 40px -14px rgba(0,0,0,0.4)` }}
           >
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-4">
-                <div className="p-2 bg-emerald-500/10 rounded-xl">
-                  <Globe size={24} className="text-emerald-500" />
+            <div className="h-[3px] w-full" style={{ background: `linear-gradient(90deg, ${accent.marker}, transparent)` }} />
+            <div className="p-5">
+              <div className="flex items-center justify-between mb-5">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div
+                    className="relative shrink-0 rounded-lg overflow-hidden flex items-center justify-center"
+                    style={{ boxShadow: `0 0 0 1px ${accent.halo}, 0 4px 12px ${accent.shadow}` }}
+                  >
+                    <CountryFlag iso2={selectedCountry.iso2} size={30} />
+                  </div>
+                  <div className="min-w-0">
+                    <h4 className="text-base font-black text-foreground uppercase tracking-tight leading-tight truncate">{selectedCountry.name}</h4>
+                    {/* <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest">Regional Intelligence</p> */}
+                  </div>
                 </div>
-                <div>
-                  <h4 className="text-lg font-black text-foreground uppercase tracking-tight">{selectedCountry.name}</h4>
-                  <p className="text-[10px] text-slate-500 font-bold  tracking-widest">Regional Intelligence</p>
+                <button
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onClick={() => setSelectedCountry(null)}
+                  className="p-1.5 hover:bg-rose-500/10 hover:text-rose-500 rounded-full transition-colors text-slate-500 shrink-0"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between px-4 py-3 bg-slate-500/5 rounded-xl border-l-2" style={{ borderColor: accent.marker }}>
+                  <div className="flex items-center gap-2.5">
+                    <Radio size={14} style={{ color: accent.marker }} />
+                    <div className="text-[10px] font-black uppercase tracking-wide text-slate-500">Total IP count</div>
+                  </div>
+                  <div className="text-lg font-black" style={{ color: accent.marker }}>{(selectedCountry.count || 0).toLocaleString()}</div>
+                </div>
+                <div className="flex items-center justify-between px-4 py-3 bg-slate-500/5 rounded-xl border-l-2 border-slate-500/20">
+                  <div className="flex items-center gap-2.5">
+                    <Activity size={14} className="text-slate-500" />
+                    <div className="text-[10px] font-black uppercase tracking-wide text-slate-500">Captures seen</div>
+                  </div>
+                  <div className="text-lg font-black text-foreground">{(selectedCountry.captures || 0).toLocaleString()}</div>
+                </div>
+                <div className="flex items-center justify-between px-4 py-3 bg-slate-500/5 rounded-xl border-l-2 border-slate-500/20">
+                  <div className="flex items-center gap-2.5">
+                    <Zap size={14} className="text-slate-500" />
+                    <div className="text-[10px] font-black uppercase tracking-wide text-slate-500">Packet volume</div>
+                  </div>
+                  <div className="text-lg font-black text-foreground">{(selectedCountry.packets || 0).toLocaleString()}</div>
                 </div>
               </div>
-              <button onClick={() => setSelectedCountry(null)} className="p-2 hover:bg-rose-500/10 hover:text-rose-500 rounded-full transition-colors text-slate-500">
-                <X size={18} />
-              </button>
             </div>
-
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 bg-slate-500/5 rounded-none border border-theme">
-                <div className="text-[11px] font-black  ">Total IP count</div>
-                <div className="text-lg font-black text-blue-500">{(selectedCountry.count || 0).toLocaleString()}</div>
-              </div>
-              <div className="flex items-center justify-between p-4 bg-slate-500/5 rounded-none border border-theme">
-                <div className="text-[11px] font-black ">Captures seen</div>
-                <div className="text-lg font-black text-foreground">{(selectedCountry.captures || 0).toLocaleString()}</div>
-              </div>
-              <div className="flex items-center justify-between p-4 bg-slate-500/5 rounded-none border border-theme">
-                <div className="text-[11px] font-black  ">Packet volume</div>
-                <div className="text-lg font-black text-foreground">{(selectedCountry.packets || 0).toLocaleString()}</div>
-              </div>
-            </div>
-
-            
           </motion.div>
-        )}
+          );
+        })()}
       </AnimatePresence>
 
       <style jsx global>{`
@@ -1260,18 +1371,27 @@ export function WorldMapLeaflet({ externalIps = [], onIpClick, mode = 'pcap', co
           transition: all 0.2s ease-out;
           cursor: pointer;
         }
+        /* Summary-mode (dashboard) markers: small, quiet glowing points -
+           no filled/solid disc, no white ring, no breathing animation.
+           Just a small colored core with a soft box-shadow glow, and a
+           gentle scale-up on hover for feedback. */
         .summary-dot {
-          background: #2563eb;
-          width: 9px !important;
-          height: 9px !important;
-          box-shadow: 0 0 15px rgba(37, 99, 235, 0.4), 
-                      0 0 30px rgba(37, 99, 235, 0.1);
-          border: 2px solid white;
-          animation: summary-scale-breathe 2s ease-in-out infinite;
+          position: relative;
+          border-radius: 50%;
+          cursor: pointer;
+          opacity: 0.88;
+          transition: transform 0.2s ease-out, filter 0.2s ease-out, opacity 0.2s ease-out;
         }
-        @keyframes summary-scale-breathe {
-          0%, 100% { transform: scale(0.9); opacity: 0.8; box-shadow: 0 0 10px rgba(37, 99, 235, 0.4); }
-          50% { transform: scale(1.4); opacity: 1; box-shadow: 0 0 25px rgba(37, 99, 235, 0.7), 0 0 40px rgba(37, 99, 235, 0.2); }
+        .summary-dot-core {
+          position: absolute;
+          inset: 0;
+          border-radius: 50%;
+        }
+        .summary-dot:hover {
+          opacity: 1;
+          filter: brightness(1.3) saturate(1.15);
+          transform: scale(1.7) !important;
+          z-index: 1000 !important;
         }
         .custom-dot-marker:hover {
           transform: scale(3) !important;
@@ -1279,10 +1399,6 @@ export function WorldMapLeaflet({ externalIps = [], onIpClick, mode = 'pcap', co
           box-shadow: 0 0 40px rgba(37, 99, 235, 1), 0 0 80px rgba(37, 99, 235, 0.4);
           z-index: 1000 !important;
           border: 2.5px solid #2563eb;
-        }
-        .summary-dot:hover {
-          background: #ffffff !important;
-          box-shadow: 0 0 50px rgba(37, 99, 235, 1);
         }
         .center-red-dot {
           width: 12px;
@@ -1302,26 +1418,22 @@ export function WorldMapLeaflet({ externalIps = [], onIpClick, mode = 'pcap', co
           white-space: pre-line;
           text-align: center;
           font-weight: 800;
-          letter-spacing: 0.03em;
-          line-height: 0.95;
+          letter-spacing: 0.06em;
+          line-height: 1.05;
           text-transform: uppercase;
           user-select: none;
           pointer-events: none;
-          color: ${theme === 'dark' ? 'rgba(255,255,255,0.62)' : 'rgba(70, 90, 122, 0.85)'};
+          color: ${theme === 'dark' ? 'rgba(148, 197, 255, 0.55)' : 'rgba(30, 41, 59, 0.68)'};
           text-shadow: ${theme === 'dark'
-            ? '0 1px 0 rgba(0,0,0,0.85)'
-            : '0 1px 0 rgba(255,255,255,0.65)'};
+            ? '0 1px 3px rgba(0,0,0,0.9), 0 0 14px rgba(59,130,246,0.25)'
+            : '0 1px 2px rgba(255,255,255,0.7), 0 0 10px rgba(255,255,255,0.4)'};
         }
         .continent-label.label-large {
-          font-size: 17px;
+          font-size: 13.5px;
         }
         .continent-label.label-medium {
-          font-size: 14px;
-          line-height: 0.92;
-        }
-        .continent-label.label-small {
           font-size: 11px;
-          opacity: 0.82;
+          line-height: 1.02;
         }
         .pcap-marker {
           background: #3b82f6;
@@ -1404,7 +1516,18 @@ export function WorldMapLeaflet({ externalIps = [], onIpClick, mode = 'pcap', co
           }
         }
         .leaflet-container {
-          background: ${theme === 'dark' ? '#091224' : '#d8edf3'} !important;
+          background: ${theme === 'dark'
+            ? 'radial-gradient(120% 120% at 30% 18%, #16263c 0%, #0a1420 50%, #04070c 100%)'
+            : 'radial-gradient(120% 120% at 30% 15%, #fbfaf6 0%, #f5f3ec 55%, #ece7db 100%)'} !important;
+        }
+        .map-atmosphere-vignette {
+          position: absolute;
+          inset: 0;
+          z-index: 450;
+          pointer-events: none;
+          background: ${theme === 'dark'
+            ? 'radial-gradient(120% 100% at 50% 45%, transparent 55%, rgba(2, 6, 14, 0.5) 100%)'
+            : 'radial-gradient(120% 100% at 50% 45%, transparent 65%, rgba(120, 105, 80, 0.14) 100%)'};
         }
         .leaflet-tooltip {
           background: hsl(var(--card) / 0.7) !important;
@@ -1418,6 +1541,12 @@ export function WorldMapLeaflet({ externalIps = [], onIpClick, mode = 'pcap', co
         }
         .leaflet-grab { cursor: pointer !important; }
         .leaflet-dragging .leaflet-grab { cursor: grabbing !important; }
+        .leaflet-interactive:focus,
+        .leaflet-interactive:focus-visible,
+        .leaflet-container svg:focus,
+        .leaflet-container path:focus {
+          outline: none !important;
+        }
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb {
@@ -1445,6 +1574,13 @@ MapBoundsHelper.propTypes = {
 PcapFocusController.propTypes = {
   focusCluster: PropTypes.object,
   mode: PropTypes.string,
+};
+
+ContinentLabels.propTypes = {
+  theme: PropTypes.string,
+  L: PropTypes.object,
+  labels: PropTypes.array,
+  zoomLevel: PropTypes.number,
 };
 
 WorldMapLeaflet.propTypes = {

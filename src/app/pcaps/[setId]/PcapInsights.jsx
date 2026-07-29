@@ -10,6 +10,57 @@ import {
 
 const ITEMS_PER_PAGE = 5;
 
+const DNS_RECORD_TYPES = {
+  'A': 'Maps a hostname to an IPv4 address',
+  'NS': 'Authoritative name server',
+  'CNAME': 'Alias to another domain name',
+  'SOA': 'Start of Authority for a DNS zone',
+  'PTR': 'Reverse DNS lookup (IP → hostname)',
+  'MX': 'Mail server for a domain',
+  'TXT': 'Text records (SPF, verification, etc.)',
+  'AAAA': 'Maps a hostname to an IPv6 address',
+  'SRV': 'Service location records',
+  'NAPTR': 'Naming Authority Pointer',
+  'DS': 'Delegation Signer (DNSSEC)',
+  'RRSIG': 'DNSSEC signature',
+  'NSEC': 'DNSSEC authenticated denial',
+  'DNSKEY': 'DNSSEC public key',
+  'NSEC3': 'DNSSEC authenticated denial (hashed)',
+  'HTTPS': 'HTTPS service binding',
+  'SVCB': 'Service Binding record',
+  'CAA': 'Certificate Authority Authorization',
+  'ANY': 'Request all available records (rarely supported today)'
+};
+
+const DnsRecordTypeTooltip = ({ type }) => {
+  const [isHovering, setIsHovering] = useState(false);
+  const description = DNS_RECORD_TYPES[type] || 'Unknown DNS record type';
+  
+  return (
+    <div 
+      className="relative inline-block"
+      onMouseEnter={() => setIsHovering(true)}
+      onMouseLeave={() => setIsHovering(false)}
+    >
+      <span className="bg-pink-500/10 text-pink-500 px-2 py-0.5 rounded-none text-[10px] font-black border border-pink-500/10 cursor-pointer select-none">
+        {type}
+      </span>
+      {isHovering && (
+        <motion.div 
+          initial={{ opacity: 0, y: 4 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 4 }}
+          transition={{ duration: 0.15 }}
+          className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 z-50 bg-slate-700/80 backdrop-blur-sm text-white text-[11px] px-3 py-2.5 rounded-lg shadow-lg border border-slate-600/50 whitespace-nowrap pointer-events-none"
+        >
+          {description}
+          <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-slate-700/80"></div>
+        </motion.div>
+      )}
+    </div>
+  );
+};
+
 const PaginatedTable = ({ data, headers, renderRow, icon: Icon, title }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const totalPages = Math.ceil(data.length / ITEMS_PER_PAGE);
@@ -207,7 +258,7 @@ export default function PcapInsights({ data, onIpClick }) {
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
         <PaginatedTable 
           data={dns_queries}
-          title="DNS Queries"
+          title="Top Queried Domains"
           icon={Search}
           headers={[
             { label: "Domain" },
@@ -218,9 +269,7 @@ export default function PcapInsights({ data, onIpClick }) {
             <>
               <td className="px-8 py-4  text-foreground max-w-[200px] truncate" title={dns.domain}>{dns.domain}</td>
               <td className="px-8 py-4 text-center">
-                <span className="bg-pink-500/10 text-pink-500 px-2 py-0.5 rounded-none text-[10px] font-black border border-pink-500/10">
-                  {dns.record_type}
-                </span>
+                <DnsRecordTypeTooltip type={dns.record_type} />
               </td>
               <td className="px-8 py-4  text-foreground ">{dns.count}</td>
             </>

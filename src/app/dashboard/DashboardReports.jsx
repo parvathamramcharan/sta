@@ -3,12 +3,14 @@
 import { useState, useEffect, useRef } from "react";
 import { 
   Globe, MapPin, Server, Activity, ArrowRight, Shield, 
+  
   Search, ChevronRight, Loader2,
   Database, Terminal,
   CheckCircle2, User, Cpu, AlertTriangle, X, Zap
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { fetchReportsGeo, fetchReportsDetails, fetchIPScan } from "./dashboardApiService";
+import { getCountryDisplayName, getCountryCode } from "@/constants/countryMapping";
 import { WorldMapLeaflet } from "./WorldMapLeaflet";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -358,7 +360,12 @@ export function DashboardReports({
     );
   }
 
-  const sortedCountries = [...geoData.countries].sort((a, b) => a.name.localeCompare(b.name));
+  const sortedCountries = [...geoData.countries].sort((a, b) => {
+    const leftName = getCountryDisplayName(a.name);
+    const rightName = getCountryDisplayName(b.name);
+
+    return leftName.localeCompare(rightName, undefined, { sensitivity: "base" });
+  });
   const totalPages = Math.ceil(detailsData.length / pageSize);
   const paginatedIps = detailsData.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
@@ -404,38 +411,58 @@ export function DashboardReports({
             {(discoveryMode === "country" ? sortedCountries : [...geoData.isps].sort((a, b) => a.name.localeCompare(b.name)))
               .filter(item => item.name.toLowerCase().includes(searchQuery.toLowerCase()))
               .map((item, idx) => {
-              const colors = {
-                'bg-blue-500': 'hover:border-blue-500 hover:bg-blue-500/[0.03]',
-                'bg-rose-500': 'hover:border-rose-500 hover:bg-rose-500/[0.03]',
-                'bg-emerald-500': 'hover:border-emerald-500 hover:bg-emerald-500/[0.03]',
-                'bg-amber-500': 'hover:border-amber-500 hover:bg-amber-500/[0.03]',
-                'bg-indigo-500': 'hover:border-indigo-500 hover:bg-indigo-500/[0.03]',
-                'bg-violet-500': 'hover:border-violet-500 hover:bg-violet-500/[0.03]',
-                'bg-cyan-500': 'hover:border-cyan-500 hover:bg-cyan-500/[0.03]'
-              };
-              const colorKeys = Object.keys(colors);
-              const colorClass = colorKeys[idx % colorKeys.length];
-              const hoverStyles = colors[colorClass];
-              
+              const dotColors = [
+                'bg-blue-500', 'bg-rose-500', 'bg-emerald-500',
+                'bg-amber-500', 'bg-indigo-500', 'bg-violet-500', 'bg-cyan-500'
+              ];
+              const colorClass = dotColors[idx % dotColors.length];
+              const isSelected = selectedItem?.name === item.name;
+              const countryCode = (getCountryCode(item.name) || 'un').toLowerCase();
+
               return (
                 <motion.button
                   key={idx}
-                  whileHover={{ scale: 1.02, y: -2 }}
+                  whileHover={{ y: -2 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => handleItemSelect(item)}
-                  className={`transition-all duration-300 text-left px-5 py-4 rounded-none border-2 group relative overflow-hidden ${
-                    selectedItem?.name === item.name
-                      ? "bg-blue-600 border-blue-600 text-white shadow-2xl shadow-blue-600/40 z-10 scale-[1.03]"
-                      : "bg-card border-slate-200/50 text-slate-500 hover:bg-blue-50/50 hover:text-blue-600"
+                  className={`relative text-left px-4 py-3.5 border group overflow-hidden transition-colors duration-300 ${
+                    isSelected
+                      ? "bg-blue-500/[0.07] border-blue-500 shadow-sm z-10"
+                      : "bg-card border-slate-200/60 hover:border-blue-500/40 hover:bg-blue-500/[0.02]"
                   }`}
                 >
-                  {/* FOOLPROOF HOVER BORDER */}
-                  <div className="absolute inset-0 border-2 border-transparent group-hover:border-blue-600 transition-colors pointer-events-none z-20" />
-                  
-                  <div className="flex items-center gap-4 relative z-10">
-                    <div className={`w-2 h-2 rounded-none ${selectedItem?.name === item.name ? 'bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)]' : `${colorClass} group-hover:scale-125 transition-all`} shrink-0 shadow-sm`} />
-                    <div className="text-[15px]  truncate group-hover:translate-x-0.5 transition-transform duration-300">
-                      {item.name}
+                  <div className="flex items-center gap-3.5 relative z-10">
+                    {discoveryMode === "country" ? (
+                      <div className={`w-11 h-7 shrink-0 overflow-hidden border transition-colors ${
+                        isSelected ? "border-blue-500/50" : "border-slate-200/70 group-hover:border-blue-500/30"
+                      }`}>
+                        <img
+                          src={`https://flagcdn.com/w80/${countryCode}.png`}
+                          alt=""
+                          className="w-full h-full object-cover block"
+                          loading="lazy"
+                        />
+                      </div>
+                    ) : (
+                      <div className={`w-9 h-9 shrink-0 flex items-center justify-center border ${
+                        isSelected ? "border-blue-500/40 bg-blue-500/5" : "border-slate-200/70 bg-slate-500/5"
+                      }`}>
+                        <div className={`w-2.5 h-2.5 ${isSelected ? 'bg-blue-600' : colorClass}`} />
+                      </div>
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <div className={`text-[14px] font-bold truncate transition-colors duration-300 ${
+                        isSelected ? 'text-blue-700' : 'text-slate-600 group-hover:text-blue-600'
+                      }`}>
+                        {discoveryMode === "country" ? getCountryDisplayName(item.name) : item.name}
+                      </div>
+                      {discoveryMode === "country" && (
+                        <div className={`text-[9px] font-black tracking-[0.15em] uppercase mt-0.5 ${
+                          isSelected ? 'text-blue-500/70' : 'text-slate-400'
+                        }`}>
+                          {countryCode}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </motion.button>
@@ -455,8 +482,17 @@ export function DashboardReports({
             exit={{ opacity: 0, y: -10 }}
             className="flex items-center justify-between px-10 py-8 bg-card border border-theme shadow-sm scroll-mt-20"
           >
-            <div className="flex items-center gap-6">
-              <h3 className="text-3xl font-bold text-foreground  ">{selectedItem.name}</h3>
+            <div className="flex items-center gap-5">
+              {discoveryMode === "country" && (
+                <div className="w-14 h-9 shrink-0 overflow-hidden border border-slate-200/70">
+                  <img
+                    src={`https://flagcdn.com/w80/${(getCountryCode(selectedItem.name) || 'un').toLowerCase()}.png`}
+                    alt=""
+                    className="w-full h-full object-cover block"
+                  />
+                </div>
+              )}
+              <h3 className="text-3xl font-bold text-foreground  ">{discoveryMode === "country" ? getCountryDisplayName(selectedItem.name) : selectedItem.name}</h3>
             </div>
             
               <div className="flex items-center gap-3">

@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -e # exit on error 
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
@@ -8,11 +8,11 @@ HOSTNAME=$(hostname -I | awk '{print $1}')
 # src/.env.local — used by Next.js dev (npm run dev)
 {
   echo "AUTH_SECRET=${AUTH_SECRET}"
-  echo "AUTH_URL=http://$HOSTNAME:6080"
+  echo "AUTH_URL=http://${HOSTNAME}:3000"
   echo "KEYCLOAK_CLIENT_ID=sinkhole"
-  echo "KEYCLOAK_ISSUER=http://keycloak:8080/realms/cdac"
+  echo "KEYCLOAK_ISSUER=http://${HOSTNAME}:8080/realms/cdac"
   #echo "BACKEND_URL=http://pcap-api:5000/api"
-  echo "BACKEND_URL=http://192.168.10.200:5000/api"
+  echo "BACKEND_URL=http://192.168.10.11:5000/api"
 
 } > "$SCRIPT_DIR/src/.env.local"
 

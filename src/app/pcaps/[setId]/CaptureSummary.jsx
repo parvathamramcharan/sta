@@ -127,7 +127,6 @@ export default function CaptureSummary({
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
-      setExportStatus('Download complete.');
     } catch (error) {
       console.error('Error downloading connection export:', error);
       setExportStatus('Download failed. Please try again.');
@@ -261,10 +260,9 @@ export default function CaptureSummary({
                 type="button"
                 onClick={() => setShowPasswordModal(true)}
                 disabled={isExportingConnections || !pcapId}
-                className="h-[42px] inline-flex items-center gap-2 px-4 border border-emerald-600/40 bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30 transition-all text-[11px] font-black uppercase tracking-[0.2em] disabled:cursor-not-allowed disabled:from-slate-400 disabled:to-slate-500 disabled:shadow-none"
-              >
+className="h-[42px] inline-flex items-center gap-2 px-4 border border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-all text-[12px] font-bold tracking-[0.15em] rounded-sm"              >
                 {isExportingConnections ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />}
-                {isExportingConnections ? 'Preparing Export...' : 'Download'}
+                {isExportingConnections ? 'Preparing Export...' : 'Export CSV '}
               </button>
               {exportStatus ? (
                 <div className={`flex items-center gap-2 text-[11px] font-semibold ${isExportingConnections ? 'text-blue-600' : 'text-emerald-600'}`}>
