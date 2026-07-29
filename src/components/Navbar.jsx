@@ -61,13 +61,13 @@ export function Navbar({ user }) {
   const NavLink = ({ href, icon: Icon, label, isActive }) => (
     <Link
       href={href}
-      className={`h-14 px-4 flex items-center gap-2 text-[13px] font-bold transition-all relative ${
-        isActive ? "text-blue-500" : "text-slate-500 hover:text-slate-800"
+      className={`h-14 px-4 flex items-center gap-2 text-[15px] dark:text-slate-400 font-bold transition-all relative ${
+        isActive ? "text-blue-500" : "text-slate-800 "
       }`}
     >
       <Icon
         size={16}
-        className={isActive ? "text-blue-500" : "text-slate-400"}
+        className={`dark:text-slate-400 ${isActive ? "text-blue-500" : "text-slate-800"}`}
       />
       {label}
       {isActive && (
@@ -83,7 +83,7 @@ export function Navbar({ user }) {
           <div className="w-6 h-6 rounded-md bg-blue-600 text-white flex items-center justify-center shadow-sm shadow-blue-200">
             <Shield size={14} strokeWidth={2.5} />
           </div>
-          <span className="font-black text-foreground text-[15px] tracking-tight">
+          <span className="font-black text-foreground text-[15px]">
             Network Traffic Analysis
           </span>
         </div>
@@ -106,18 +106,18 @@ export function Navbar({ user }) {
                 onMouseLeave={() => setPcapMenuOpen(false)}
               >
                 <button
-                  className={`h-14 px-4 flex items-center gap-2 text-[13px] font-bold transition-all relative outline-none ${
+                  className={`h-14 px-4 flex items-center gap-2 text-[15px] font-bold transition-all relative outline-none  dark:text-slate-400  ${
                     pathname.startsWith("/pcaps")
-                      ? "text-blue-500"
-                      : "text-slate-500 hover:text-slate-800"
+                      ? "text-blue-500   "
+                      : "text-slate-800 "
                   }`}
                 >
                   <FileText
                     size={16}
                     className={
                       pathname.startsWith("/pcaps")
-                        ? "text-blue-500"
-                        : "text-slate-400"
+                        ? "text-blue-500  "
+                        : "text-slate-800  dark:text-slate-400 "
                     }
                   />
                   PCAPS
@@ -131,14 +131,20 @@ export function Navbar({ user }) {
                 </button>
 
                 {pcapMenuOpen && (
-                  <div className="absolute top-14 left-0 bg-card border border-theme rounded-xl shadow-xl min-w-[180px] p-1.5 z-50">
-                    <Link
-                      href="/pcaps/set-1"
-                      onClick={() => setPcapMenuOpen(false)}
-                      className="block px-3 py-2 text-[13px] font-bold text-slate-500 rounded-md hover:bg-blue-500/10 hover:text-blue-500 transition-colors"
-                    >
-                      Set 1
-                    </Link>
+                  <div className="absolute top-14 bg-card text-slate-800   dark:text-slate-400  text-center border border-theme shadow-xl min-w-[120px] z-50">
+                    {[
+                      { label: "Set 1", href: "/pcaps/set-1" },
+                      { label: "Set 2", href: "/pcaps/set-2" },
+                    ].map((set) => (
+                      <Link
+                        key={set.href}
+                        href={set.href}
+                        onClick={() => setPcapMenuOpen(false)}
+                        className="block px-3 py-2 text-[14px] font-bold text-slate-800  dark:text-slate-400  rounded-md border border-transparent hover:border-blue-500/40 hover:bg-blue-500/10 hover:text-blue-500 transition-colors"
+                      >
+                        {set.label}
+                      </Link>
+                    ))}
                   </div>
                 )}
               </div>
@@ -212,23 +218,44 @@ export function Navbar({ user }) {
           )}
         </div>
 
-        <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-xl gap-0.5 border border-theme">
+        <div className="flex items-center bg-slate-100 dark:bg-slate-800  rounded-xl border border-theme">
           <button
-            onClick={() => toggleTheme("light")}
-            className={`p-1.5 rounded-lg transition-all ${theme === "light" ? "bg-white text-blue-600 shadow-sm" : "text-slate-400 hover:text-slate-600"}`}
-            title="Light Theme"
+            onClick={() => toggleTheme(theme === "light" ? "dark" : "light")}
+            className="relative flex items-center w-16 h-8 rounded-lg"
+            title={
+              theme === "light"
+                ? "Switch to Dark Theme"
+                : "Switch to Light Theme"
+            }
           >
-            <Sun size={15} />
-          </button>
-          <button
-            onClick={() => toggleTheme("dark")}
-            className={`p-1.5 rounded-lg transition-all ${theme === "dark" ? "bg-slate-700 text-blue-400 shadow-sm" : "text-slate-400 hover:text-slate-300"}`}
-            title="Dark Theme"
-          >
-            <Moon size={15} />
+            {/* Sliding Background */}
+            <div
+              className={`absolute top-0.5 w-7 h-7 rounded-lg bg-white dark:bg-slate-700 shadow-sm transition-all duration-200 ${
+                theme === "light" ? "left-0.5" : "left-8"
+              }`}
+            />
+
+            {/* Sun */}
+            <div className="relative z-10 flex-1 flex justify-center">
+              <Sun
+                size={16}
+                className={`transition-colors ${
+                  theme === "light" ? "text-yellow-500" : "text-slate-400"
+                }`}
+              />
+            </div>
+
+            {/* Moon */}
+            <div className="relative z-10 flex-1 flex justify-center">
+              <Moon
+                size={16}
+                className={`transition-colors ${
+                  theme === "dark" ? "text-blue-400" : "text-slate-400"
+                }`}
+              />
+            </div>
           </button>
         </div>
-
         <div className="relative h-full flex items-center" ref={userRef}>
           <button
             onClick={() => setUserMenuOpen(!userMenuOpen)}
@@ -264,10 +291,10 @@ export function Navbar({ user }) {
                       setShowFeedbackModal(true);
                     }
                   }}
-                  className="w-full text-left px-3 py-2 text-[13px] font-bold text-slate-500 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center justify-between"
+                  className="w-full text-left px-3 py-2 text-[13px] font-bold text-slate-800 dark:text-slate-200 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center justify-between"
                 >
                   <span className="flex items-center gap-2">
-                    <MessageSquare size={14} className="text-slate-400" />
+                    <MessageSquare size={14} className="text-slate-800 dark:text-slate-200" />
                     Feedback
                   </span>
 
@@ -288,9 +315,8 @@ export function Navbar({ user }) {
                         setUserMenuOpen(false);
                         setFeedbackMenuOpen(false);
                         setShowViewFeedbackModal(true);
-                     
                       }}
-                      className="w-full text-left px-3 py-2 text-[13px] font-bold text-slate-500 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800"
+                      className="w-full text-left px-3 py-2 text-[13px] font-bold text-slate-800 dark:text-slate-200 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800"
                     >
                       View Feedback
                     </button>
@@ -301,7 +327,7 @@ export function Navbar({ user }) {
                         setFeedbackMenuOpen(false);
                         setShowFeedbackModal(true);
                       }}
-                      className="w-full text-left px-3 py-2 text-[13px] font-bold text-slate-500 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800"
+                      className="w-full text-left px-3 py-2 text-[13px] font-bold text-slate-800  dark:text-slate-200 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800"
                     >
                       Submit Feedback
                     </button>

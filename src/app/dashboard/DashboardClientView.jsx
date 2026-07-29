@@ -142,19 +142,19 @@ export default function DashboardClientView({ session }) {
         ref={tabBarRef}
         className="sticky top-14 z-30 bg-white dark:bg-slate-950 border-b border-theme flex w-full overflow-visible transition-colors"
       >
-        <div className="absolute inset-0 bg-emerald-500/10 pointer-events-none" />
+        <div className="absolute inset-0 bg-blue-100 dark:bg-[#18243f] pointer-events-none" />
         {tabs.map((tab) => {
           if (tab.id === "Reports") {
             return (
               <div key={tab.id} className="flex-1 min-w-[150px] relative group">
                 <button
                   onClick={() => { handleTabChange("Reports"); setReportInitialMode("country"); }}
-                  className={`w-full flex items-center justify-center gap-3 px-6 py-4 font-bold font-black transition-all border-r border-theme relative ${activeTab === "Reports"
+                  className={`w-full flex items-center dark:text-slate-400 justify-center gap-3 px-6 py-4 font-bold font-black transition-all border-r border-theme relative ${activeTab === "Reports"
                       ? "text-blue-600 bg-blue-500/10"
-                      : "text-slate-400 hover:text-foreground hover:bg-slate-500/5"
+                      : "text-slate-800 hover:text-foreground hover:bg-slate-500/5"
                     }`}
                 >
-                  <tab.icon size={14} className={activeTab === "Reports" ? "text-blue-600" : "text-slate-400"} />
+                  <tab.icon size={14} className={activeTab === "Reports" ? "text-blue-600" : "text-slate-800"} />
                   {tab.id}
                   <ChevronDown size={14} className={activeTab === "Reports" ? "text-blue-600 opacity-70" : "opacity-50"} />
                   {activeTab === "Reports" && (
@@ -163,16 +163,16 @@ export default function DashboardClientView({ session }) {
                 </button>
 
                 {/* Dropdown Menu */}
-                <div className="absolute top-full left-0 w-full bg-card border border-theme shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+                <div className="absolute top-full  left-0 w-full bg-card border border-theme shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
                   <button
                     onClick={() => { handleTabChange("Reports"); setReportInitialMode("country"); }}
-                    className="w-full px-4 py-3 font-bold font-black text-slate-500 hover:text-blue-600 hover:bg-slate-500/10 transition-all text-center border-b border-theme "
+                    className="w-full px-4 py-3 font-bold dark:text-slate-400 font-black text-slate-800 hover:text-blue-600 hover:bg-slate-500/10 transition-all text-center border-b border-theme "
                   >
                     Country
                   </button>
                   <button
                     onClick={() => { handleTabChange("Reports"); setReportInitialMode("isp"); }}
-                    className="w-full px-4 py-3 font-bold font-black text-slate-500 hover:text-blue-600 hover:bg-slate-500/10 transition-all text-center  "
+                    className="w-full px-4 py-3 font-bold dark:text-slate-400 font-black text-slate-800 hover:text-blue-600 hover:bg-slate-500/10 transition-all text-center  "
                   >
                     ISP
                   </button>
@@ -184,12 +184,12 @@ export default function DashboardClientView({ session }) {
             <button
               key={tab.id}
               onClick={() => handleTabChange(tab.id)}
-              className={`flex-1 flex items-center justify-center gap-3 px-6 py-4 font-bold font-black transition-all border-r border-theme last:border-r-0 relative ${activeTab === tab.id
+              className={`flex-1 flex items-center dark:text-slate-400 justify-center gap-3 px-6 py-4 font-bold font-black transition-all border-r border-theme last:border-r-0 relative ${activeTab === tab.id
                   ? "text-blue-600 bg-blue-500/10"
-                  : "text-slate-400 hover:text-foreground hover:bg-slate-500/5"
+                  : "text-slate-800 hover:text-foreground hover:bg-slate-500/5"
                 }`}
             >
-              <tab.icon size={14} className={activeTab === tab.id ? "text-blue-600" : "text-slate-400"} />
+              <tab.icon size={14} className={activeTab === tab.id ? "text-blue-600" : "text-slate-800"} />
               {tab.id}
               {activeTab === tab.id && (
                 <div className="absolute bottom-0 left-0 w-full h-1 bg-blue-500/20" />

@@ -19,7 +19,10 @@ export async function fetchPcapSet(setId, accessToken) {
       timeout: 30000,
       headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
     });
-    if (!res.ok) throw new Error(`Failed to fetch pcap set: ${res.status}`);
+    if (!res.ok) {
+      const errorBody = await res.text();
+      throw new Error(`Failed to fetch pcap set: ${res.status}${errorBody ? ` - ${errorBody}` : ""}`);
+    }
     const json = await res.json();
     return json;
   } catch (error) {
@@ -43,7 +46,6 @@ export async function fetchPcapOverview(pcapId) {
 
 export async function fetchPcapConnections(pcapId, page = 1, period = "") {
   try {
-    // Fetching a standard limit
     let url = `${BASE_URL}/pcaps/${pcapId}/connections?page=${page}&limit=50`;
     if (period) url += `&period=${period}`;
     
@@ -109,6 +111,18 @@ export async function fetchIpScan(ip) {
     throw error;
   }
 }
+export async function fetchPcapMap(pcapId) {
+  try {
+    const res = await fetchWithTimeout(`${BASE_URL}/map?pcap_id=${pcapId}`);
+    if (!res.ok) throw new Error(`Failed to fetch map data: ${res.status}`);
+    const json = await res.json();
+    return json.data || json;
+  } catch (error) {
+    console.error("Map Error:", error);
+    throw error;
+  }
+}
+
 export async function fetchPcapGeoReport(pcapId) {
   try {
     const res = await fetchWithTimeout(`${BASE_URL}/reports/geo?pcap_id=${pcapId}`);
@@ -121,17 +135,6 @@ export async function fetchPcapGeoReport(pcapId) {
   }
 }
 
-export async function fetchPcapMap(pcapId) {
-  try {
-    const res = await fetchWithTimeout(`${BASE_URL}/map?pcap_id=${pcapId}`);
-    if (!res.ok) throw new Error(`Failed to fetch map data: ${res.status}`);
-    const json = await res.json();
-    return json.data || json;
-  } catch (error) {
-    console.error("Map Error:", error);
-    throw error;
-  }
-}
 
 export async function fetchPcapDetails(pcapId, type, value) {
   try {

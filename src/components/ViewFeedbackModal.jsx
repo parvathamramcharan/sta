@@ -208,9 +208,9 @@ export function ViewFeedbackModal({ isOpen, onClose }) {
               <MessageSquare size={20} className="text-blue-500" />
             </div>
             <div>
-              <h2 className="text-lg font-black text-foreground">Feedback</h2>
-              <p className="text-[11px] font-bold  uppercase  mt-0.5">
-                View all submitted feedback
+              <h2 className="text-lg font-black text-foreground">Feedbacks</h2>
+              <p className="text-[12px] font-bold    mt-0.5">
+                View all submitted feedbacks
               </p>
             </div>
           </div>
@@ -286,7 +286,7 @@ export function ViewFeedbackModal({ isOpen, onClose }) {
                 </div>
               ) : (
                 <div className="space-y-2">
-                  <div className="hidden md:grid grid-cols-[10fr_12fr_10fr_8fr_11fr_13fr] gap-4 rounded-xl bg-slate-100 px-4 py-3 text-[11px] font-bold uppercase tracking-[0.25em] text-slate-500">
+                  <div className="hidden md:grid grid-cols-[10fr_12fr_10fr_8fr_11fr_13fr] gap-4 rounded-xl bg-slate-100 dark:bg-slate-800 dark:text-slate-400 px-4 py-3 text-[11px] font-bold uppercase tracking-[0.25em] text-slate-500">
                     <div className="text-left">Name</div>
                     <div className="text-left">Email</div>
                     <div className="text-left">Organisation</div>
@@ -299,7 +299,7 @@ export function ViewFeedbackModal({ isOpen, onClose }) {
                     return (
                       <div
                         key={key}
-                        className="bg-slate-50 rounded-xl p-4 shadow-sm transition-colors hover:bg-slate-100"
+                        className="bg-slate-50  p-4 shadow-sm transition-colors rounded-xl dark:bg-slate-800 dark:text-slate-400"
                       >
                         <div className="grid grid-cols-[10fr_12fr_10fr_8fr_11fr_13fr] items-center gap-4">
                           <div className="flex items-center gap-2 min-w-0">

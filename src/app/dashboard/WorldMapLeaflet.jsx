@@ -122,6 +122,33 @@ function EnsureTopPane() {
 const DELHI_COORDS = [28.6139, 77.2090];
 const FOCUS_IP_RENDER_LIMIT = 180;
 
+// Tailwind class strings for the plain-HTML markers rendered inside Leaflet divIcons.
+// These are static strings (no interpolated class names) so Tailwind's JIT compiler
+// can pick them up and generate the corresponding utility CSS.
+const PCAP_MARKER_BASE_CLASSES =
+  "relative flex items-center justify-center rounded-full border-2 border-white text-white font-black text-[8px] [text-shadow:0_1px_2px_rgba(15,23,42,0.25)] transition-all duration-[250ms] ease-[cubic-bezier(0.2,0.9,0.2,1)] cursor-pointer hover:![transform:translateY(-6px)_scale(1.16)] hover:![box-shadow:0_0_0_8px_rgba(59,130,246,0.18),0_14px_26px_rgba(37,99,235,0.32)] hover:!z-[1000]";
+
+const PCAP_MARKER_FOCUS_CLASSES =
+  "!border-[2.5px] !shadow-[0_0_0_5px_rgba(37,99,235,0.12),0_8px_18px_rgba(30,64,175,0.22)]";
+
+const PCAP_SPRINKLE_ANIM_CLASSES =
+  "will-change-transform animate-[pcap-marker-sprinkle_460ms_cubic-bezier(0.16,1.15,0.28,1)_both]";
+
+const PCAP_SPRINKLE_RING_CLASSES =
+  "absolute inset-0 rounded-full opacity-0 pointer-events-none z-[1] animate-[pcap-sprinkle-ring_520ms_ease-out_both]";
+
+const PCAP_PULSE_CLASSES =
+  "absolute inset-0 rounded-full opacity-40 pointer-events-none z-[1] animate-[pcap-map-pulse_2s_cubic-bezier(0.4,0,0.6,1)_infinite]";
+
+const SUMMARY_DOT_CLASSES =
+  "rounded-full border-2 border-white bg-blue-600 shadow-[0_0_15px_rgba(37,99,235,0.4),0_0_30px_rgba(37,99,235,0.1)] transition-all duration-200 ease-out cursor-pointer animate-[summary-scale-breathe_2s_ease-in-out_infinite] hover:!bg-white hover:![transform:scale(3)] hover:![box-shadow:0_0_50px_rgba(37,99,235,1)] hover:!z-[1000] hover:!border-[2.5px] hover:!border-blue-600";
+
+const CENTER_DOT_CLASSES =
+  "w-3 h-3 rounded-full bg-red-500 border-2 border-white shadow-[0_6px_18px_rgba(239,68,68,0.28)]";
+
+const CONTINENT_LABEL_BASE_CLASSES =
+  "-translate-x-1/2 -translate-y-1/2 whitespace-pre-line text-center font-extrabold uppercase tracking-[0.03em] leading-[0.95] select-none pointer-events-none";
+
 const hasCoordinates = (ip) => {
   const lat = Number(ip.latitude);
   const lng = Number(ip.longitude);
@@ -428,7 +455,10 @@ function ContinentLabels({ theme, L, labels, zoomLevel }) {
 
   return labels.map((label) => {
     const icon = L.divIcon({
-      html: `<div class="continent-label ${label.className}">${label.text.replace(/\n/g, '<br/>')}</div>`,
+      html: `<div class="${CONTINENT_LABEL_BASE_CLASSES} ${label.sizeClass}" style="color:${labelColor};text-shadow:${labelTextShadow};">${label.text.replace(/\n/g, '<br/>')}</div>`,
+      // "continent-label-marker" targets the Leaflet-generated wrapper element; its
+      // default background/border/shadow are stripped via an arbitrary Tailwind
+      // descendant selector applied on the map's outer container (see below).
       className: 'continent-label-marker',
       iconSize: [1, 1],
       iconAnchor: [0, 0]
@@ -713,6 +743,7 @@ const getPolygonCentroid = (geometry) => {
 // underlying land is no longer clickable in summary mode.
 const SUMMARY_MARKER_SIZE = 8;
 
+//if no mode or no externalIps, or no countrydata , then return it will select here  pcap , null , null
 export function WorldMapLeaflet({ externalIps = [], onIpClick, mode = 'pcap', countryData = [], title }) {
   const { theme } = useTheme();
   const [selectedGroup, setSelectedGroup] = useState(null);
@@ -815,6 +846,13 @@ export function WorldMapLeaflet({ externalIps = [], onIpClick, mode = 'pcap', co
       const jitterY = Math.cos(point.lng * 2.1 - point.lat) * 6;
       const sprinkleX = Math.round((deltaLng / flyMagnitude) * 34 + jitterX);
       const sprinkleY = Math.round((deltaLat / flyMagnitude) * 28 + jitterY);
+      const countLabelSizeClass = point.count > 999 ? 'text-[9px]' : 'text-[10px]';
+      const markerClasses = [
+        PCAP_MARKER_BASE_CLASSES,
+        PCAP_SPRINKLE_ANIM_CLASSES,
+        point.isFocusedReveal ? PCAP_MARKER_FOCUS_CLASSES : '',
+        'group'
+      ].filter(Boolean).join(' ');
 
       return {
         point,
@@ -890,10 +928,17 @@ export function WorldMapLeaflet({ externalIps = [], onIpClick, mode = 'pcap', co
 
   const initialZoom = mode === 'reports' ? 8 : (mode === 'summary' ? 2 : 2.2);
 
+  // Drives the theme-dependent Leaflet base-map background via a CSS custom
+  // property, referenced by an arbitrary-value Tailwind class below.
+  const mapContainerStyle = { '--leaflet-bg': theme === 'dark' ? '#091224' : '#d8edf3' };
+
   if (!L) return <div className="w-full h-full bg-slate-900 animate-pulse rounded-none" />;
 
   return (
-    <div className="w-full h-full relative z-0 rounded-none overflow-hidden border border-theme transition-colors bg-card">
+    <div
+      className="w-full h-full relative z-0 rounded-none overflow-hidden border border-theme transition-colors bg-card [&_.leaflet-container]:!bg-[var(--leaflet-bg)] [&_.continent-label-marker]:!bg-transparent [&_.continent-label-marker]:!border-0 [&_.continent-label-marker]:!shadow-none [&_.leaflet-tooltip]:!bg-[hsl(var(--card)/0.7)] [&_.leaflet-tooltip]:!backdrop-blur-xl [&_.leaflet-tooltip]:!border [&_.leaflet-tooltip]:!border-[hsl(var(--border))] [&_.leaflet-tooltip]:!rounded-xl [&_.leaflet-tooltip]:!shadow-[0_20px_25px_-5px_rgb(0_0_0_/_0.1),0_8px_10px_-6px_rgb(0_0_0_/_0.1)] [&_.leaflet-tooltip]:!p-0 [&_.leaflet-tooltip]:!text-[hsl(var(--foreground))] [&_.leaflet-tooltip]:overflow-hidden [&_.leaflet-grab]:!cursor-pointer [&_.leaflet-dragging_.leaflet-grab]:!cursor-grabbing"
+      style={mapContainerStyle}
+    >
       <MapContainer
         center={initialCenter}
         zoom={initialZoom}
@@ -1054,6 +1099,7 @@ export function WorldMapLeaflet({ externalIps = [], onIpClick, mode = 'pcap', co
           reportsGroupedPoints.map((point, idx) => {
             const markerSize = getPcapMarkerSize(point.count, zoomLevel);
             const pointStyle = getPcapPointStyle(point.count);
+            const countLabelSizeClass = point.count > 999 ? 'text-[9px]' : 'text-[10px]';
             const icon = L.divIcon({
               html: `
                 <div class="pcap-marker group" style="width: ${markerSize}px; height: ${markerSize}px; background: ${pointStyle.marker}; box-shadow: ${buildGlowShadow(pointStyle)};">
@@ -1182,13 +1228,14 @@ export function WorldMapLeaflet({ externalIps = [], onIpClick, mode = 'pcap', co
           })
         ) : null}
 
+
         {mode === 'pcap' && L && (
           <Marker
             pane="topPane"
             key="center-delhi"
             position={DELHI_COORDS}
             icon={L.divIcon({
-              html: `<div class="center-red-dot"></div>`,
+              html: `<div class="${CENTER_DOT_CLASSES}"></div>`,
               className: '',
               iconSize: [12, 12],
               iconAnchor: [6, 6]
@@ -1363,6 +1410,16 @@ export function WorldMapLeaflet({ externalIps = [], onIpClick, mode = 'pcap', co
         })()}
       </AnimatePresence>
 
+      {/*
+        Only the pieces that Tailwind utility classes genuinely cannot express are left here:
+        - @keyframes definitions (Tailwind's arbitrary `animate-[...]` values need the keyframes
+          to exist somewhere in the stylesheet; they can't be authored as utility classes).
+        - The custom scrollbar's ::-webkit-scrollbar pseudo-elements (no core Tailwind utility
+          covers these without an extra plugin).
+        Everything else that used to live in this block (marker colors, borders, shadows,
+        hover states, leaflet-tooltip/leaflet-container/leaflet-grab theming, continent
+        label styling, etc.) has been moved into Tailwind classes above.
+      */}
       <style jsx global>{`
         .custom-dot-marker {
           background: #3b82f6;
@@ -1372,10 +1429,6 @@ export function WorldMapLeaflet({ externalIps = [], onIpClick, mode = 'pcap', co
           transition: all 0.2s ease-out;
           cursor: pointer;
         }
-        /* Summary-mode (dashboard) markers: small, quiet glowing points -
-           no filled/solid disc, no white ring, no breathing animation.
-           Just a small colored core with a soft box-shadow glow, and a
-           gentle scale-up on hover for feedback. */
         .summary-dot {
           position: relative;
           border-radius: 50%;
@@ -1507,14 +1560,8 @@ export function WorldMapLeaflet({ externalIps = [], onIpClick, mode = 'pcap', co
           }
         }
         @keyframes pcap-sprinkle-ring {
-          0% {
-            opacity: 0.34;
-            transform: scale(0.5);
-          }
-          100% {
-            opacity: 0;
-            transform: scale(2.1);
-          }
+          0% { opacity: 0.34; transform: scale(0.5); }
+          100% { opacity: 0; transform: scale(2.1); }
         }
         .leaflet-container {
           background: ${theme === 'dark'

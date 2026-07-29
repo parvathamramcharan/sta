@@ -26,9 +26,7 @@ export default function AboutPage() {
       <div className="max-w-6xl mx-auto px-6 py-16">
         {/* Header Section */}
         <div className="text-center mb-16">
-          <div className="inline-flex items-center justify-center size-20 rounded-full bg-blue-100 dark:bg-blue-900/30 mb-6">
-            <Shield className="size-10 text-blue-600 dark:text-blue-400" />
-          </div>
+         
           <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400 bg-clip-text text-transparent">
             Sinkhole Traffic Analysis Framework
           </h1>
