@@ -403,6 +403,7 @@ const CONTINENT_LABELS = [
   { id: 'asia', text: 'ASIA', position: [42, 78], className: 'label-large' },
   { id: 'south-america', text: 'SOUTH AMERICA', position: [-14, -65], className: 'label-large' },
   { id: 'australia', text: 'AUSTRALIA', position: [-25, 133], className: 'label-large' },
+  { id: 'antarctica', text: 'ANTARCTICA', position: [-80, 0], className: 'label-large' },
 ];
 
 const getPcapMarkerSize = (count, zoomLevel) => {
