@@ -527,7 +527,8 @@ export default function PcapClientView({ setId, initialResponse, session }) {
           )}
           {stats.observed_ips && (
             <span className="text-emerald-500 text-sm font-medium bg-emerald-500/10 px-3 py-1 rounded-none border border-emerald-500/20">
-              {stats.observed_ips.toLocaleString()} External IPs
+              {/* {stats.observed_ips.toLocaleString()} External IPs */}
+              {stats.observed_ips.toLocaleString('en-US')} External IPs
             </span>
           )}
         </h1>
@@ -685,7 +686,7 @@ export default function PcapClientView({ setId, initialResponse, session }) {
             className="fixed inset-0 top-[120px] z-[40] bg-background flex flex-col"
           >
             <div className="flex-1 flex flex-col w-full bg-card border-t border-theme overflow-hidden">
-              <div className="flex items-center gap-0 bg-emerald-500/10 border-b border-theme shrink-0">
+              <div className="flex items-center gap-0 bg-emerald-100 dark:bg-[#18243f] border-b border-theme shrink-0">
                 <div className="flex-1 flex items-center gap-0">
                   {TABS.map((tab) => {
                     if (tab.id === "Reports") {
@@ -693,14 +694,14 @@ export default function PcapClientView({ setId, initialResponse, session }) {
                         <div key={tab.id} className="flex-1 relative group">
                           <button
                             onClick={() => { setActiveTab("Reports"); setReportInitialMode("country"); }}
-                            className={`w-full whitespace-nowrap px-4 py-4 font-bold font-black transition-all text-center border-r border-theme relative group flex items-center justify-center gap-2 ${activeTab === "Reports"
+                            className={`w-full whitespace-nowrap px-4 py-4 font-bold dark:text-slate-400 font-black transition-all text-center border-r border-theme relative group flex items-center justify-center gap-2 ${activeTab === "Reports"
                                 ? "text-blue-600 bg-blue-500/10"
-                                : "text-slate-400 hover:text-foreground hover:bg-slate-500/5"
+                                : "text-slate-800 hover:text-foreground hover:bg-slate-500/5"
                               }`}
                           >
-                            <tab.icon size={14} className={activeTab === "Reports" ? "text-blue-600" : "text-slate-400"} />
+                            <tab.icon size={14} className={activeTab === "Reports" ? "text-blue-600" : "text-slate-800 dark:text-slate-400"} />
                             {tab.id}
-                            <ChevronDown size={14} className={activeTab === "Reports" ? "text-blue-600 opacity-70" : "opacity-50"} />
+                            <ChevronDown size={14} className={activeTab === "Reports" ? "text-blue-600 opacity-70" : "opacity-100"} />
                             {activeTab === "Reports" && (
                               <div className="absolute bottom-0 left-0 right-0 h-1 bg-blue-500/20" />
                             )}
@@ -710,13 +711,13 @@ export default function PcapClientView({ setId, initialResponse, session }) {
                           <div className="absolute top-full left-0 w-full bg-card  border  border-theme shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-[60]">
                             <button
                               onClick={() => { setActiveTab("Reports"); setReportInitialMode("country"); }}
-                              className="w-full px-4 py-3 font-semibold font-black text-slate-500 hover:text-blue-600 hover:bg-slate-500/10 transition-all text-center border-b border-theme "
+                              className="w-full px-4 py-3 font-semibold font-black dark:text-slate-400 text-slate-800 hover:text-blue-600 hover:bg-slate-500/10 transition-all text-center border-b border-theme "
                             >
                               Country
                             </button>
                             <button
                               onClick={() => { setActiveTab("Reports"); setReportInitialMode("isp"); }}
-                              className="w-full px-4 py-3 font-semibold font-black text-slate-500 hover:text-blue-600 hover:bg-slate-500/10 transition-all text-center "
+                              className="w-full px-4 py-3 font-semibold font-black dark:text-slate-400  text-slate-800 hover:text-blue-600 hover:bg-slate-500/10 transition-all text-center "
                             >
                               ISP
                             </button>
@@ -728,12 +729,12 @@ export default function PcapClientView({ setId, initialResponse, session }) {
                       <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id)}
-                        className={`flex-1 whitespace-nowrap px-4 py-4 font-bold font-black  transition-all text-center border-r border-theme last:border-r-0 relative group flex items-center justify-center gap-2 ${activeTab === tab.id
+                        className={`flex-1 whitespace-nowrap px-4 py-4 font-bold font-black dark:text-slate-400  transition-all text-center border-r border-theme last:border-r-0 relative group flex items-center justify-center gap-2 ${activeTab === tab.id
                             ? "text-blue-600 bg-blue-500/10"
-                            : "text-slate-400 hover:text-foreground hover:bg-slate-500/5"
+                            : "text-slate-800 hover:text-foreground hover:bg-slate-500/5"
                           }`}
                       >
-                        <tab.icon size={14} className={activeTab === tab.id ? "text-blue-600" : "text-slate-400"} />
+                        <tab.icon size={14} className={activeTab === tab.id ? "text-blue-600" : "text-slate-800 dark:text-slate-400"} />
                         {tab.id}
                         {activeTab === tab.id && (
                           <div className="absolute bottom-0 left-0 right-0 h-1 bg-blue-500/20" />

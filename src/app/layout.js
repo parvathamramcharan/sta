@@ -21,7 +21,7 @@ export default async function RootLayout({ children }) {
       <body className="antialiased min-h-screen flex flex-col">
         <ThemeProvider>
           {session && <Navbar user={session.user} />}
-          <main className="flex-1 max-w-[1600px] w-full mx-auto ">
+          <main className="flex-1 w-full ">
             {children}
           </main>
         </ThemeProvider>
