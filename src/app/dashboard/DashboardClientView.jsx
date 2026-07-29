@@ -142,7 +142,7 @@ export default function DashboardClientView({ session }) {
         ref={tabBarRef}
         className="sticky top-14 z-30 bg-white dark:bg-slate-950 border-b border-theme flex w-full overflow-visible transition-colors"
       >
-        <div className="absolute inset-0 bg-blue-50 dark:bg-[#18243f] pointer-events-none" />
+        <div className="absolute inset-0 bg-blue-100 dark:bg-[#18243f] pointer-events-none" />
         {tabs.map((tab) => {
           if (tab.id === "Reports") {
             return (
