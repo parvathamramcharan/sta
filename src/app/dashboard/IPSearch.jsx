@@ -62,7 +62,7 @@ export function IPSearch() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
-      <div className="flex justify-center mb-6 pt-16">
+      <div className="flex justify-center mb-6">
         <form onSubmit={(e) => handleSearch(e)} className="relative w-full max-w-xl group">
           <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
           <input
@@ -75,7 +75,7 @@ export function IPSearch() {
                 setError("");
               }
             }}
-            placeholder="Enter IP Address for Deep Intelligence..."
+            placeholder="Enter IP Address "
             className="w-full pl-12 pr-12 py-4 bg-card border border-theme rounded-none text-[15px] font-medium text-foreground focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all shadow-sm placeholder:text-slate-500"
           />
           <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center">
@@ -92,7 +92,7 @@ export function IPSearch() {
 
       <div className="flex flex-wrap items-center justify-center gap-2 -mt-2 mb-8 min-h-[24px]">
         <Clock size={13} className="" />
-        <span className="text-[13px] font-black   mr-2">Recent:</span>
+        <span className="text-[14px] font-black   mr-2">Recent:</span>
         {history.length > 0 ? (
           history.map((h, i) => (
             <button
