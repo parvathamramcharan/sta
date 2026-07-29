@@ -125,7 +125,7 @@ export const COUNTRY_MAPPING = {
   "Republic of Malta": { code: "MT", displayName: "Malta" },
   "Republic of Senegal": { code: "SN", displayName: "Senegal" },
   "Republic of Mozambique": { code: "MZ", displayName: "Mozambique" },
-  "XK": { code: "XK", displayName: "Kosovo" },
+   "Kosovo": { code: "XK", displayName: "Kosovo" },
   "British Virgin Islands": { code: "VG", displayName: "British Virgin Islands" },
   "Lao People's Democratic Republic": { code: "LA", displayName: "Laos" },
   "Republic of Madagascar": { code: "MG", displayName: "Madagascar" },
@@ -205,6 +205,10 @@ export const COUNTRY_MAPPING = {
   "Kingdom of Eswatini": { code: "SZ", displayName: "Eswatini" },
   "Independent State of Papua New Guinea": { code: "PG", displayName: "Papua New Guinea" },
   "Greenland": { code: "GL", displayName: "Greenland" },
+  "Cook Islands": { code: "CK", displayName: "Cook Islands" },
+  "Democratic People's Republic of Korea": { code: "KP", displayName: "North Korea" },
+  "Republic of Mali": { code: "ML", displayName: "Mali" },
+  "Saint Vincent and the Grenadines": { code: "VC", displayName: "Saint Vincent and the Grenadines" },
 };
 
 /**
