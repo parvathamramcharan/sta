@@ -105,10 +105,10 @@ const StatItem = memo(({ label, value, icon: Icon, color, isSelected }) => {
         <Icon size={16} strokeWidth={2.5} />
       </div>
       <div className="min-w-0">
-        <div className={`text-[13px] font-black tabular-nums leading-tight truncate ${isSelected ? "text-white" : "text-foreground"}`}>
+        <div className={` font-serif font-semibold tabular-nums leading-tight truncate ${isSelected ? "text-white" : "text-foreground"}`}>
           {value}
         </div>
-        <div className={`text-[9px] font-black uppercase tracking-[0.1em] leading-none ${isSelected ? "text-blue-100/60" : "text-slate-400"}`}>
+        <div className={` font-serif  leading-none ${isSelected ? "text-blue-100/60" : ""}`}>
           {label}
         </div>
       </div>
@@ -137,25 +137,26 @@ const PcapCard = memo(({ file, isSelected, onClick }) => {
       variants={cardVariants}
       key={file.pcap_id}
       onClick={onClick}
-      className={`relative flex flex-col aspect-square cursor-pointer border-2 rounded-xl p-5 pt-8 justify-start gap-8 overflow-hidden transition-colors duration-300 will-change-transform transform-gpu ${isSelected
+      className={`relative flex flex-col min-h-[270px] cursor-pointer border-2 rounded-xl p-5 pt-8 justify-start gap-5 overflow-hidden transition-colors duration-300 will-change-transform transform-gpu ${isSelected
           ? "bg-blue-600 border-blue-600 ring-2 ring-blue-600 shadow-2xl shadow-blue-500/30 z-20"
           : `bg-slate-500/[0.01] border-blue-400/40 shadow-blue-500/10 hover:border-blue-500 hover:shadow-2xl hover:shadow-blue-500/20 z-10`
         }`}
     >
-      <div className="relative z-10 flex flex-col items-start text-left gap-1.5 h-[72px]">
-        <div className={`flex items-center gap-2 ${isSelected ? "text-blue-100/80" : "text-blue-600"}`}>
-          {file.infected_host && <Shield size={12} className="text-rose-500 animate-pulse" />}
-          <span className="text-[10px] font-black uppercase tracking-[0.2em] whitespace-nowrap">PCAP File :</span>
-        </div>
+      {/* <div className="relative z-10 flex flex-col items-start text-left gap-1.5 h-[72px]"> */}
+      <div className="relative z-10 flex flex-col gap-2 min-h-[60px]">
+        
+          <span className=" font-normal text-blue-800 dark:text-slate-400 whitespace-nowrap">PCAP File :</span>
+        
         <div className="pr-2">
-          <div className={`font-black text-[13px] leading-[1.4] line-clamp-2 tracking-tight ${isSelected ? "text-white" : "text-foreground"}`} title={file.filename}>
+          <div className={`font-serif font-semibold leading-[1.4] line-clamp-2 tracking-tight ${isSelected ? "text-white" : "text-foreground"}`} title={file.filename}>
             {file.filename}
           </div>
         </div>
       </div>
 
       {/* Telemetry Matrix */}
-      <div className="relative z-10 grid grid-cols-2 gap-x-3 gap-y-7 pt-1">
+      <div className="relative z-10 grid grid-cols-2 gap-x-3 gap-y-9 pt-1">
+      
         <StatItem
           label="Size"
           value={formatBytes(file.size)}
@@ -494,9 +495,9 @@ export default function PcapClientView({ setId, initialResponse, session }) {
     return (
       <button
         onClick={() => handleFilterClick(label)}
-        className={`flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-bold rounded-md border transition-all ${isActive
+        className={`flex items-center gap-1.5 px-3 py-1.5 font-serif rounded-md border transition-all ${isActive
             ? "bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-500/20"
-            : "bg-card border-theme text-slate-500 hover:text-foreground hover:bg-slate-500/5"
+            : "bg-card border-theme  hover:text-foreground hover:bg-slate-500/5"
           }`}
       >
         {label}
@@ -514,10 +515,10 @@ export default function PcapClientView({ setId, initialResponse, session }) {
   return (
     <div className="flex flex-col gap-3 pb-10">
 
-      <div className="flex items-center justify-between shrink-0 pt-1">
-        <h1 className="text-xl font-black text-foreground tracking-tight flex items-center gap-3">
+      <div className="flex items-center justify-between shrink-0 pt-1 ">
+        <h1 className="text-[20px]  font-medium   font-serif text-foreground flex items-center gap-3 ml-6">
           PCAP Set {setId}
-          <span className="text-amber-500 text-sm font-medium bg-amber-500/10 px-3 py-1 rounded-none border border-amber-500/20">
+          <span className="text-amber-500 text-sm font-serif  bg-amber-500/10 px-3 py-1 rounded-none border border-amber-500/20">
             {stats.total_pcaps || initialData.length} Files
           </span>
           {stats.repository_size && (
@@ -558,34 +559,34 @@ export default function PcapClientView({ setId, initialResponse, session }) {
         </div>
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-2 bg-card rounded-md px-2 py-1 border border-theme">
-            <label className="text-[13px] font-bold text-slate-500">From</label>
+            <label className=" font-serif ">From</label>
             <input
               type="date"
               value={dateFrom}
               max={dateTo || undefined}
               onChange={(e) => { setDateFrom(e.target.value); setCurrentPage(1); }}
-              className="text-[13px] font-bold px-2 py-1 bg-transparent border border-transparent rounded-md"
+              className=" font-serif px-2 py-1 bg-transparent border border-transparent rounded-md"
               placeholder="dd/mm/yyyy"
             />
-            <label className="text-[13px] font-bold text-slate-500">To</label>
+            <label className="font-serif ">To</label>
             <input
               type="date"
               value={dateTo}
               min={dateFrom || undefined}
               onChange={(e) => { setDateTo(e.target.value); setCurrentPage(1); }}
-              className="text-[13px] font-bold px-2 py-1 bg-transparent border border-transparent rounded-md"
+              className=" font-serif px-2 py-1 bg-transparent border border-transparent rounded-md"
               placeholder="dd/mm/yyyy"
             />
             <button
               onClick={() => { setDateFrom(""); setDateTo(""); setCurrentPage(1); }}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-bold rounded-md border transition-all bg-card border-theme text-slate-500 hover:text-foreground hover:bg-slate-500/5`}
+              className={`flex items-center gap-1.5 px-3 py-1.5 font-serif rounded-md border transition-all bg-card border-theme  hover:text-foreground hover:bg-slate-500/5`}
             >
               Clear
             </button>
           </div>
         </div>
         <div className="px-4 text-[11px] font-black text-foreground uppercase tracking-widest border-l border-theme ml-2">
-          <span className="text-blue-600">{(currentPage - 1) * itemsPerPage + 1}-{Math.min(currentPage * itemsPerPage, sortedData.length)}</span> <span className="text-slate-400 px-1 normal-case font-bold">of</span> <span className="text-foreground">{sortedData.length}</span> PCAPs
+          <span className="text-blue-600">{(currentPage - 1) * itemsPerPage + 1}-{Math.min(currentPage * itemsPerPage, sortedData.length)}</span> <span className=" px-1 normal-case font-serif">of</span> <span className="text-foreground fomt-serif">{sortedData.length}</span> PCAPs
         </div>
       </div>
 
@@ -694,7 +695,7 @@ export default function PcapClientView({ setId, initialResponse, session }) {
                         <div key={tab.id} className="flex-1 relative group">
                           <button
                             onClick={() => { setActiveTab("Reports"); setReportInitialMode("country"); }}
-                            className={`w-full whitespace-nowrap px-4 py-4 font-bold dark:text-slate-400 font-black transition-all text-center border-r border-theme relative group flex items-center justify-center gap-2 ${activeTab === "Reports"
+                            className={`w-full whitespace-nowrap px-4 py-4 font-serif dark:text-slate-400  transition-all text-center border-r border-theme relative group flex items-center justify-center gap-2 ${activeTab === "Reports"
                                 ? "text-blue-600 bg-blue-500/10"
                                 : "text-slate-800 hover:text-foreground hover:bg-slate-500/5"
                               }`}
@@ -711,13 +712,13 @@ export default function PcapClientView({ setId, initialResponse, session }) {
                           <div className="absolute top-full left-0 w-full bg-card  border  border-theme shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-[60]">
                             <button
                               onClick={() => { setActiveTab("Reports"); setReportInitialMode("country"); }}
-                              className="w-full px-4 py-3 font-semibold font-black dark:text-slate-400 text-slate-800 hover:text-blue-600 hover:bg-slate-500/10 transition-all text-center border-b border-theme "
+                              className="w-full px-4 py-3 font-serif dark:text-slate-400 text-slate-800 hover:text-blue-600 hover:bg-slate-500/10 transition-all text-center border-b border-theme "
                             >
                               Country
                             </button>
                             <button
                               onClick={() => { setActiveTab("Reports"); setReportInitialMode("isp"); }}
-                              className="w-full px-4 py-3 font-semibold font-black dark:text-slate-400  text-slate-800 hover:text-blue-600 hover:bg-slate-500/10 transition-all text-center "
+                              className="w-full px-4 py-3 font-serif dark:text-slate-400  text-slate-800 hover:text-blue-600 hover:bg-slate-500/10 transition-all text-center "
                             >
                               ISP
                             </button>
@@ -729,7 +730,7 @@ export default function PcapClientView({ setId, initialResponse, session }) {
                       <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id)}
-                        className={`flex-1 whitespace-nowrap px-4 py-4 font-bold font-black dark:text-slate-400  transition-all text-center border-r border-theme last:border-r-0 relative group flex items-center justify-center gap-2 ${activeTab === tab.id
+                        className={`flex-1 whitespace-nowrap px-4 py-4  font-serif dark:text-slate-400  transition-all text-center border-r border-theme last:border-r-0 relative group flex items-center justify-center gap-2 ${activeTab === tab.id
                             ? "text-blue-600 bg-blue-500/10"
                             : "text-slate-800 hover:text-foreground hover:bg-slate-500/5"
                           }`}
@@ -757,8 +758,8 @@ export default function PcapClientView({ setId, initialResponse, session }) {
                   <div className="px-8 py-4 border-b border-theme bg-card shrink-0 flex items-center justify-between">
                     <div className="flex items-center gap-4">
                       <div className="flex flex-col">
-                        <div className="text-[10px] font-black text-blue-600 uppercase  mb-1">PCAP FILENAME</div>
-                        <span className="text-[20px] font-black text-foreground uppercase  leading-none">{selectedFile.filename}</span>
+                        <div className="font-normal text-blue-800 dark:text-slate-400 whitespace-nowrap  mb-1">PCAP FILENAME</div>
+                        <span className="font-serif font-bold  ">{selectedFile.filename}</span>
                       </div> 
                     </div>
                   </div>

@@ -34,19 +34,19 @@ export function ConfirmModal({ isOpen, title = "Confirm", description, confirmLa
                 <AlertTriangle size={30} strokeWidth={1.2} />
               </div>
 
-              <h3 className="text-xl font-black text-foreground mb-2 tracking-tight">{title}</h3>
+              <h3 className="text-xl font-serif text-foreground mb-2 ">{title}</h3>
               {description && <p className="text-slate-500 text-[14px] mb-6">{description}</p>}
 
               <div className="flex gap-3">
                 <button
                   onClick={onClose}
-                  className="flex-1 px-4 py-3 text-[13px] font-black uppercase tracking-widest text-slate-500 bg-slate-500/5 hover:bg-slate-500/10 rounded-xl transition-all active:scale-95 border border-theme"
+                  className="flex-1 px-4 py-3 text-[13px] font-black text-slate-500 bg-slate-500/5 hover:bg-slate-500/10 rounded-xl transition-all active:scale-95 border border-theme"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={onConfirm}
-                  className={`flex-1 px-4 py-3 text-[13px] font-black uppercase tracking-widest text-white rounded-xl transition-all active:scale-95 ${destructive ? 'bg-rose-600 hover:bg-rose-700 shadow-lg shadow-rose-600/20' : 'bg-blue-600 hover:bg-blue-500'}`}
+                  className={`flex-1 px-4 py-3 text-[13px] font-black text-white rounded-xl transition-all active:scale-95 ${destructive ? 'bg-rose-600 hover:bg-rose-700 shadow-lg shadow-rose-600/20' : 'bg-blue-600 hover:bg-blue-500'}`}
                 >
                   {confirmLabel}
                 </button>

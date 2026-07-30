@@ -208,8 +208,8 @@ export function ViewFeedbackModal({ isOpen, onClose }) {
               <MessageSquare size={20} className="text-blue-500" />
             </div>
             <div>
-              <h2 className="text-lg font-black text-foreground">Feedbacks</h2>
-              <p className="text-[12px] font-bold    mt-0.5">
+              <h2 className="text-lg font-black font-serif text-foreground">Feedbacks</h2>
+              <p className=" font-serif    mt-0.5">
                 View all submitted feedbacks
               </p>
             </div>
@@ -228,7 +228,7 @@ export function ViewFeedbackModal({ isOpen, onClose }) {
             <div className="flex items-center justify-center py-12">
               <div className="text-center">
                 <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mb-3"></div>
-                <p className="text-sm font-bold text-slate-500">Loading feedback...</p>
+                <p className="text-sm font-serif">Loading feedback...</p>
               </div>
             </div>
           ) : error ? (
@@ -250,7 +250,7 @@ export function ViewFeedbackModal({ isOpen, onClose }) {
             <div className="flex items-center justify-center py-12">
               <div className="text-center">
                 <MessageSquare size={32} className="mx-auto text-slate-400 mb-3" />
-                <p className="text-sm font-bold text-slate-500">No feedback available yet.</p>
+                <p className="text-sm font-serif">No feedback available yet.</p>
               </div>
             </div>
           ) : (
@@ -258,9 +258,9 @@ export function ViewFeedbackModal({ isOpen, onClose }) {
               {/* Filters and counts */}
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-2">
                 <div className="flex items-center gap-3">
-                  <div className="text-sm font-bold">Total:</div>
-                  <div className="text-sm text-foreground font-black">{feedbackList.length}</div>
-                  <div className="text-sm text-slate-500">(Showing {filteredList.length})</div>
+                  <div className=" font-serif">Total:</div>
+                  <div className="text-foreground font-serif">{feedbackList.length}</div>
+                  <div className=" font-serif">(Showing {filteredList.length})</div>
                 </div>
 
                 <div className="flex items-center gap-2">
@@ -276,17 +276,17 @@ export function ViewFeedbackModal({ isOpen, onClose }) {
                   </select>
                   <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="px-3 py-2 rounded-xl border bg-card text-sm" />
                   <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="px-3 py-2 rounded-xl border bg-card text-sm" />
-                  <button onClick={() => { setRoleFilter("all"); setDateFrom(""); setDateTo(""); }} className="px-3 py-2 bg-slate-500/10 rounded-xl text-sm font-bold">Clear</button>
+                  <button onClick={() => { setRoleFilter("all"); setDateFrom(""); setDateTo(""); }} className="px-3 py-2 bg-slate-500/10 rounded-xl font-serif">Clear</button>
                 </div>
               </div>
 
               {filteredList.length === 0 ? (
                 <div className="flex items-center justify-center py-8">
-                  <div className="text-center text-sm text-slate-500">No feedback matches the selected filters.</div>
+                  <div className="text-center font-serif">No feedback matches the selected filters.</div>
                 </div>
               ) : (
                 <div className="space-y-2">
-                  <div className="hidden md:grid grid-cols-[10fr_12fr_10fr_8fr_11fr_13fr] gap-4 rounded-xl bg-slate-100 dark:bg-slate-800 dark:text-slate-400 px-4 py-3 text-[11px] font-bold uppercase tracking-[0.25em] text-slate-500">
+                  <div className="hidden md:grid grid-cols-[10fr_12fr_10fr_8fr_11fr_13fr] gap-4 rounded-xl bg-slate-100 dark:bg-slate-800 dark:text-slate-400 px-4 py-3 font-serif ">
                     <div className="text-left">Name</div>
                     <div className="text-left">Email</div>
                     <div className="text-left">Organisation</div>
@@ -306,48 +306,48 @@ export function ViewFeedbackModal({ isOpen, onClose }) {
                             <div className="p-1.5 bg-blue-500/10 rounded-lg flex-shrink-0">
                               <MessageSquare size={16} className="text-blue-500" />
                             </div>
-                            <p className="text-base font-normal text-foreground truncate">{feedback.name || "N/A"}</p>
+                            <p className="text-base font-serif  text-foreground truncate">{feedback.name || "N/A"}</p>
                           </div>
 
                           <div className="flex items-center gap-2 min-w-0">
                             <div className="p-1.5 bg-emerald-500/10 rounded-lg flex-shrink-0">
                               <Mail size={16} className="text-emerald-500" />
                             </div>
-                            <p className="text-base font-normal text-foreground truncate">{feedback.email || "N/A"}</p>
+                            <p className="text-base font-serif text-foreground truncate">{feedback.email || "N/A"}</p>
                           </div>
 
                           <div className="flex items-center gap-2 min-w-0">
                             <div className="p-1.5 bg-amber-500/10 rounded-lg flex-shrink-0">
                               <Building2 size={16} className="text-amber-500" />
                             </div>
-                            <p className="text-base font-normal text-foreground truncate">{feedback.organisation || "N/A"}</p>
+                            <p className="text-base font-serif text-foreground truncate">{feedback.organisation || "N/A"}</p>
                           </div>
 
                           <div className="flex items-center gap-2 min-w-0">
                             <div className="p-1.5 bg-violet-500/10 rounded-lg flex-shrink-0">
                               <Building2 size={16} className="text-violet-500" />
                             </div>
-                            <p className="text-base font-normal text-foreground truncate">{feedback.role || "N/A"}</p>
+                            <p className="text-base font-serif text-foreground truncate">{feedback.role || "N/A"}</p>
                           </div>
 
                           <div className="flex items-center gap-2 min-w-0">
                             <div className="p-1.5 bg-slate-500/10 rounded-lg flex-shrink-0">
                               <Clock size={16} className="text-slate-500" />
                             </div>
-                            <p className="text-base font-normal text-foreground truncate">{formatDate(feedback.submitted_at)}</p>
+                            <p className="text-base font-serif           text-foreground truncate">{formatDate(feedback.submitted_at)}</p>
                           </div>
 
                           <div className="flex items-center justify-end gap-2">
                             <button
                               onClick={() => toggleExpand(key)}
-                              className="whitespace-nowrap rounded-xl border border-slate-300 bg-slate-100 px-3 py-1.5 text-sm font-bold text-slate-700 hover:bg-slate-200 transition-colors"
+                              className="whitespace-nowrap rounded-xl border border-slate-300 bg-slate-100 px-3 py-1.5 text-sm font-normal text-slate-700 hover:bg-slate-200 transition-colors"
                             >
                               {expanded.has(key) ? "Hide" : "View"}
                             </button>
                             <button
                               onClick={() => handleDelete(feedback)}
                               disabled={deleting === key}
-                              className="whitespace-nowrap rounded-xl border border-rose-300 bg-rose-50 px-3 py-1.5 text-sm font-bold text-rose-600 hover:bg-rose-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                              className="whitespace-nowrap rounded-xl border border-rose-300 bg-rose-50 px-3 py-1.5 text-sm font-normal text-rose-600 hover:bg-rose-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                               {deleting === key ? "Deleting..." : "Delete"}
                             </button>
@@ -356,7 +356,7 @@ export function ViewFeedbackModal({ isOpen, onClose }) {
 
                         {expanded.has(key) && (
                           <div className="mt-4 pt-3 border-t border-theme">
-                            <p className="text-[12px] font-bold text-slate-500 uppercase tracking-widest mb-2">Message</p>
+                            <p className="text-[12px] font-serif mb-2">Message</p>
                             <p className="text-base text-foreground break-words whitespace-pre-wrap">{feedback.message || "No message provided"}</p>
                           </div>
                         )}

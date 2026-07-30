@@ -1,20 +1,36 @@
 import {
-  PieChart, Pie, Cell, Tooltip as RechartsTooltip, ResponsiveContainer,
-  BarChart, Bar, XAxis, YAxis, CartesianGrid,
-} from 'recharts';
-import PropTypes from 'prop-types';
+  PieChart,
+  Pie,
+  Cell,
+  Tooltip as RechartsTooltip,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+} from "recharts";
+import PropTypes from "prop-types";
 
-const COLORS = ['#4834d4', '#22a6b3', '#f0932b', '#eb4d4b', '#be2edd', '#f9ca24', '#e056fd'];
-
-const GRADIENTS = [
-  ['#4834d4', '#686de0'],
-  ['#22a6b3', '#7ed6df'],
-  ['#f0932b', '#ffbe76'],
-  ['#eb4d4b', '#ff7979'],
-  ['#be2edd', '#e056fd']
+const COLORS = [
+  "#4834d4",
+  "#22a6b3",
+  "#f0932b",
+  "#eb4d4b",
+  "#be2edd",
+  "#f9ca24",
+  "#e056fd",
 ];
 
-const DIRECTION_COLORS = ['#f0932b', '#4834d4', '#22a6b3', '#eb4d4b'];
+const GRADIENTS = [
+  ["#4834d4", "#686de0"],
+  ["#22a6b3", "#7ed6df"],
+  ["#f0932b", "#ffbe76"],
+  ["#eb4d4b", "#ff7979"],
+  ["#be2edd", "#e056fd"],
+];
+
+const DIRECTION_COLORS = ["#f0932b", "#4834d4", "#22a6b3", "#eb4d4b"];
 
 const formatAxisLabel = (value) => {
   if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
@@ -40,12 +56,9 @@ function ChartContainer({ title, children }) {
   return (
     <div className="bg-card shadow-sm p-6 h-[320px] flex flex-col hover:shadow-md transition-all">
       <div className="flex items-center gap-3 mb-6 shrink-0">
-        <div className="w-1.5 h-4 bg-blue-600" />
-        <div className="font-bold text-foreground">{title}</div>
+        <div className="font-serif text-foreground">{title}</div>
       </div>
-      <div className="flex-1 w-full min-h-0">
-        {children}
-      </div>
+      <div className="flex-1 w-full min-h-0">{children}</div>
     </div>
   );
 }
@@ -58,19 +71,24 @@ ChartContainer.propTypes = {
 function CustomTooltip({ active, payload, label }) {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-card/95 backdrop-blur-sm p-3 rounded-none shadow-xl text-[12px] font-medium text-foreground z-50">
-        <p className="text-foreground/60 text-[10px] uppercase mb-1.5 font-bold">
+      <div className="bg-card/95 backdrop-blur-sm p-3 rounded-none shadow-xl text-[12px] font-serif text-foreground z-50">
+        <p className="text-foreground/60 text-[12px]  mb-1.5 ">
           {label || payload[0].name || payload[0].payload.label}
         </p>
         {payload.map((entry, index) => (
           <p
             key={index}
             className="flex items-center gap-2"
-            style={{ color: entry.color || entry.fill || COLORS[index % COLORS.length] }}
+            style={{
+              color: entry.color || entry.fill || COLORS[index % COLORS.length],
+            }}
           >
             <span
               className="w-1.5 h-1.5 rounded-full"
-              style={{ backgroundColor: entry.color || entry.fill || COLORS[index % COLORS.length] }}
+              style={{
+                backgroundColor:
+                  entry.color || entry.fill || COLORS[index % COLORS.length],
+              }}
             />
             {entry.name}: {entry.value.toLocaleString()}
           </p>
@@ -94,15 +112,15 @@ export default function TrafficDistribution({ data }) {
     dns_domains = [],
     top_ssl_domains = [],
     transport = [],
-    url_domains = []
+    url_domains = [],
   } = data || {};
 
   const process = (arr, nameKey, valKey) => {
     if (!arr || arr.length === 0) return [];
 
-    return arr.map(item => ({
+    return arr.map((item) => ({
       label: item.label || item[nameKey] || "Unknown",
-      value: item.value || item[valKey] || 0
+      value: item.value || item[valKey] || 0,
     }));
   };
 
@@ -115,7 +133,6 @@ export default function TrafficDistribution({ data }) {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 pb-6">
-
       {/* Transport Layer */}
       <ChartContainer title="Transport Layer">
         {transData.length === 0 ? (
@@ -153,28 +170,27 @@ export default function TrafficDistribution({ data }) {
               {transData.map((entry, index) => {
                 const total = transData.reduce(
                   (sum, item) => sum + item.value,
-                  0
+                  0,
                 );
 
                 const percent = total
                   ? ((entry.value / total) * 100).toFixed(2)
-                  : '0.00';
+                  : "0.00";
 
                 return (
                   <div key={index} className="flex items-center gap-3">
                     <div
-                      className="w-3.5 h-3.5 rounded-none"
+                      className="w-2.5 h-2.5 rounded-none"
                       style={{
-                        backgroundColor:
-                          COLORS[index % COLORS.length]
+                        backgroundColor: COLORS[index % COLORS.length],
                       }}
                     />
 
-                    <span className="text-[13px] font-bold text-foreground uppercase">
+                    <span className="text-[12px] font-serif text-foreground uppercase">
                       {entry.label}
                     </span>
 
-                    <span className="text-[12px] text-slate-500 font-medium ml-auto">
+                    <span className="text-[12px]  font-serif  ml-auto">
                       {percent}%
                     </span>
                   </div>
@@ -228,9 +244,9 @@ export default function TrafficDistribution({ data }) {
               <XAxis
                 type="number"
                 tick={{
-                  fontSize: 10,
-                  fill: '#475569',
-                  fontWeight: 'bold'
+                  fontSize: 12,
+                  fill: "hsl(var(--foreground) / 0.7)",
+                  fontFamily: "sans-serif",
                 }}
                 tickFormatter={formatAxisLabel}
                 axisLine={false}
@@ -242,29 +258,21 @@ export default function TrafficDistribution({ data }) {
                 type="category"
                 width={80}
                 tick={{
-                  fontSize: 11,
-                  fill: '#334155',
-                  fontWeight: 'bold'
+                  fontSize: 12,
+                  fill: "hsl(var(--foreground) / 0.85)",
+                  fontFamily: "sans-serif",
                 }}
                 axisLine={false}
                 tickLine={false}
               />
-
               <RechartsTooltip
                 content={<CustomTooltip />}
-                cursor={{ fill: 'hsl(var(--foreground) / 0.05)' }}
+                cursor={{ fill: "hsl(var(--foreground) / 0.05)" }}
               />
 
-              <Bar
-                dataKey="value"
-                radius={[0, 0, 0, 0]}
-                barSize={14}
-              >
+              <Bar dataKey="value" radius={[0, 0, 0, 0]} barSize={14}>
                 {appData.slice(0, 5).map((entry, index) => (
-                  <Cell
-                    key={`cell-${index}`}
-                    fill={`url(#colorApp${index})`}
-                  />
+                  <Cell key={`cell-${index}`} fill={`url(#colorApp${index})`} />
                 ))}
               </Bar>
             </BarChart>
@@ -283,13 +291,7 @@ export default function TrafficDistribution({ data }) {
               margin={{ top: 10, right: 10, left: 0, bottom: 20 }}
             >
               <defs>
-                <linearGradient
-                  id="colorUri"
-                  x1="0"
-                  y1="0"
-                  x2="0"
-                  y2="1"
-                >
+                <linearGradient id="colorUri" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor="#48dbfb" />
                   <stop offset="100%" stopColor="#54a0ff" />
                 </linearGradient>
@@ -304,9 +306,9 @@ export default function TrafficDistribution({ data }) {
               <XAxis
                 dataKey="label"
                 tick={{
-                  fontSize: 10,
-                  fill: 'hsl(var(--foreground) / 0.6)',
-                  fontWeight: 'bold'
+                  fontSize: 12,
+                  fill: "hsl(var(--foreground) / 0.7)",
+                  fontFamily: "sans-serif",
                 }}
                 axisLine={false}
                 tickLine={false}
@@ -314,9 +316,9 @@ export default function TrafficDistribution({ data }) {
 
               <YAxis
                 tick={{
-                  fontSize: 10,
-                  fill: 'hsl(var(--foreground) / 0.6)',
-                  fontWeight: 'bold'
+                  fontSize: 12,
+                   fill: "hsl(var(--foreground) / 0.85)",
+                  fontFamily: "sans-serif",
                 }}
                 tickFormatter={formatAxisLabel}
                 axisLine={false}
@@ -325,7 +327,7 @@ export default function TrafficDistribution({ data }) {
 
               <RechartsTooltip
                 content={<CustomTooltip />}
-                cursor={{ fill: 'hsl(var(--foreground) / 0.05)' }}
+                cursor={{ fill: "hsl(var(--foreground) / 0.05)" }}
               />
 
               <Bar
@@ -384,8 +386,8 @@ export default function TrafficDistribution({ data }) {
                 type="number"
                 tick={{
                   fontSize: 10,
-                  fill: 'hsl(var(--foreground) / 0.6)',
-                  fontWeight: 'bold'
+                  fill: "hsl(var(--foreground) / 0.6)",
+                  fontFamily: "sans-serif",
                 }}
                 tickFormatter={formatAxisLabel}
                 axisLine={false}
@@ -398,8 +400,8 @@ export default function TrafficDistribution({ data }) {
                 width={130}
                 tick={{
                   fontSize: 10,
-                  fill: 'hsl(var(--foreground) / 0.8)',
-                  fontWeight: 'bold'
+                  fill: "hsl(var(--foreground) / 0.8)",
+                  fontFamily: "sans-serif",
                 }}
                 axisLine={false}
                 tickLine={false}
@@ -407,19 +409,12 @@ export default function TrafficDistribution({ data }) {
 
               <RechartsTooltip
                 content={<CustomTooltip />}
-                cursor={{ fill: 'hsl(var(--foreground) / 0.05)' }}
+                cursor={{ fill: "hsl(var(--foreground) / 0.05)" }}
               />
 
-              <Bar
-                dataKey="value"
-                radius={[0, 0, 0, 0]}
-                barSize={12}
-              >
+              <Bar dataKey="value" radius={[0, 0, 0, 0]} barSize={12}>
                 {dnsData.slice(0, 5).map((entry, index) => (
-                  <Cell
-                    key={`cell-${index}`}
-                    fill={`url(#colorDns${index})`}
-                  />
+                  <Cell key={`cell-${index}`} fill={`url(#colorDns${index})`} />
                 ))}
               </Bar>
             </BarChart>
@@ -450,11 +445,7 @@ export default function TrafficDistribution({ data }) {
                     {directionData.map((entry, index) => (
                       <Cell
                         key={`cell-${index}`}
-                        fill={
-                          DIRECTION_COLORS[
-                            index % DIRECTION_COLORS.length
-                          ]
-                        }
+                        fill={DIRECTION_COLORS[index % DIRECTION_COLORS.length]}
                       />
                     ))}
                   </Pie>
@@ -468,30 +459,28 @@ export default function TrafficDistribution({ data }) {
               {directionData.map((entry, index) => {
                 const total = directionData.reduce(
                   (sum, item) => sum + item.value,
-                  0
+                  0,
                 );
 
                 const percent = total
                   ? ((entry.value / total) * 100).toFixed(2)
-                  : '0.00';
+                  : "0.00";
 
                 return (
                   <div key={index} className="flex items-center gap-3">
                     <div
-                      className="w-3.5 h-3.5 rounded-none"
+                      className="w-2 h-2 rounded-none"
                       style={{
                         backgroundColor:
-                          DIRECTION_COLORS[
-                            index % DIRECTION_COLORS.length
-                          ]
+                          DIRECTION_COLORS[index % DIRECTION_COLORS.length],
                       }}
                     />
 
-                    <span className="text-[13px] font-bold text-foreground uppercase">
+                    <span className="text-[12px] font-serif text-foreground ">
                       {entry.label}
                     </span>
 
-                    <span className="text-[12px] text-foreground/50 font-medium ml-auto">
+                    <span className="text-[12px] text-foreground/50 font-serif ml-auto">
                       {percent}%
                     </span>
                   </div>
@@ -525,20 +514,12 @@ export default function TrafficDistribution({ data }) {
                   >
                     <stop
                       offset="0%"
-                      stopColor={
-                        GRADIENTS[
-                          (i + 2) % GRADIENTS.length
-                        ][0]
-                      }
+                      stopColor={GRADIENTS[(i + 2) % GRADIENTS.length][0]}
                     />
 
                     <stop
                       offset="100%"
-                      stopColor={
-                        GRADIENTS[
-                          (i + 2) % GRADIENTS.length
-                        ][1]
-                      }
+                      stopColor={GRADIENTS[(i + 2) % GRADIENTS.length][1]}
                     />
                   </linearGradient>
                 ))}
@@ -555,8 +536,8 @@ export default function TrafficDistribution({ data }) {
                 type="number"
                 tick={{
                   fontSize: 10,
-                  fill: '#475569',
-                  fontWeight: 'bold'
+                  fill: "hsl(var(--foreground) / 0.7)",
+                  fontFamily: "sans-serif",                  
                 }}
                 tickFormatter={formatAxisLabel}
                 axisLine={false}
@@ -569,8 +550,8 @@ export default function TrafficDistribution({ data }) {
                 width={130}
                 tick={{
                   fontSize: 10,
-                  fill: '#334155',
-                  fontWeight: 'bold'
+                   fill: "hsl(var(--foreground) / 0.85)",
+                  fontFamily: "sans-serif",
                 }}
                 axisLine={false}
                 tickLine={false}
@@ -578,26 +559,18 @@ export default function TrafficDistribution({ data }) {
 
               <RechartsTooltip
                 content={<CustomTooltip />}
-                cursor={{ fill: 'hsl(var(--foreground) / 0.05)' }}
+                cursor={{ fill: "hsl(var(--foreground) / 0.05)" }}
               />
 
-              <Bar
-                dataKey="value"
-                radius={[0, 0, 0, 0]}
-                barSize={12}
-              >
+              <Bar dataKey="value" radius={[0, 0, 0, 0]} barSize={12}>
                 {sslData.slice(0, 5).map((entry, index) => (
-                  <Cell
-                    key={`cell-${index}`}
-                    fill={`url(#colorSsl${index})`}
-                  />
+                  <Cell key={`cell-${index}`} fill={`url(#colorSsl${index})`} />
                 ))}
               </Bar>
             </BarChart>
           </ResponsiveContainer>
         )}
       </ChartContainer>
-
     </div>
   );
 }

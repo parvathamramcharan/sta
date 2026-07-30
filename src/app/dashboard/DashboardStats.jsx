@@ -3,7 +3,7 @@
 import { useState } from "react";
 import PropTypes from "prop-types";
 import { motion } from "framer-motion";
-import { Globe, MapPin, Server, Activity, Shield, ChevronLeft, ChevronRight, Zap } from "lucide-react";
+import { Globe, MapPin, Server, Activity, Shield, ChevronLeft, ChevronRight, Zap, ChevronDown } from "lucide-react";
 
 export function DashboardStats({ stats }) {
   return (
@@ -58,18 +58,17 @@ function InfectedHostsTable({ hosts = [] }) {
     <div className="flex flex-col h-full group bg-card shadow-sm overflow-hidden">
       <div className="flex items-center justify-between px-8 py-6 border-b border-theme bg-slate-500/[0.02]">
         <div className="flex items-center gap-4">
-          
           <div>
-            <h3 className="text-[16px] font-black text-foreground tracking-tight"> Top Affected Hosts</h3>
+            <h3 className="text-[16px] font-serif text-foreground "> Top Affected Hosts</h3>
           </div>
         </div>
         <div className="flex flex-row items-center gap-12">
           {totalPages > 1 && (
-            <div className="text-[13px] font-black text-slate-600">
+            <div className="text-[13px] font-serif">
               Page <span className="text-foreground">{currentPage}</span> of <span className="text-foreground">{totalPages}</span>
             </div>
           )}
-          <div className="px-3 py-1 bg-rose-500/10 border border-rose-500/20 rounded-none text-[13px] font-black text-rose-600">
+          <div className="px-3 py-1 bg-rose-500/10 border border-rose-500/20 rounded-none text-[13px] font-serif text-rose-600">
             Total : {hosts.length}
           </div>
         </div>
@@ -80,8 +79,8 @@ function InfectedHostsTable({ hosts = [] }) {
           <table className="w-full text-left">
             <thead className="bg-rose-500/10">
               <tr>
-                <th className="w-24 px-8 py-5  font-semibold font-black text-rose-600  ">S.No</th>
-                <th className="px-8 py-5  font-semibold font-black text-rose-600 ">Host IP Address</th>
+                <th className="w-24 px-8 py-2.5  font-serif text-[14px]  text-rose-600  ">S.No</th>
+                <th className="px-8 py-2.5  font-serif  text-[14px] text-rose-600 ">Host IP Address</th>
               </tr>
             </thead>
             <tbody className="">
@@ -94,12 +93,11 @@ function InfectedHostsTable({ hosts = [] }) {
                   className="hover:bg-rose-500/[0.03] transition-colors group/row cursor-default"
                 >
                   <td className="px-8 py-5">
-                    <span className="text-[12px]  group-hover/row:text-rose-400 transition-colors">{startIndex + idx + 1}</span>
+                    <span className="text-[12px] font-serif text-foreground group-hover/row:text-rose-400 transition-colors">{startIndex + idx + 1}</span>
                   </td>
                   <td className="px-8 py-5">
                     <div className="flex items-center gap-3">
-                      <div className="w-1.5 h-1.5 rounded-none bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.4)] opacity-0 group-hover/row:opacity-100 transition-all scale-0 group-hover/row:scale-100" />
-                      <span className="text-[14px]  text-foreground tracking-tight group-hover/row:text-rose-500 group-hover/row:translate-x-1 transition-all duration-300">
+                      <span className="text-[14px]  text-foreground font-serif group-hover/row:text-rose-500 group-hover/row:translate-x-1 transition-all duration-300">
                         {ip}
                       </span>
                     </div>
@@ -130,7 +128,7 @@ function InfectedHostsTable({ hosts = [] }) {
                 whileHover={{ scale: 1.1, y: -2 }}
                 whileTap={{ scale: 0.9 }}
                 onClick={() => setCurrentPage(p)}
-                className={`w-9 h-9 flex items-center justify-center text-[11px] font-black transition-all border rounded-none ${
+                className={`w-9 h-9 flex items-center justify-center text-[11px] font-serif transition-all border rounded-none ${
                   currentPage === p
                     ? "bg-rose-50 text-rose-600 border-rose-600 shadow-[0_0_20px_rgba(225,29,72,0.15)] scale-110 z-10"
                     : "bg-card text-slate-500 border-theme hover:text-rose-600 hover:border-rose-600 hover:shadow-lg hover:shadow-rose-500/10"
@@ -159,7 +157,7 @@ function InfectedHostsTable({ hosts = [] }) {
 }
 
 function StatTable({ title, data = [], icon: Icon, labelKey, headerLabel }) {
-  // Which metric currently drives the ranking / sort order
+  // Which metric currently drives the ranking / sort order AND the column shown
   const [metric, setMetric] = useState("packets");
 
   const sortedData = [...data].sort((a, b) => (b[metric] || 0) - (a[metric] || 0));
@@ -171,53 +169,40 @@ function StatTable({ title, data = [], icon: Icon, labelKey, headerLabel }) {
     return value.toLocaleString();
   };
 
+  const metricLabel = metric === "packets" ? "Packets" : "Connections";
+
   return (
     <div className="flex flex-col h-full group bg-card shadow-sm overflow-hidden hover:shadow-xl hover:shadow-blue-500/5 transition-all duration-500">
       <div className="flex items-center justify-between gap-4 px-6 py-5 border-b border-theme bg-slate-500/[0.02]">
-        <h3 className="text-[15px] font-black text-foreground tracking-tight">{title}</h3>
+        <h3 className="text-[15px] font-serif text-foreground ">{title}</h3>
 
-        {/* Metric toggle — choose whether ranking is driven by packets or connections */}
-        <div className="flex items-center border border-theme rounded-none overflow-hidden shrink-0">
-          <button
-            onClick={() => setMetric("packets")}
-            className={`px-3 py-1.5 text-[12px] font-black uppercase transition-colors ${
-              metric === "packets"
-                ? "bg-blue-600 text-white"
-                : "bg-transparent text-slate-500 hover:text-blue-600 hover:bg-blue-500/5"
-            }`}
+        {/* Metric dropdown — choose whether ranking/column shows packets or connections */}
+        <div className="relative shrink-0">
+          <select
+            value={metric}
+            onChange={(e) => setMetric(e.target.value)}
+            className="appearance-none pl-3 pr-8 py-1.5 text-[12px] font-serif border border-theme rounded-none bg-transparent text-blue-600 hover:bg-blue-500/5 cursor-pointer focus:outline-none focus:ring-1 focus:ring-blue-500"
           >
-            Packets
-          </button>
-          <button
-            onClick={() => setMetric("connections")}
-            className={`px-3 py-1.5 text-[12px] font-black uppercase  transition-colors border-l border-theme ${
-              metric === "connections"
-                ? "bg-blue-600 text-white"
-                : "bg-transparent text-slate-500 hover:text-blue-600 hover:bg-blue-500/5"
-            }`}
-          >
-            Connections
-          </button>
+            <option value="packets">Packets</option>
+            <option value="connections">Connections</option>
+          </select>
+          <ChevronDown
+            size={14}
+            className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-blue-600"
+          />
         </div>
       </div>
 
       <div className="flex-1 flex flex-col">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
-            <thead className="bg-blue-500/10">
+            <thead className="font-serif bg-blue-500/10">
               <tr>
-                <th className="w-16 px-6 py-5 font-semibold font-black text-blue-600">S.No</th>
-                <th className="px-6 py-5 font-semibold font-black text-blue-600">{headerLabel}</th>
-                <th className={`px-6 py-5 font-semibold font-black text-right transition-colors ${metric === "packets" ? "text-blue-600" : "text-slate-400"}`}>
-                  <div className="flex items-center justify-end gap-1.5">
-                  
-                    Packets
-                  </div>
-                </th>
-                <th className={`px-6 py-5 font-semibold font-black text-right transition-colors ${metric === "connections" ? "text-blue-600" : "text-slate-400"}`}>
-                  <div className="flex items-center justify-end gap-1.5">
-                  
-                    Connections
+                <th className="w-16 px-6 py-2.5 text-[14px]  font-serif  text-blue-600">S.No</th>
+                <th className="px-6 py-2.5 font-serif text-[14px]  text-blue-600">{headerLabel}</th>
+                <th className="px-6 py-2.5 font-serif text-blue-600">
+                  <div className="flex items-center text-[14px]  font-serif  gap-1.5">
+                    {metricLabel}
                   </div>
                 </th>
               </tr>
@@ -226,45 +211,26 @@ function StatTable({ title, data = [], icon: Icon, labelKey, headerLabel }) {
               {sortedData.length > 0 ? (
                 sortedData.slice(0, 10).map((item, idx) => (
                   <tr key={idx} className="hover:bg-slate-500/5 transition-colors group/row">
-                    <td className="px-6 py-5">
-                      <span
-                        className={`inline-flex items-center justify-center w-6 h-6 text-[11px] font-black ${
-                          idx === 0
-                            ? "bg-blue-600/10 text-blue-600 border border-blue-600/30"
-                            : "text-slate-400"
-                        }`}
-                      >
-                        {idx + 1}
+                    <td className="px-6 py-2.5 ">
+                     <span className="inline-flex items-center justify-center text-[11px] font-serif" >
+                            {idx + 1}
                       </span>
                     </td>
-                    <td className="px-6 py-5">
-                      <div className="text-[14px] tracking-tight group-hover/row:text-purple-500 transition-colors truncate max-w-[160px]">
+                    <td className="px-6 py-2.5">
+                      <div className="text-[14px] font-serif group-hover/row:text-purple-500 transition-colors  max-w-[160px]">
                         {item[labelKey]}
                       </div>
                     </td>
-                    <td className="px-6 py-5 text-right">
-                      <span
-                        className={`text-[14px] font-black tabular-nums tracking-tighter transition-colors ${
-                          metric === "packets" ? "text-orange-400" : "text-slate-400"
-                        }`}
-                      >
-                        {formatValue(item.packets)}
-                      </span>
-                    </td>
-                    <td className="px-6 py-5 text-right">
-                      <span
-                        className={`text-[14px] font-black tabular-nums tracking-tighter transition-colors ${
-                          metric === "connections" ? "text-orange-400" : "text-slate-400"
-                        }`}
-                      >
-                        {formatValue(item.connections)}
+                    <td className="px-6 py-2.5 text-left">
+                      <span className="text-[14px] font-serif tabular-nums text-orange-400">
+                        {formatValue(item[metric])}
                       </span>
                     </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="4" className="px-8 py-20 text-center text-slate-400 font-bold text-[10px] uppercase tracking-widest opacity-30">
+                  <td colSpan="3" className="px-8 py-20 text-center text-slate-400 font-serif text-[10px] opacity-30">
                     Gathering records...
                   </td>
                 </tr>

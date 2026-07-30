@@ -61,7 +61,7 @@ export function Navbar({ user }) {
   const NavLink = ({ href, icon: Icon, label, isActive }) => (
     <Link
       href={href}
-      className={`h-14 px-4 flex items-center gap-2 text-[15px] dark:text-slate-400 font-bold transition-all relative ${
+      className={`h-14 px-4 flex items-center gap-2 text-[15px] dark:text-slate-400 font-serif transition-all relative ${
         isActive ? "text-blue-500" : "text-slate-800 "
       }`}
     >
@@ -83,7 +83,7 @@ export function Navbar({ user }) {
           <div className="w-6 h-6 rounded-md bg-blue-600 text-white flex items-center justify-center shadow-sm shadow-blue-200">
             <Shield size={14} strokeWidth={2.5} />
           </div>
-          <span className="font-black text-foreground text-[15px]">
+          <span className="font-serif  text-foreground text-[18px]">
             Network Traffic Analysis
           </span>
         </div>
@@ -106,7 +106,7 @@ export function Navbar({ user }) {
                 onMouseLeave={() => setPcapMenuOpen(false)}
               >
                 <button
-                  className={`h-14 px-4 flex items-center gap-2 text-[15px] font-bold transition-all relative outline-none  dark:text-slate-400  ${
+                  className={`h-14 px-4 flex items-center gap-2 text-[15px] font-serif  transition-all relative outline-none  dark:text-slate-400  ${
                     pathname.startsWith("/pcaps")
                       ? "text-blue-500   "
                       : "text-slate-800 "
@@ -140,7 +140,7 @@ export function Navbar({ user }) {
                         key={set.href}
                         href={set.href}
                         onClick={() => setPcapMenuOpen(false)}
-                        className="block px-3 py-2 text-[14px] font-bold text-slate-800  dark:text-slate-400  rounded-md border border-transparent hover:border-blue-500/40 hover:bg-blue-500/10 hover:text-blue-500 transition-colors"
+                        className="block px-3 py-2 text-[14px] font-serif  text-slate-800  dark:text-slate-400  rounded-md border border-transparent hover:border-blue-500/40 hover:bg-blue-500/10 hover:text-blue-500 transition-colors"
                       >
                         {set.label}
                       </Link>
@@ -172,7 +172,7 @@ export function Navbar({ user }) {
                 onMouseLeave={() => setPcapMenuOpen(false)}
               >
                 <button
-                  className={`h-14 px-4 flex items-center gap-2 text-[13px] font-bold transition-all relative outline-none ${
+                  className={`h-14 px-4 flex items-center gap-2 text-[13px] font-serif transition-all relative outline-none ${
                     pathname.startsWith("/reports")
                       ? "text-blue-500"
                       : "text-slate-500 hover:text-slate-800"
@@ -201,7 +201,7 @@ export function Navbar({ user }) {
                     <Link
                       href="/reports?set=1"
                       onClick={() => setPcapMenuOpen(false)}
-                      className="block px-3 py-2 text-[13px] font-bold text-slate-500 rounded-md hover:bg-blue-500/10 hover:text-blue-500 transition-colors"
+                      className="block px-3 py-2 text-[13px] font-serif text-slate-500 rounded-md hover:bg-blue-500/10 hover:text-blue-500 transition-colors"
                     >
                       Set 1
                     </Link>
@@ -273,9 +273,9 @@ export function Navbar({ user }) {
           </button>
 
           {userMenuOpen && (
-            <div className="absolute top-14 right-0 bg-card border border-theme rounded-xl shadow-2xl min-w-[220px] p-1.5 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+            <div className="absolute top-14 right-0 bg-card border border-theme rounded-xl shadow-2xl min-w-[180px] p-1.5 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
               <div className="px-3 py-2 border-b border-theme mb-1">
-                <div className="text-[13px] font-black text-foreground">
+                <div className=" font-serif  text-foreground">
                   {user?.name || "Logged In"}
                 </div>
                 {/* <div className="text-[11px] text-slate-500 truncate">{user?.email || "No email"}</div> */}
@@ -291,7 +291,7 @@ export function Navbar({ user }) {
                       setShowFeedbackModal(true);
                     }
                   }}
-                  className="w-full text-left px-3 py-2 text-[13px] font-bold text-slate-800 dark:text-slate-200 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center justify-between"
+                  className="w-full text-left px-3 py-2 font-serif text-slate-800 dark:text-slate-200 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center justify-between"
                 >
                   <span className="flex items-center gap-2">
                     <MessageSquare size={14} className="text-slate-800 dark:text-slate-200" />
@@ -316,7 +316,7 @@ export function Navbar({ user }) {
                         setFeedbackMenuOpen(false);
                         setShowViewFeedbackModal(true);
                       }}
-                      className="w-full text-left px-3 py-2 text-[13px] font-bold text-slate-800 dark:text-slate-200 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800"
+                      className="w-full text-left px-3 py-2 font-serif  text-slate-800 dark:text-slate-200 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800"
                     >
                       View Feedback
                     </button>
@@ -327,7 +327,7 @@ export function Navbar({ user }) {
                         setFeedbackMenuOpen(false);
                         setShowFeedbackModal(true);
                       }}
-                      className="w-full text-left px-3 py-2 text-[13px] font-bold text-slate-800  dark:text-slate-200 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800"
+                      className="w-full text-left px-3 py-2 font-serif text-slate-800  dark:text-slate-200 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800"
                     >
                       Submit Feedback
                     </button>
@@ -339,7 +339,7 @@ export function Navbar({ user }) {
                   setUserMenuOpen(false);
                   setShowLogoutModal(true);
                 }}
-                className="w-full text-left px-3 py-2 text-[13px] font-bold text-red-500 rounded-md hover:bg-red-500/10 transition-colors flex items-center gap-2 mt-1"
+                className="w-full text-left px-3 py-2 font-serif text-red-500 rounded-md hover:bg-red-500/10 transition-colors flex items-center gap-2 mt-1"
               >
                 <LogOut size={14} className="text-red-500" />
                 Logout

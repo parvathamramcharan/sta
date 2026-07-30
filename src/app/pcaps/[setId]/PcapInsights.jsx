@@ -36,37 +36,35 @@ const PaginatedTable = ({ data, headers, renderRow, icon: Icon, title }) => {
 
   return (
     <div className="flex flex-col h-full group bg-card shadow-sm overflow-hidden rounded-none hover:shadow-2xl hover:shadow-blue-500/5 transition-all duration-500">
-      <div className="flex items-center justify-between px-6 py-5 border-b border-theme bg-slate-500/[0.02]">
+      <div className="flex items-center justify-between px-6 py-5 border-b border-theme bg-blue-500/10 ">
         <div className="flex items-center gap-4">
-          <div className="w-10 h-10 bg-blue-600/10 text-blue-600 flex items-center justify-center border border-blue-600/20 group-hover:scale-110 transition-transform duration-500">
-            <Icon size={20} />
-          </div>
           <div>
-            <h3 className="font-bold font-black text-foreground ">{title}</h3>
+            <h3 className="font-semibold font-serif text-foreground ">{title}</h3>
           </div>
         </div>
-        <div className="flex flex-col items-end gap-1">
-          <div className="px-3 py-1 bg-blue-500/10 border border-blue-500/20 rounded-none text-[10px] font-black text-blue-600  ">
-            Total : {data.length}
-          </div>
+        <div className="flex flex-row items-end gap-2">
           {totalPages > 1 && (
-            <div className="text-[10px] font-black text-slate-600 ">
+            <div className=" px-3 py-1 font-serif ">
               Page <span className="text-foreground">{currentPage}</span> of{" "}
               <span className="text-foreground">{totalPages}</span>
             </div>
           )}
+          <div className="px-3 py-1 bg-blue-500/10 border border-blue-500/20 rounded-none font-serif text-blue-600  ">
+            Total : {data.length}
+          </div>
+          
         </div>
       </div>
 
       <div className="flex-1 flex flex-col">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
-            <thead className="bg-blue-500/10">
+            <thead className="bg-slate-500/[0.02]">
               <tr>
                 {headers.map((h, i) => (
                   <th
                     key={i}
-                    className={`px-8 py-5 font-black text-blue-600  ${h.className || ""}`}
+                    className={`px-8 py-5 font-serif   ${h.className || ""}`}
                   >
                     {h.label}
                   </th>
@@ -78,7 +76,7 @@ const PaginatedTable = ({ data, headers, renderRow, icon: Icon, title }) => {
                 paginatedData.map((item, idx) => (
                   <tr
                     key={idx}
-                    className="hover:bg-slate-500/5 transition-colors group/row"
+                    className="hover:bg-slate-500/5 transition-colors font-serif group/row" 
                   >
                     {renderRow(item, idx, startIndex + idx)}
                   </tr>
@@ -87,7 +85,7 @@ const PaginatedTable = ({ data, headers, renderRow, icon: Icon, title }) => {
                 <tr>
                   <td
                     colSpan={headers.length}
-                    className="px-8 py-20 text-center text-[15px] "
+                    className="px-8 py-20 text-center font-serif  "
                   >
                     No Data Available
                   </td>
@@ -102,14 +100,14 @@ const PaginatedTable = ({ data, headers, renderRow, icon: Icon, title }) => {
             <button
               onClick={() => setCurrentPage(1)}
               disabled={currentPage === 1}
-              className="w-9 h-9 flex items-center justify-center text-[10px] font-black text-slate-400 hover:text-blue-600 disabled:opacity-20 transition-all border border-theme bg-card"
+              className="w-9 h-9 flex items-center justify-center font-serif hover:text-blue-600 disabled:opacity-20 transition-all border border-theme bg-card"
             >
               «
             </button>
             <button
               onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
               disabled={currentPage === 1}
-              className="w-9 h-9 flex items-center justify-center text-[10px] font-black text-slate-400 hover:text-blue-600 disabled:opacity-20 transition-all border border-theme bg-card"
+              className="w-9 h-9 flex items-center justify-center font-serif hover:text-blue-600 disabled:opacity-20 transition-all border border-theme bg-card"
             >
               ‹
             </button>
@@ -135,14 +133,14 @@ const PaginatedTable = ({ data, headers, renderRow, icon: Icon, title }) => {
                 setCurrentPage((prev) => Math.min(totalPages, prev + 1))
               }
               disabled={currentPage === totalPages}
-              className="w-9 h-9 flex items-center justify-center text-[10px] font-black text-slate-400 hover:text-blue-600 disabled:opacity-20 transition-all border border-theme bg-card"
+              className="w-9 h-9 flex items-center justify-center font-serif hover:text-blue-600 disabled:opacity-20 transition-all border border-theme bg-card"
             >
               ›
             </button>
             <button
               onClick={() => setCurrentPage(totalPages)}
               disabled={currentPage === totalPages}
-              className="w-9 h-9 flex items-center justify-center text-[10px] font-black text-slate-400 hover:text-blue-600 disabled:opacity-20 transition-all border border-theme bg-card"
+              className="w-9 h-9 flex items-center justify-center font-serif hover:text-blue-600 disabled:opacity-20 transition-all border border-theme bg-card"
             >
               »
             </button>
@@ -153,6 +151,25 @@ const PaginatedTable = ({ data, headers, renderRow, icon: Icon, title }) => {
   );
 };
 
+// Small reusable dropdown used to toggle between "Packets" and "Connections"
+// in the Internal / External IP tables' metric column header.
+const MetricSelect = ({ value, onChange }) => (
+  <select
+    value={value}
+    onChange={(e) => onChange(e.target.value)}
+    onClick={(e) => e.stopPropagation()}
+    className="bg-blue-500/10 text-blue-600 text-[10px] font-black border border-blue-500/20 rounded-none px-2 py-1 outline-none cursor-pointer hover:bg-blue-500/20 transition-colors"
+  >
+    <option value="packet_count">Packets</option>
+    <option value="connections">Connections</option>
+  </select>
+);
+
+MetricSelect.propTypes = {
+  value: PropTypes.string,
+  onChange: PropTypes.func,
+};
+
 export default function PcapInsights({ data, onIpClick }) {
   if (!data || !data.pcap_insights) {
     return (
@@ -161,6 +178,10 @@ export default function PcapInsights({ data, onIpClick }) {
   }
 
   const [hoveredRtIndex, setHoveredRtIndex] = useState(null);
+
+  // Metric toggles for Internal / External IP tables (Packets vs Connections)
+  const [internalMetric, setInternalMetric] = useState("packet_count");
+  const [externalMetric, setExternalMetric] = useState("packet_count");
 
   const {
     dns_queries = [],
@@ -173,10 +194,102 @@ export default function PcapInsights({ data, onIpClick }) {
     urls = [],
     user_agents = [],
     ftp_session = null,
+    top_countries = [],
+    top_cities = [],
+    top_isps = [],
   } = data.pcap_insights;
 
   return (
     <div className="flex flex-col gap-8 animate-in fade-in duration-500 pb-10">
+       {/* New: Top Countries / Top Cities / Top ISPs */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <PaginatedTable
+          data={top_countries}
+          title="Top Countries"
+          icon={Globe}
+          headers={[
+            { label: "Country" },
+            { label: "IPs", className: "text-center" },
+            { label: "Packets" },
+          ]}
+          renderRow={(c) => (
+            <>
+              <td
+                className="px-8 py-4 text-foreground max-w-[220px] truncate"
+                title={c.name}
+              >
+                {c.name}
+              </td>
+              <td className="px-8 py-4 text-center">
+                <span className=" px-2 py-0.5 font-serif  ">
+                  {c.ip_count}
+                </span>
+              </td>
+              <td className="px-8 py-4 font-serif text-orange-500">
+                {c.packets?.toLocaleString()}
+              </td>
+            </>
+          )}
+        />
+
+        <PaginatedTable
+          data={top_cities}
+          title="Top Cities"
+          icon={Info}
+          headers={[
+            { label: "City" },
+            { label: "IPs", className: "text-center" },
+            { label: "Packets" },
+          ]}
+          renderRow={(c) => (
+            <>
+              <td
+                className="px-8 py-4 text-foreground max-w-[220px] truncate"
+                title={c.name}
+              >
+                {c.name}
+              </td>
+              <td className="px-8 py-4 text-center">
+                <span className="font-serif  px-2 py-0.5  font-serif  ">
+                  {c.ip_count}
+                </span>
+              </td>
+              <td className="px-8 py-4 text-orange-500">
+                {c.packets?.toLocaleString()}
+              </td>
+            </>
+          )}
+        />
+
+        <PaginatedTable
+          data={top_isps}
+          title="Top ISPs"
+          icon={Database}
+          headers={[
+            { label: "ISP" },
+            { label: "IPs", className: "text-center" },
+            { label: "Packets" },
+          ]}
+          renderRow={(c) => (
+            <>
+              <td
+                className="px-8 py-4 text-foreground max-w-[220px] truncate"
+                title={c.name}
+              >
+                {c.name}
+              </td>
+              <td className="px-8 py-4 text-center">
+                <span className="  px-2 py-0.5  font-serif ">
+                  {c.ip_count}
+                </span>
+              </td>
+              <td className="px-8 py-4 text-orange-500 font-serif ">
+                {c.packets?.toLocaleString()}
+              </td>
+            </>
+          )}
+        />
+      </div>
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
         <PaginatedTable
           data={internal_ips}
@@ -184,7 +297,14 @@ export default function PcapInsights({ data, onIpClick }) {
           icon={Shield}
           headers={[
             { label: "IP Address", className: "w-[400px]" },
-            { label: "Packets" },
+            {
+              label: (
+                <MetricSelect
+                  value={internalMetric}
+                  onChange={setInternalMetric}
+                />
+              ),
+            },
           ]}
           renderRow={(ip) => (
             <>
@@ -195,7 +315,10 @@ export default function PcapInsights({ data, onIpClick }) {
                 {ip.ip}
               </td>
               <td className="px-8 py-4 text-orange-500">
-                {ip.packet_count?.toLocaleString()}
+                {(internalMetric === "connections"
+                  ? ip.connections
+                  : ip.packet_count
+                )?.toLocaleString() ?? "N/A"}
               </td>
             </>
           )}
@@ -208,7 +331,14 @@ export default function PcapInsights({ data, onIpClick }) {
           headers={[
             { label: "IP / Location" },
             { label: "ISP" },
-            { label: "Packets" },
+            {
+              label: (
+                <MetricSelect
+                  value={externalMetric}
+                  onChange={setExternalMetric}
+                />
+              ),
+            },
           ]}
           renderRow={(ip) => (
             <>
@@ -226,7 +356,10 @@ export default function PcapInsights({ data, onIpClick }) {
               </td>
               <td className="px-8 py-4  ">{ip.isp || "Unknown"}</td>
               <td className="px-8 py-4  text-orange-500">
-                {ip.packet_count?.toLocaleString() || "N/A"}
+                {(externalMetric === "connections"
+                  ? ip.connections
+                  : ip.packet_count
+                )?.toLocaleString() ?? "N/A"}
               </td>
             </>
           )}
@@ -698,6 +831,8 @@ export default function PcapInsights({ data, onIpClick }) {
           </div>
         </div>
       </div>
+
+     
     </div>
   );
 }

@@ -1165,7 +1165,7 @@ export function WorldMapLeaflet({ externalIps = [], onIpClick, mode = 'pcap', co
               <MapPin size={16} className="text-blue-500 drop-shadow-[0_0_8px_rgba(59,130,246,0.4)]" />
             </div>
             <div>
-              <div className="font-bold  font-black text-foreground  group-hover:text-blue-500 transition-colors">
+              <div className="font-serif  text-foreground  group-hover:text-blue-500 transition-colors">
                 {title}
               </div>
             </div>
@@ -1184,7 +1184,7 @@ export function WorldMapLeaflet({ externalIps = [], onIpClick, mode = 'pcap', co
             <Globe size={16} className="text-blue-500 drop-shadow-[0_0_8px_rgba(59,130,246,0.4)]" />
           </div>
           <div>
-            <div className="font-bold font-black text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400 leading-none mb-1 group-hover:text-blue-400 transition-colors">
+            <div className="font-serif    text-slate-500 dark:text-slate-400 leading-none mb-1 group-hover:text-blue-400 transition-colors">
               {mode === 'summary' ? 'Total Countries' : 'Total IPs Located'}
             </div>
             <div className="text-lg font-black text-foreground tracking-tight group-hover:text-blue-500 transition-colors">
