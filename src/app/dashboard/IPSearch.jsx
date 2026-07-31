@@ -6,7 +6,7 @@ import { fetchIPScan } from "./dashboardApiService";
 import PropTypes from "prop-types";
 import { motion, AnimatePresence } from "framer-motion";
 
-export function IPSearch() {
+export function IPSearch({ initialIp, onScanComplete }) {
   const [ip, setIp] = useState("");
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -57,8 +57,17 @@ export function IPSearch() {
       setError("Unable to connect to the intelligence server.");
     } finally {
       setLoading(false);
+      onScanComplete?.();
     }
   };
+
+  useEffect(() => {
+    if (!initialIp) return;
+
+    setIp(initialIp);
+    handleSearch(null, initialIp);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialIp]);
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
@@ -373,6 +382,11 @@ function WhoisField({ label, value }) {
     </div>
   );
 }
+
+IPSearch.propTypes = {
+  initialIp: PropTypes.string,
+  onScanComplete: PropTypes.func,
+};
 
 DetailRow.propTypes = {
   icon: PropTypes.elementType.isRequired,

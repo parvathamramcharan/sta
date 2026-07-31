@@ -4,7 +4,7 @@ import { ChevronLeft, ChevronRight, Download, Lock, Copy, CheckCircle2, Loader2 
 import PropTypes from 'prop-types';
 import { formatBytes, formatDuration } from './PcapClientView';
 import { downloadPcapConnectionsExport } from './apiService';
-
+import { IPSearch } from '@/app/dashboard/IPSearch';
 
 function KpiCard({ title, value, colorClass = "text-foreground" }) {
   return (
