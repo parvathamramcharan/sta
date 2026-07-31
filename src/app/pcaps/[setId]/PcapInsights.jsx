@@ -35,38 +35,37 @@ const PaginatedTable = ({ data, headers, renderRow, icon: Icon, title }) => {
   });
 
   return (
-    <div className="flex flex-col h-full group bg-card shadow-sm overflow-hidden rounded-none hover:shadow-2xl hover:shadow-blue-500/5 transition-all duration-500">
-      <div className="flex items-center justify-between px-6 py-5 border-b border-theme bg-slate-500/[0.02]">
+    <div className="flex flex-col h-full group bg-card shadow-sm  rounded-none hover:shadow-2xl hover:shadow-blue-500/5 transition-all duration-500">
+      <div className="flex items-center justify-between px-6 py-5 border-b border-theme bg-blue-500/10 ">
         <div className="flex items-center gap-4">
-          <div className="w-10 h-10 bg-blue-600/10 text-blue-600 flex items-center justify-center border border-blue-600/20 group-hover:scale-110 transition-transform duration-500">
-            <Icon size={20} />
-          </div>
           <div>
-            <h3 className="font-bold font-black text-foreground ">{title}</h3>
+            <h3 className="font-semibold font-serif text-foreground ">{title}</h3>
           </div>
         </div>
-        <div className="flex flex-col items-end gap-1">
-          <div className="px-3 py-1 bg-blue-500/10 border border-blue-500/20 rounded-none text-[10px] font-black text-blue-600  ">
-            Total : {data.length}
-          </div>
+        <div className="flex flex-row items-end gap-2">
           {totalPages > 1 && (
-            <div className="text-[10px] font-black text-slate-600 ">
+            <div className=" px-3 py-1 font-serif ">
               Page <span className="text-foreground">{currentPage}</span> of{" "}
               <span className="text-foreground">{totalPages}</span>
             </div>
           )}
+          <div className="px-3 py-1 bg-blue-500/10 border border-blue-500/20 rounded-none font-serif text-blue-600  dark:text-slate-100 ">
+            Total : {data.length}
+          </div>
+          
         </div>
       </div>
 
       <div className="flex-1 flex flex-col">
-        <div className="overflow-x-auto">
+        {/* <div className="overflow-x-auto"> */}
+        <div className="overflow-x-auto overflow-y-visible">
           <table className="w-full text-left">
-            <thead className="bg-blue-500/10">
+            <thead className="bg-slate-500/[0.02]">
               <tr>
                 {headers.map((h, i) => (
                   <th
                     key={i}
-                    className={`px-8 py-5 font-black text-blue-600  ${h.className || ""}`}
+                    className={`px-8 py-5 font-serif   ${h.className || ""}`}
                   >
                     {h.label}
                   </th>
@@ -78,7 +77,7 @@ const PaginatedTable = ({ data, headers, renderRow, icon: Icon, title }) => {
                 paginatedData.map((item, idx) => (
                   <tr
                     key={idx}
-                    className="hover:bg-slate-500/5 transition-colors group/row"
+                    className="hover:bg-slate-500/5 transition-colors font-serif group/row" 
                   >
                     {renderRow(item, idx, startIndex + idx)}
                   </tr>
@@ -87,7 +86,7 @@ const PaginatedTable = ({ data, headers, renderRow, icon: Icon, title }) => {
                 <tr>
                   <td
                     colSpan={headers.length}
-                    className="px-8 py-20 text-center text-[15px] "
+                    className="px-8 py-20 text-center font-serif  "
                   >
                     No Data Available
                   </td>
@@ -102,14 +101,14 @@ const PaginatedTable = ({ data, headers, renderRow, icon: Icon, title }) => {
             <button
               onClick={() => setCurrentPage(1)}
               disabled={currentPage === 1}
-              className="w-9 h-9 flex items-center justify-center text-[10px] font-black text-slate-400 hover:text-blue-600 disabled:opacity-20 transition-all border border-theme bg-card"
+              className="w-9 h-9 flex items-center justify-center font-serif hover:text-blue-600 disabled:opacity-20 transition-all border border-theme bg-card"
             >
               «
             </button>
             <button
               onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
               disabled={currentPage === 1}
-              className="w-9 h-9 flex items-center justify-center text-[10px] font-black text-slate-400 hover:text-blue-600 disabled:opacity-20 transition-all border border-theme bg-card"
+              className="w-9 h-9 flex items-center justify-center font-serif hover:text-blue-600 disabled:opacity-20 transition-all border border-theme bg-card"
             >
               ‹
             </button>
@@ -135,14 +134,14 @@ const PaginatedTable = ({ data, headers, renderRow, icon: Icon, title }) => {
                 setCurrentPage((prev) => Math.min(totalPages, prev + 1))
               }
               disabled={currentPage === totalPages}
-              className="w-9 h-9 flex items-center justify-center text-[10px] font-black text-slate-400 hover:text-blue-600 disabled:opacity-20 transition-all border border-theme bg-card"
+              className="w-9 h-9 flex items-center justify-center font-serif hover:text-blue-600 disabled:opacity-20 transition-all border border-theme bg-card"
             >
               ›
             </button>
             <button
               onClick={() => setCurrentPage(totalPages)}
               disabled={currentPage === totalPages}
-              className="w-9 h-9 flex items-center justify-center text-[10px] font-black text-slate-400 hover:text-blue-600 disabled:opacity-20 transition-all border border-theme bg-card"
+              className="w-9 h-9 flex items-center justify-center font-serif hover:text-blue-600 disabled:opacity-20 transition-all border border-theme bg-card"
             >
               »
             </button>
@@ -153,6 +152,25 @@ const PaginatedTable = ({ data, headers, renderRow, icon: Icon, title }) => {
   );
 };
 
+// Small reusable dropdown used to toggle between "Packets" and "Connections"
+// in the Internal / External IP tables' metric column header.
+const MetricSelect = ({ value, onChange }) => (
+  <select
+    value={value}
+    onChange={(e) => onChange(e.target.value)}
+    onClick={(e) => e.stopPropagation()}
+    className="bg-blue-500/10 text-blue-600 font-serif  border border-blue-500/20 rounded-none px-2 py-1 outline-none cursor-pointer  transition-colors"
+  >
+    <option value="packet_count">Packets</option>
+    <option value="connections">Connections</option>
+  </select>
+);
+
+MetricSelect.propTypes = {
+  value: PropTypes.string,
+  onChange: PropTypes.func,
+};
+
 export default function PcapInsights({ data, onIpClick }) {
   if (!data || !data.pcap_insights) {
     return (
@@ -161,6 +179,10 @@ export default function PcapInsights({ data, onIpClick }) {
   }
 
   const [hoveredRtIndex, setHoveredRtIndex] = useState(null);
+
+  // Metric toggles for Internal / External IP tables (Packets vs Connections)
+  const [internalMetric, setInternalMetric] = useState("packet_count");
+  const [externalMetric, setExternalMetric] = useState("packet_count");
 
   const {
     dns_queries = [],
@@ -173,10 +195,101 @@ export default function PcapInsights({ data, onIpClick }) {
     urls = [],
     user_agents = [],
     ftp_session = null,
+    top_countries = [],
+    top_cities = [],
+    top_isps = [],
   } = data.pcap_insights;
 
   return (
     <div className="flex flex-col gap-8 animate-in fade-in duration-500 pb-10">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <PaginatedTable
+          data={top_countries}
+          title="Top Countries"
+          icon={Globe}
+          headers={[
+            { label: "Country" },
+            { label: "IPs", className: "text-center" },
+            { label: "Packets" },
+          ]}
+          renderRow={(c) => (
+            <>
+              <td
+                className="px-8 py-4 text-foreground max-w-[220px] truncate"
+                title={c.name}
+              >
+                {c.name}
+              </td>
+              <td className="px-8 py-4 text-center">
+                <span className=" px-2 py-0.5 font-serif  ">
+                  {c.ip_count}
+                </span>
+              </td>
+              <td className="px-8 py-4 font-serif text-orange-500">
+                {c.packets?.toLocaleString()}
+              </td>
+            </>
+          )}
+        />
+
+        <PaginatedTable
+          data={top_cities}
+          title="Top Cities"
+          icon={Info}
+          headers={[
+            { label: "City" },
+            { label: "IPs", className: "text-center" },
+            { label: "Packets" },
+          ]}
+          renderRow={(c) => (
+            <>
+              <td
+                className="px-8 py-4 text-foreground max-w-[220px] truncate"
+                title={c.name}
+              >
+                {c.name}
+              </td>
+              <td className="px-8 py-4 text-center">
+                <span className="font-serif  px-2 py-0.5  font-serif  ">
+                  {c.ip_count}
+                </span>
+              </td>
+              <td className="px-8 py-4 text-orange-500">
+                {c.packets?.toLocaleString()}
+              </td>
+            </>
+          )}
+        />
+
+        <PaginatedTable
+          data={top_isps}
+          title="Top ISPs"
+          icon={Database}
+          headers={[
+            { label: "ISP" },
+            { label: "IPs", className: "text-center" },
+            { label: "Packets" },
+          ]}
+          renderRow={(c) => (
+            <>
+              <td
+                className="px-8 py-4 text-foreground max-w-[220px] truncate"
+                title={c.name}
+              >
+                {c.name}
+              </td>
+              <td className="px-8 py-4 text-center">
+                <span className="  px-2 py-0.5  font-serif ">
+                  {c.ip_count}
+                </span>
+              </td>
+              <td className="px-8 py-4 text-orange-500 font-serif ">
+                {c.packets?.toLocaleString()}
+              </td>
+            </>
+          )}
+        />
+      </div>
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
         <PaginatedTable
           data={internal_ips}
@@ -184,18 +297,28 @@ export default function PcapInsights({ data, onIpClick }) {
           icon={Shield}
           headers={[
             { label: "IP Address", className: "w-[400px]" },
-            { label: "Packets" },
+            {
+              label: (
+                <MetricSelect
+                  value={internalMetric}
+                  onChange={setInternalMetric}
+                />
+              ),
+            },
           ]}
           renderRow={(ip) => (
             <>
               <td
-                className="px-8 py-4  text-foreground cursor-pointer hover:text-blue-600 transition-colors"
+                className="px-8 py-4 font-serif text-foreground cursor-pointer hover:text-blue-600 transition-colors"
                 onClick={() => onIpClick && onIpClick(ip.ip)}
               >
                 {ip.ip}
               </td>
-              <td className="px-8 py-4 text-orange-500">
-                {ip.packet_count?.toLocaleString()}
+              <td className="px-8 py-4 font-serif text-orange-500">
+                {(internalMetric === "connections"
+                  ? ip.connections
+                  : ip.packet_count
+                )?.toLocaleString() ?? "N/A"}
               </td>
             </>
           )}
@@ -208,25 +331,35 @@ export default function PcapInsights({ data, onIpClick }) {
           headers={[
             { label: "IP / Location" },
             { label: "ISP" },
-            { label: "Packets" },
+            {
+              label: (
+                <MetricSelect
+                  value={externalMetric}
+                  onChange={setExternalMetric}
+                />
+              ),
+            },
           ]}
           renderRow={(ip) => (
             <>
               <td
-                className="px-8 py-4 cursor-pointer group/ip"
+                className="px-8 py-4 cursor-pointer font-serif group/ip"
                 onClick={() => onIpClick && onIpClick(ip.ip)}
               >
-                <div className=" text-foreground group-hover/ip:text-blue-600 transition-colors">
+                <div className=" text-foreground text-[20px] font-medium  font-serif group-hover/ip:text-blue-600 transition-colors">
                   {ip.ip}
                 </div>
-                <div className="text-[10px]">
+                <div className="text-[14px] font-serif ">
                   {ip.city && `${ip.city}, `}
                   {ip.country}
                 </div>
               </td>
-              <td className="px-8 py-4  ">{ip.isp || "Unknown"}</td>
-              <td className="px-8 py-4  text-orange-500">
-                {ip.packet_count?.toLocaleString() || "N/A"}
+              <td className="px-8 py-4 font-serif  ">{ip.isp || "Unknown"}</td>
+              <td className="px-8 py-4 font-serif   text-orange-500">
+                {(externalMetric === "connections"
+                  ? ip.connections
+                  : ip.packet_count
+                )?.toLocaleString() ?? "N/A"}
               </td>
             </>
           )}
@@ -244,8 +377,6 @@ export default function PcapInsights({ data, onIpClick }) {
             { label: "Count" },
           ]}
           renderRow={(dns, idx, globalIdx) => {
-            // Improved: each record type now carries a category + accent color
-            // so the tooltip can be color-coded and better organized.
             const recordTypeMeanings = {
               A: {
                 num: 1,
@@ -390,12 +521,12 @@ export default function PcapInsights({ data, onIpClick }) {
             return (
               <>
                 <td
-                  className="px-8 py-4  text-foreground max-w-[200px] truncate"
+                  className="px-8 py-4 font-serif  text-foreground max-w-[310px] truncate"
                   title={dns.domain}
                 >
                   {dns.domain}
                 </td>
-                <td className="px-8 py-4 text-center">
+                <td className="px-8 py-4 font-serif text-center">
                   <div
                     className="relative inline-block"
                     onMouseEnter={() => setHoveredRtIndex(globalIdx)}
@@ -406,16 +537,16 @@ export default function PcapInsights({ data, onIpClick }) {
                     <button
                       type="button"
                       tabIndex={0}
-                      className="bg-pink-500/10 text-pink-500 px-2 py-0.5 rounded-md text-[10px] font-black border border-pink-500/10 cursor-help outline-none focus:ring-2 focus:ring-pink-500/30"
+                      className="bg-pink-500/10 text-pink-500 px-2 py-0.5 text-[14px]  font-serif rounded-md   border border-pink-500/10 cursor-help outline-none focus:ring-2 focus:ring-pink-500/30"
                       aria-describedby={tooltipId}
                     >
                       {dns.record_type}
                     </button>
-
+ 
                     <div
                       id={tooltipId}
                       role="tooltip"
-                      className={`absolute z-[100] bottom-full mb-3 left-1/2 -translate-x-1/2 w-56 rounded-xl shadow-2xl border overflow-hidden transform transition-all duration-200 origin-bottom ${
+                      className={`absolute z-[100] bottom-full mb-3 left-1/2 -translate-x-1/2 w-56   border overflow-hidden transform transition-all duration-200 origin-bottom ${
                         isOpen
                           ? "opacity-100 translate-y-0 scale-100 pointer-events-auto"
                           : "opacity-0 translate-y-2 scale-95 pointer-events-none"
@@ -425,11 +556,7 @@ export default function PcapInsights({ data, onIpClick }) {
                         borderColor: "#c7dbfe",
                       }}
                     >
-                      {/* accent top bar */}
-                      <div
-                        className="h-[3px] w-full"
-                        style={{ backgroundColor: accent }}
-                      />
+                      
 
                       <div
                         className="px-3.5 py-3"
@@ -438,14 +565,14 @@ export default function PcapInsights({ data, onIpClick }) {
                         <div className="flex items-center justify-between gap-2">
                           <div className="flex items-center gap-2">
                             <span
-                              className="text-[13px] font-black tracking-wide"
+                              className="font-serif"
                               style={{ color: accent }}
                             >
                               {rt || "Unknown"}
                             </span>
                             {rec && (
                               <span
-                                className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full"
+                                className="font-serif px-1.5 py-0.5 rounded-full"
                                 style={{
                                   color: accent,
                                   backgroundColor: `${accent}22`,
@@ -457,7 +584,7 @@ export default function PcapInsights({ data, onIpClick }) {
                           </div>
                           {rec?.num !== undefined && (
                             <span
-                              className="text-[10px] font-mono font-bold"
+                              className="font-serif "
                               style={{ color: accent, opacity: 0.75 }}
                             >
                               Type {rec.num}
@@ -465,24 +592,17 @@ export default function PcapInsights({ data, onIpClick }) {
                           )}
                         </div>
 
-                        <div className="text-[11.5px] leading-snug text-slate-700 mt-1.5">
+                        <div className="font-serif dark:text-slate-900 leading-snug mt-1.5">
                           {rec?.desc ||
                             "No description available for this record type."}
                         </div>
                       </div>
 
-                      <div
-                        className="absolute left-1/2 top-full -translate-x-1/2 w-2.5 h-2.5 rotate-45 border-r border-b"
-                        style={{
-                          backgroundColor: "#eaf1ff",
-                          borderColor: "#c7dbfe",
-                          marginTop: "-6px",
-                        }}
-                      />
+                      
                     </div>
                   </div>
                 </td>
-                <td className="px-8 py-4  text-foreground ">{dns.count}</td>
+                <td className="px-8 py-4 font-serif text-foreground ">{dns.count}</td>
               </>
             );
           }}
@@ -499,12 +619,12 @@ export default function PcapInsights({ data, onIpClick }) {
           renderRow={(dom) => (
             <>
               <td
-                className="px-8 py-4  max-w-[200px] truncate"
+                className="px-8 py-4 font-serif min-w-[400px] truncate"
                 title={dom.label}
               >
                 {dom.label}
               </td>
-              <td className="px-8 py-4  text-emerald-500">{dom.value}</td>
+              <td className="px-8 py-4 font-serif   text-emerald-500">{dom.value}</td>
             </>
           )}
         />
@@ -521,10 +641,10 @@ export default function PcapInsights({ data, onIpClick }) {
           ]}
           renderRow={(url) => (
             <>
-              <td className="px-8 py-4 max-w-xl truncate" title={url.label}>
+              <td className="px-8 py-4 max-w-xl font-serif truncate" title={url.label}>
                 {url.label}
               </td>
-              <td className="px-8 py-4  text-foreground">{url.value}</td>
+              <td className="px-8 py-4 font-serif  text-foreground">{url.value}</td>
             </>
           )}
         />
@@ -543,18 +663,18 @@ export default function PcapInsights({ data, onIpClick }) {
         renderRow={(file) => (
           <>
             <td
-              className="px-8 py-4  text-foreground max-w-xs truncate"
+              className="px-8 py-4 font-serif text-foreground max-w-[550px] truncate"
               title={file.filename}
             >
               {file.filename}
             </td>
-            <td className="px-8 py-4 ">{file.type}</td>
-            <td className="px-8 py-4 text-center">
-              <span className="bg-emerald-500/10 text-emerald-500 px-2 py-0.5 rounded-none text-[10px] font-black border border-emerald-500/10">
+            <td className="px-8 py-4 font-serif ">{file.type}</td>
+            <td className="px-8 py-4 font-serif text-center">
+              <span className="bg-emerald-500/10 text-emerald-500 px-2 py-0.5 rounded-none  border border-emerald-500/10">
                 {file.protocol}
               </span>
             </td>
-            <td className="px-8 py-4  text-foreground">{file.file_size}</td>
+            <td className="px-8 py-4  font-serif text-foreground">{file.file_size}</td>
           </>
         )}
       />
@@ -571,9 +691,9 @@ export default function PcapInsights({ data, onIpClick }) {
           ]}
           renderRow={(p) => (
             <>
-              <td className="px-8 py-4  text-orange-500">{p.port}</td>
-              <td className="px-8 py-4  text-slate-600 ">{p.protocol}</td>
-              <td className="px-8 py-4 text-foreground">
+              <td className="px-8 py-4 font-serif text-orange-500">{p.port}</td>
+              <td className="px-8 py-4 font-serif  ">{p.protocol}</td>
+              <td className="px-8 py-4 font-serif text-foreground">
                 {p.usage?.toLocaleString()}
               </td>
             </>
@@ -587,8 +707,8 @@ export default function PcapInsights({ data, onIpClick }) {
           headers={[{ label: "Protocol" }, { label: "Packets" }]}
           renderRow={(proto) => (
             <>
-              <td className="px-8 py-4  text-foreground">{proto.protocol}</td>
-              <td className="px-8 py-4  text-purple-500">
+              <td className="px-8 py-4  font-serif text-foreground">{proto.protocol}</td>
+              <td className="px-8 py-4  font-serif text-purple-500">
                 {proto.packet_count?.toLocaleString()}
               </td>
             </>
@@ -601,7 +721,7 @@ export default function PcapInsights({ data, onIpClick }) {
               <div className="p-2 bg-blue-500/10 rounded-lg">
                 <Cpu size={18} className="text-blue-500" />
               </div>
-              <h3 className="font-black text-foreground">User Agents</h3>
+              <h3 className="font-serif font-semibold text-foreground">User Agents</h3>
             </div>
           </div>
           <div className="flex flex-col gap-2 max-h-[350px] overflow-y-auto pr-2 custom-scrollbar">
@@ -611,17 +731,17 @@ export default function PcapInsights({ data, onIpClick }) {
                   key={idx}
                   className="bg-card border border-theme p-3 rounded-none shadow-sm hover:border-blue-500/30 transition-all group"
                 >
-                  <div className="text-[13px] text-slate-500 mb-1 flex items-center gap-1.5">
-                    <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />{" "}
+                  <div className="font-serif text-orange-500 mb-1 flex items-center gap-1.5">
+                    <div className="w-1.5 h-1.5 font-serif rounded-full bg-blue-500" />{" "}
                     Agent {idx + 1}
                   </div>
-                  <div className="text-[13px] text-slate-600 leading-relaxed break-all line-clamp-2 group-hover:line-clamp-none transition-all">
+                  <div className="font-serif  leading-relaxed break-all line-clamp-2 group-hover:line-clamp-none transition-all">
                     {ua.user_agent}
                   </div>
                 </div>
               ))
             ) : (
-              <div className="py-6 text-center text-slate-500">
+              <div className="py-6 text-center font-serif ">
                 No data available.
               </div>
             )}
@@ -633,71 +753,73 @@ export default function PcapInsights({ data, onIpClick }) {
                 <Server size={20} />
               </div>
               <div>
-                <h3 className="text-sm font-black text-foreground">
+                <h3 className="font-serif font-semibold   text-foreground">
                   FTP Session
                 </h3>
               </div>
             </div>
 
             {ftp_session ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-slate-700">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 ">
                 <div>
-                  <div className="text-slate-500 uppercase text-[10px] tracking-wide mb-1">
+                  <div className="  font-serif   mb-1">
                     Command
                   </div>
-                  <div className="font-black text-foreground">
+                  <div className=" font-serif   font-semibold text-[20px] text-foreground">
                     {ftp_session.command || "N/A"}
                   </div>
                 </div>
                 <div>
-                  <div className="text-slate-500 uppercase text-[10px] tracking-wide mb-1">
+                  <div className=" font-serif mb-1">
                     Username
                   </div>
-                  <div className="font-black text-foreground">
+                  <div className="font-serif  font-semibold  text-[20px] text-foreground">
                     {ftp_session.username || "N/A"}
                   </div>
                 </div>
                 <div>
-                  <div className="text-slate-500 uppercase text-[10px] tracking-wide mb-1">
+                  <div className="font-serif   mb-1">
                     Source IP
                   </div>
-                  <div className="font-black text-foreground">
+                  <div className="font-serif  font-semibold  text-[20px] text-foreground">
                     {ftp_session.source_ip || "N/A"}
                   </div>
                 </div>
                 <div>
-                  <div className="text-slate-500 uppercase text-[10px] tracking-wide mb-1">
+                  <div className=" font-serif  mb-1">
                     Destination IP
                   </div>
-                  <div className="font-black text-foreground">
+                  <div className="font-serif  font-semibold text-[20px] text-foreground">
                     {ftp_session.destination_ip || "N/A"}
                   </div>
                 </div>
                 <div>
-                  <div className="text-slate-500 uppercase text-[10px] tracking-wide mb-1">
+                  <div className=" font-serif  mb-1">
                     Port
                   </div>
-                  <div className="font-black text-foreground">
+                  <div className="font-serif  font-semibold text-[20px]text-foreground">
                     {ftp_session.port || "N/A"}
                   </div>
                 </div>
                 <div className="md:col-span-2">
-                  <div className="text-slate-500 uppercase text-[10px] tracking-wide mb-1">
+                  <div className="font-serif  mb-1">
                     Transferred File
                   </div>
-                  <div className="font-black text-foreground truncate">
+                  <div className="font-serif  font-semibold text-[20px] text-foreground truncate">
                     {ftp_session.file_transferred || "N/A"}
                   </div>
                 </div>
               </div>
             ) : (
-              <div className="py-4 text-center text-slate-500">
-                Not available.
+              <div className="py-4 text-center ">
+                Not Data available.
               </div>
             )}
           </div>
         </div>
       </div>
+
+     
     </div>
   );
 }

@@ -86,8 +86,8 @@ export function DashboardSummary({ data }) {
               <kpi.icon size={28} className={getIconColorClass(kpi.color)} strokeWidth={2} />
             </div>
             <div>
-              <p className="font-bold font-black text-slate-500 mb-1">{kpi.label}</p>
-              <h3 className="text-lg font-black text-foreground " >{kpi.value}</h3>
+              <p className="font-serif  text- mb-1">{kpi.label}</p>
+              <h3 className="text-lg  font-serif text-foreground " >{kpi.value}</h3>
             </div>
           </div>
           

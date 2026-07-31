@@ -101,8 +101,8 @@ export function FeedbackModal({ isOpen, onClose, user }) {
               <MessageSquare size={20} className="text-blue-500" />
             </div>
             <div>
-              <h2 className="text-lg font-black text-foreground">Submit Feedback</h2>
-              <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">Share your valuable feedback </p>
+              <h2 className="text-lg font-semibold font-serif  text-foreground">Submit Feedback</h2>
+              <p className="font-serif  mt-0.5">Share your valuable feedback </p>
             </div>
           </div>
           <button 
@@ -115,7 +115,7 @@ export function FeedbackModal({ isOpen, onClose, user }) {
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div className="space-y-1.5">
-            <label htmlFor="feedback-name" className="text-[12px] font-black text-slate-400 uppercase tracking-widest">Name <span className="text-rose-500">*</span></label>
+            <label htmlFor="feedback-name" className="font-serif ">Name <span className="text-rose-500">*</span></label>
             <input 
               id="feedback-name"
               type="text" 
@@ -123,12 +123,12 @@ export function FeedbackModal({ isOpen, onClose, user }) {
               value={formData.name} 
               onChange={handleChange} 
               required
-              className="w-full bg-slate-500/5 border border-theme rounded-xl px-4 py-3 text-sm font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
+              className="w-full bg-slate-500/5 border border-theme rounded-xl px-4 py-3 text-sm  text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
             />
           </div>
 
           <div className="space-y-1.5">
-            <label htmlFor="feedback-email" className="text-[12px] font-black text-slate-400 uppercase tracking-widest">Email <span className="text-rose-500">*</span></label>
+            <label htmlFor="feedback-email" className="font-serif">Email <span className="text-rose-500">*</span></label>
             <input 
               id="feedback-email"
               type="email" 
@@ -143,7 +143,7 @@ export function FeedbackModal({ isOpen, onClose, user }) {
           </div>
 
           <div className="space-y-1.5">
-            <label htmlFor="feedback-organisation" className="text-[12px] font-black text-slate-400 uppercase tracking-widest">Organisation</label>
+            <label htmlFor="feedback-organisation" className="font-serif  ">Organisation</label>
             <input 
               id="feedback-organisation"
               type="text" 
@@ -151,12 +151,12 @@ export function FeedbackModal({ isOpen, onClose, user }) {
               value={formData.organisation} 
               onChange={handleChange} 
               placeholder="Optional"
-              className="w-full bg-slate-500/5 border border-theme rounded-xl px-4 py-3 text-sm font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
+              className="w-full bg-slate-500/5 border border-theme rounded-xl px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
             />
           </div>
 
           <div className="space-y-1.5">
-            <label htmlFor="feedback-message" className="text-[12px] font-black text-slate-400 uppercase tracking-widest">Message <span className="text-rose-500">*</span></label>
+            <label htmlFor="feedback-message" className="font-serif">Message <span className="text-rose-500">*</span></label>
             <textarea 
               id="feedback-message"
               name="message" 
@@ -169,7 +169,7 @@ export function FeedbackModal({ isOpen, onClose, user }) {
           </div>
 
           {status && (
-            <div className={`p-4 rounded-xl text-sm font-bold flex items-center gap-2 ${
+            <div className={`p-4 rounded-xl text-sm font-serif flex items-center gap-2 ${
               status.type === 'success' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-500 border border-rose-500/20'
             }`}>
               {status.text}
@@ -180,14 +180,14 @@ export function FeedbackModal({ isOpen, onClose, user }) {
             <button 
               type="button" 
               onClick={onClose}
-              className="px-5 py-2.5 rounded-xl text-sm font-bold text-slate-400 hover:text-foreground hover:bg-slate-500/10 transition-colors"
+              className="px-5 py-2.5 rounded-xl text-sm font-serif text-slate-400 hover:text-foreground hover:bg-slate-500/10 transition-colors"
             >
               Cancel
             </button>
             <button 
               type="submit" 
               disabled={loading}
-              className="px-5 py-2.5 rounded-xl text-sm font-bold text-white bg-blue-600 hover:bg-blue-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className="px-5 py-2.5 rounded-xl text-sm font-serif text-white bg-blue-600 hover:bg-blue-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               <Send size={16} />
               {loading ? 'Submitting...' : 'Submit Feedback'}

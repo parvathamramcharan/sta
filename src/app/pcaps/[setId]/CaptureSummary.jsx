@@ -4,12 +4,13 @@ import { ChevronLeft, ChevronRight, Download, Lock, Copy, CheckCircle2, Loader2 
 import PropTypes from 'prop-types';
 import { formatBytes, formatDuration } from './PcapClientView';
 import { downloadPcapConnectionsExport } from './apiService';
+import { IPSearch } from '@/app/dashboard/IPSearch';
 
 function KpiCard({ title, value, colorClass = "text-foreground" }) {
   return (
     <div className="bg-card px-6 py-6 border border-theme flex flex-col justify-between transition-all hover:bg-slate-500/[0.02] min-h-[110px]">
-      <div className="font-bold text-slate-500/80 mb-3">{title}</div>
-      <div className={`text-xl font-black tracking-tight ${colorClass} truncate`} title={typeof value === 'string' ? value : ''}>
+      <div className="  font-serif   mb-3">{title}</div>
+      <div className={`text-2xl font-serif font=-semibold  tracking-tight ${colorClass} truncate`} title={typeof value === 'string' ? value : ''}>
         {value}
       </div>
     </div>
@@ -149,22 +150,22 @@ export default function CaptureSummary({
           value={
             start_time_utc ? (
               <div className="flex flex-col leading-none gap-1">
-                <span className="text-[18px] font-black tracking-tight">{start_time_utc.split('T')[0]}, {start_time_utc.split('T')[1]?.split(/[.+Z]/)[0]}</span>
+                <span className="text-[18px] font-serif tracking-tight">{start_time_utc.split('T')[0]}, {start_time_utc.split('T')[1]?.split(/[.+Z]/)[0]}</span>
               </div>
             ) : "-"
           }
-          colorClass="text-slate-600"
+          colorClass="text-blue-600"
         />
         <KpiCard
           title="End Time"
           value={
             end_time_utc ? (
               <div className="flex flex-col leading-none gap-1">
-                <span className="text-[18px] font-black tracking-tight">{end_time_utc.split('T')[0]},   {end_time_utc.split('T')[1]?.split(/[.+Z]/)[0]}</span>
+                <span className="text-[18px] font-serif tracking-tight">{end_time_utc.split('T')[0]},   {end_time_utc.split('T')[1]?.split(/[.+Z]/)[0]}</span>
               </div>
             ) : "-"
           }
-          colorClass="text-slate-600"
+          colorClass="text-emerald-600"
         />
         <KpiCard title="Connections" value={total_connections?.toLocaleString() || "0"} colorClass="text-purple-600" />
         
@@ -182,8 +183,7 @@ export default function CaptureSummary({
       <div className="bg-card shadow-sm p-8 h-96 flex flex-col transition-colors">
         <div className="flex items-center justify-between mb-10">
           <div className="flex items-center gap-3">
-            <div className="w-1.5 h-6 bg-blue-600" />
-            <h3 className="text-[13px] font-black  text-foreground">PCAP Session Timeline</h3>
+            <h3 className="font-serif font-semibold  text-foreground">PCAP Session Timeline</h3>
           </div>
         </div>
         <div className="flex-1 w-full min-h-0">
@@ -198,18 +198,18 @@ export default function CaptureSummary({
               <CartesianGrid vertical={false} stroke="currentColor" strokeDasharray="3 3" className="text-slate-200 dark:text-slate-800" />
               <XAxis
                 dataKey="label"
-                tick={{ fontSize: 11, fill: 'currentColor', fontWeight: 'bold' }}
+                tick={{ fontSize: 12, fill: 'currentColor', fontFamily: "sans-serif"}}
                 className="text-slate-500 dark:text-slate-400"
                 axisLine={{ stroke: 'currentColor' }}
                 tickLine={false}
-                label={{ value: 'TIME (24H FORMAT)', position: 'insideBottom', offset: -30, fontSize: 15, fontWeight: 'bold', fill: 'currentColor', letterSpacing: '0.1em' }}
+                label={{ value: 'Time (24H Format)', position: 'insideBottom', offset: -30, fontSize: 15, fill: 'currentColor' }}
               />
               <YAxis
-                tick={{ fontSize: 11, fill: 'currentColor', fontWeight: 'bold' }}
+                tick={{ fontSize: 12, fill: 'currentColor', fontFamily: 'sans-serif' }}
                 className="text-slate-500 dark:text-slate-400"
                 axisLine={{ stroke: 'currentColor' }}
                 tickLine={false}
-                label={{ value: 'PACKETS', angle: -90, position: 'center', fontSize: 15, fontWeight: 'bold', fill: 'currentColor', letterSpacing: '0.1em', dx: -45 }}
+                label={{ value: 'Packets', angle: -90, position: 'center', fontSize: 15, fill: 'currentColor', dx: -45 }}
               />
               <Tooltip
                 contentStyle={{ backgroundColor: 'hsl(var(--card))', borderRadius: '0', border: '1px solid hsl(var(--border))', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
@@ -237,19 +237,19 @@ export default function CaptureSummary({
         <div className="px-8 py-5 border-b border-theme bg-slate-500/[0.02] flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="inline-flex items-center px-4 py-2 bg-emerald-500/8 border border-emerald-500/20 rounded-none">
-              <span className="font-bold font-black text-emerald-700 ">PCAP Connection Logs</span>
+              <span className="font-serif font-semibold text-emerald-700 ">PCAP Connection Logs</span>
             </div>
           </div>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
-              <span className="text-[12px] font-black text-slate-500  ">Time Filter:</span>
+              <span className="font-serif  ">Time Filter:</span>
               <select
                 value={timeFilter}
                 onChange={(e) => {
                   setTimeFilter(e.target.value);
                   setConnectionsPage(1);
                 }}
-                className="h-[42px] bg-card border border-theme rounded-none px-4 text-[10px] font-black text-foreground outline-none focus:border-blue-600 transition-all cursor-pointer appearance-none hover:bg-slate-500/10"
+                className="h-[42px] bg-card border border-theme rounded-none px-4 font-serif  text-foreground outline-none focus:border-blue-600 transition-all cursor-pointer appearance-none hover:bg-slate-500/10"
               >
                 <option value="" className="bg-card">All Temporal Records</option>
                 <option value="1d" className="bg-card">Last 24 Hours</option>
@@ -263,7 +263,7 @@ export default function CaptureSummary({
               const total = connectionsPagination.total || 0;
               const tp = connectionsPagination.total_pages || Math.ceil(total / 100);
               return (
-                <div className="h-[42px] flex items-center px-4 bg-blue-500/10 border border-blue-500/20 rounded-none text-[10px] font-black text-blue-600 uppercase tracking-widest">
+                <div className="h-[42px] flex items-center px-4 bg-blue-500/10 border border-blue-500/20 rounded-none font-serif  text-blue-600 ">
                   {total} Records Total
                 </div>
               );
@@ -303,15 +303,15 @@ className="h-[42px] inline-flex items-center gap-2 px-4 border border-emerald-30
           <table className="w-full text-left">
             <thead>
               <tr className="border-b border-theme bg-slate-500/5 transition-colors">
-                <th className="px-8 py-4 font-bold font-black text-slate-700 dark:text-slate-300 text-left">Timestamp</th>
-                <th className="px-8 py-4 font-bold font-black text-slate-700 dark:text-slate-300 text-left">Source IP</th>
-                <th className="px-8 py-4 font-bold font-black text-slate-700 dark:text-slate-300 text-left">Dest IP</th>
-                <th className="px-8 py-4 font-bold font-black text-slate-700 dark:text-slate-300 text-left">Duration</th>
-                <th className="px-8 py-4 font-bold font-black text-slate-700 dark:text-slate-300 text-left">Port</th>
-                <th className="px-8 py-4 font-bold font-black text-slate-700 dark:text-slate-300 text-left">Protocol</th>
-                <th className="px-8 py-4 font-bold font-black text-slate-700 dark:text-slate-300 text-left">Service</th>
-                <th className="px-8 py-4 font-bold font-black text-slate-700 dark:text-slate-300 text-left">Status</th>
-                <th className="px-8 py-4 font-bold font-black text-slate-700 dark:text-slate-300 text-left">Bytes</th>
+                <th className="px-8 py-4 font-serif dark:text-slate-300 text-left">Timestamp</th>
+                <th className="px-8 py-4 font-serif  dark:text-slate-300 text-left">Source IP</th>
+                <th className="px-8 py-4 font-serif dark:text-slate-300 text-left">Dest IP</th>
+                <th className="px-8 py-4 font-serif dark:text-slate-300 text-left">Duration</th>
+                <th className="px-8 py-4 font-serif dark:text-slate-300 text-left">Port</th>
+                <th className="px-8 py-4 font-serif dark:text-slate-300 text-left">Protocol</th>
+                <th className="px-8 py-4 font-serif dark:text-slate-300 text-left">Service</th>
+                <th className="px-8 py-4 font-serif dark:text-slate-300 text-left">Status</th>
+                <th className="px-8 py-4 font-serif dark:text-slate-300 text-left">Bytes</th>
               </tr>
             </thead>
             <tbody className="">
@@ -325,12 +325,12 @@ className="h-[42px] inline-flex items-center gap-2 px-4 border border-emerald-30
                 return (
                   <tr key={idx} className="hover:bg-blue-500/[0.04] transition-colors group border-b border-theme last:border-0">
                     <td className="px-8 py-3.5 whitespace-nowrap">
-                      <span className="text-[14px] text-slate-600 dark:text-slate-400 tabular-nums">{formatTime(conn.timestamp || conn.ts)}</span>
+                      <span className="font-serif  dark:text-slate-400 tabular-nums">{formatTime(conn.timestamp || conn.ts)}</span>
                     </td>
                     <td className="px-8 py-3.5">
                       <button
                         type="button"
-                        className="text-[14px] text-foreground cursor-pointer hover:text-blue-600 transition-colors bg-transparent border-none p-0"
+                        className="font-serif text-foreground cursor-pointer hover:text-blue-600 transition-colors bg-transparent border-none p-0"
                         onClick={() => onIpClick && onIpClick(conn.src_ip || conn["id.orig_h"] || conn.source_ip)}
                       >
                         {conn.src_ip || conn["id.orig_h"] || conn.source_ip}
@@ -339,24 +339,24 @@ className="h-[42px] inline-flex items-center gap-2 px-4 border border-emerald-30
                     <td className="px-8 py-3.5">
                       <button
                         type="button"
-                        className="text-[14px] text-foreground cursor-pointer hover:text-blue-600 transition-colors bg-transparent border-none p-0"
+                        className="font-serif text-foreground cursor-pointer hover:text-blue-600 transition-colors bg-transparent border-none p-0"
                         onClick={() => onIpClick && onIpClick(conn.dest_ip || conn["id.resp_h"] || conn.destination_ip)}
                       >
                         {conn.dest_ip || conn["id.resp_h"] || conn.destination_ip}
                       </button>
                     </td>
                     <td className="px-8 py-3.5">
-                      <span className="text-[14px]  dark:text-slate-400">{formatDuration(conn.duration || conn["id.duration"] || 0)}</span>
+                      <span className="font-serif  dark:text-slate-400">{formatDuration(conn.duration || conn["id.duration"] || 0)}</span>
                     </td>
                     <td className="px-8 py-3.5">
-                      <span className="text-[14px] text-orange-500">{conn.resp_port || conn["id.resp_p"] || conn.dest_port || conn.destination_port}</span>
+                      <span className="font-serif text-orange-500">{conn.resp_port || conn["id.resp_p"] || conn.dest_port || conn.destination_port}</span>
                     </td>
                     <td className="px-8 py-3.5">
-                      <span className="text-[14px] text-slate-500 dark:text-slate-400 uppercase tracking-widest">{conn.proto || conn.protocol}</span>
+                      <span className="font-serif  dark:text-slate-400 uppercase ">{conn.proto || conn.protocol}</span>
                     </td>
                     <td className="px-8 py-3.5">
                       {conn.service ? (
-                        <span className="text-[12px] text-purple-600 dark:text-purple-400 uppercase bg-purple-500/10 px-2.5 py-1 rounded-none border border-purple-500/20 inline-block">
+                        <span className="font-serif text-purple-600 dark:text-purple-400 uppercase bg-purple-500/10 px-2.5 py-1 rounded-none border border-purple-500/20 inline-block">
                           {conn.service}
                         </span>
                       ) : (
@@ -364,7 +364,7 @@ className="h-[42px] inline-flex items-center gap-2 px-4 border border-emerald-30
                       )}
                     </td>
                     <td className="px-8 py-3.5">
-                      <span className={`text-[14px]  leading-snug ${isEstablished ? 'text-emerald-600 dark:text-emerald-400' :
+                      <span className={`font-serif  leading-snug ${isEstablished ? 'text-emerald-600 dark:text-emerald-400' :
                         isRefused ? 'text-rose-600 dark:text-rose-400' :
                           isPending ? 'text-amber-600 dark:text-amber-400' :
                             'text-slate-500 dark:text-slate-400'
@@ -373,7 +373,7 @@ className="h-[42px] inline-flex items-center gap-2 px-4 border border-emerald-30
                       </span>
                     </td>
                     <td className="px-8 py-3.5 text-left">
-                      <span className="text-[14px] text-foreground">{formatBytes(conn.orig_bytes ?? conn.bytes ?? 0)}</span>
+                      <span className="font-serif text-foreground">{formatBytes(conn.orig_bytes ?? conn.bytes ?? 0)}</span>
                     </td>
                   </tr>
                 );
@@ -389,19 +389,19 @@ className="h-[42px] inline-flex items-center gap-2 px-4 border border-emerald-30
           if (tp <= 1 && total <= connectionsData?.length) return null;
           return (
             <div className="px-8 py-4 border-t border-theme bg-slate-500/[0.02] flex items-center justify-between">
-              <span className="text-[10px] font-black ">
+              <span className="font-serif ">
                 Page <span className="text-foreground">{connectionsPage}</span> of <span className="text-foreground">{tp}</span>
               </span>
               <div className="flex items-center gap-1.5">
                 <button
                   onClick={() => setConnectionsPage(1)}
                   disabled={connectionsPage === 1 || isLoadingConnections}
-                  className="w-8 h-8 flex items-center justify-center text-[10px] font-black text-slate-400 hover:text-blue-600 disabled:opacity-20 transition-all border border-theme bg-card"
+                  className="w-8 h-8 flex items-center justify-center font-serif hover:text-blue-600 disabled:opacity-20 transition-all border border-theme bg-card"
                 >«</button>
                 <button
                   onClick={() => setConnectionsPage(p => Math.max(1, p - 1))}
                   disabled={connectionsPage === 1 || isLoadingConnections}
-                  className="w-8 h-8 flex items-center justify-center text-[10px] font-black text-slate-400 hover:text-blue-600 disabled:opacity-20 transition-all border border-theme bg-card"
+                  className="w-8 h-8 flex items-center justify-center  font-serif  hover:text-blue-600 disabled:opacity-20 transition-all border border-theme bg-card"
                 ><ChevronLeft size={14} /></button>
 
                 {Array.from({ length: Math.min(5, tp) }, (_, i) => {
@@ -414,7 +414,7 @@ className="h-[42px] inline-flex items-center gap-2 px-4 border border-emerald-30
                     <button
                       key={pageNum}
                       onClick={() => setConnectionsPage(pageNum)}
-                      className={`w-8 h-8 flex items-center justify-center text-[10px] font-black transition-all border ${connectionsPage === pageNum
+                      className={`w-8 h-8 flex items-center justify-center font-serif transition-all border ${connectionsPage === pageNum
                         ? "bg-blue-600/10 text-blue-600 border-blue-600/50 shadow-lg shadow-blue-500/5"
                         : "text-slate-500 border-theme hover:border-blue-500/30 hover:bg-slate-500/10 bg-card"
                         }`}
@@ -425,12 +425,12 @@ className="h-[42px] inline-flex items-center gap-2 px-4 border border-emerald-30
                 <button
                   onClick={() => setConnectionsPage(p => Math.min(tp, p + 1))}
                   disabled={connectionsPage === tp || isLoadingConnections}
-                  className="w-8 h-8 flex items-center justify-center text-[10px] font-black text-slate-400 hover:text-blue-600 disabled:opacity-20 transition-all border border-theme bg-card"
+                  className="w-8 h-8 flex items-center justify-center font-serif hover:text-blue-600 disabled:opacity-20 transition-all border border-theme bg-card"
                 ><ChevronRight size={14} /></button>
                 <button
                   onClick={() => setConnectionsPage(tp)}
                   disabled={connectionsPage === tp || isLoadingConnections}
-                  className="w-8 h-8 flex items-center justify-center text-[10px] font-black text-slate-400 hover:text-blue-600 disabled:opacity-20 transition-all border border-theme bg-card"
+                  className="w-8 h-8 flex items-center justify-center font-serif hover:text-blue-600 disabled:opacity-20 transition-all border border-theme bg-card"
                 >»</button>
               </div>
             </div>
@@ -446,18 +446,18 @@ className="h-[42px] inline-flex items-center gap-2 px-4 border border-emerald-30
                 <Lock size={20} />
               </div>
               <div>
-                <h4 className="text-lg font-black text-slate-900 dark:text-slate-100">Secure ZIP Password</h4>
-                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                <h4 className="font-serif font-bold text-lg dark:text-slate-100">Secure ZIP Password</h4>
+                <p className="mt-1 font-serif  dark:text-slate-200">
                   This export is password protected. Use the password below to open the archive.
                 </p>
               </div>
             </div>
 
             <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/70">
-              <div className="mb-2 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
-                Password pattern
+              <div className="mb-2  font-normal  dark:text-slate-400">
+                Password Pattern
               </div>
-              <div className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+              <div className="text-sm font-semibold  dark:text-slate-200">
                 sta# + @ + pcap id    
               </div>
               <div className="mt-3 flex items-center justify-between rounded-lg border border-blue-200 bg-white px-3 py-2.5 dark:border-blue-500/20 dark:bg-slate-900/80">
