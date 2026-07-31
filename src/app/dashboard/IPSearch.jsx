@@ -167,7 +167,7 @@ export function IPSearch() {
                     <DetailRow icon={Globe} label="Autonomous System Number" value={result.asn} color="blue" />
                     <DetailRow icon={Cpu} label="OS Match" value={result.os_info?.best_match} subValue={`Confidence: ${result.os_info?.confidence}%`} color="purple" />
                     <DetailRow icon={Shield} label="DNSBL Status" value={result.dnsbl?.listed ? "Listed / At Risk" : "Clean"} color={result.dnsbl?.listed ? "rose" : "emerald"} />
-                    <DetailRow icon={Terminal} label="rDNS / Hostname" value={result.rdns || (result.hostnames?.length ? result.hostnames.join(", ") : null)} color="slate" />
+                    <DetailRow icon={Terminal} label="rDNS / Hostname" value={result.rdns || (result.hostnames?.length ? result.hostnames.join(", ") : null)} color="indigo" />
                     <DetailRow icon={Zap} label="Proxy Type" value={result.proxy_type} color="amber" />
 
                   </div>
@@ -328,19 +328,20 @@ function DetailRow({ icon: Icon, label, value, subValue, color }) {
     purple: "text-purple-500 bg-purple-500/5 border-purple-500/10",
     rose: "text-rose-500 bg-rose-500/5 border-rose-500/10",
     emerald: "text-emerald-500 bg-emerald-500/5 border-emerald-500/10",
-     blue: "text-blue-500 bg-blue-500/5 border-blue-500/10",
+   
+indigo: "text-indigo-500 bg-indigo-500/5 border-indigo-500/10",
     amber: "text-amber-500 bg-amber-500/5 border-amber-500/10",
   };
 
   return (
     <div className={`flex flex-col p-6 rounded-none border ${colorMap[color] || colorMap.slate} space-y-3`}>
       <div className="flex items-center gap-4">
-        <Icon size={20} className="shrink-0" />
+        <Icon size={30} className="shrink-0" />
         <div className="font-serif ">{label}</div>
       </div>
       <div className="min-w-0">
-        <div className="text-[15px] font-serif text-foreground break-all leading-tight">{value || "N/A"}</div>
-        {subValue && <div className="text-[12px] font-serif opacity-100 mt-0.5">{subValue}</div>}
+        <div className="text-[25px] font-serif text-foreground break-all leading-tight">{value || "N/A"}</div>
+        {subValue && <div className="text-[22px] font-serif opacity-100 mt-0.5">{subValue}</div>}
       </div>
     </div>
   );

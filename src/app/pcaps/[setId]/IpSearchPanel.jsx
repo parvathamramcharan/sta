@@ -133,10 +133,10 @@ export default function IpSearchPanel({ initialIp, onScanComplete }) {
   }, [handleScan, initialIp]);
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500 pb-10">
+    <div className="space-y-8 animate-in fade-in duration-500 pb-10 mt-4">
       <div className="flex justify-center mb-6 ">
         <div className="relative w-full max-w-xl group">
-          <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
+          <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2  group-focus-within:text-blue-500 transition-colors" />
           <input
             type="text"
             value={ipSearchTerm}
@@ -150,13 +150,13 @@ export default function IpSearchPanel({ initialIp, onScanComplete }) {
             }}
             onKeyDown={(event) => event.key === "Enter" && handleScan()}
             placeholder="Enter IP Address "
-            className="w-full pl-12 pr-12 py-4 bg-card border border-theme rounded-none text-[15px] font-medium text-foreground focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all shadow-sm placeholder:text-slate-500"
+            className="w-full pl-12 pr-12 py-4 bg-card border border-theme rounded-none font-serif text-foreground focus:outline-none focus:ring-4 focus:ring-blue-500/10 "
           />
           <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center">
             {isScanning ? (
               <Activity size={18} className="animate-spin text-blue-500" />
             ) : (
-              <button onClick={() => handleScan()} disabled={!ipSearchTerm} className="text-slate-400 hover:text-blue-500 transition-colors disabled:opacity-0 p-1">
+              <button onClick={() => handleScan()} disabled={!ipSearchTerm} className="font-serif hover:text-blue-500 transition-colors disabled:opacity-0 p-1">
                 <ArrowRight size={20} />
               </button>
             )}
@@ -166,13 +166,13 @@ export default function IpSearchPanel({ initialIp, onScanComplete }) {
 
       <div className="flex flex-wrap items-center justify-center gap-2 -mt-2 mb-8 min-h-[24px]">
         <Clock size={13} className="" />
-        <span className="text-[13px] font-black mr-2">Recent:</span>
+        <span className="font-serif  mr-2">Recent:</span>
         {history.length > 0 ? (
           history.map((entry, index) => (
             <button
               key={`${entry}-${index}`}
               onClick={() => handleScan(entry)}
-              className="px-3 py-1 hover:bg-blue-500/10 border hover:border-blue-500/30 text-[11px] font-bold hover:text-blue-500 rounded-none transition-all"
+              className="px-3 py-1 hover:bg-blue-500/10 border hover:border-blue-500/30 font-serif  hover:text-blue-500 rounded-none transition-all"
             >
               {entry}
             </button>
