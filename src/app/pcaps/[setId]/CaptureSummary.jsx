@@ -5,6 +5,7 @@ import PropTypes from 'prop-types';
 import { formatBytes, formatDuration } from './PcapClientView';
 import { downloadPcapConnectionsExport } from './apiService';
 
+
 function KpiCard({ title, value, colorClass = "text-foreground" }) {
   return (
     <div className="bg-card px-6 py-6 border border-theme flex flex-col justify-between transition-all hover:bg-slate-500/[0.02] min-h-[110px]">
@@ -447,18 +448,18 @@ export default function CaptureSummary({
                 <Lock size={20} />
               </div>
               <div>
-                <h4 className="text-lg font-black text-slate-900 dark:text-slate-100">Secure ZIP Password</h4>
-                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                <h4 className="font-serif font-bold text-lg dark:text-slate-100">Secure ZIP Password</h4>
+                <p className="mt-1 font-serif  dark:text-slate-200">
                   This export is password protected. Use the password below to open the archive.
                 </p>
               </div>
             </div>
 
             <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/70">
-              <div className="mb-2 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
-                Password pattern
+              <div className="mb-2  font-normal  dark:text-slate-400">
+                Password Pattern
               </div>
-              <div className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+              <div className="text-sm font-semibold  dark:text-slate-200">
                 sta# + @ + pcap id    
               </div>
               <div className="mt-3 flex items-center justify-between rounded-lg border border-blue-200 bg-white px-3 py-2.5 dark:border-blue-500/20 dark:bg-slate-900/80">

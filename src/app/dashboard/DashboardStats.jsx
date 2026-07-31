@@ -115,8 +115,8 @@ function InfectedHostsTable({ hosts = [] }) {
               disabled={currentPage === 1}
               className={`w-10 h-10 flex items-center justify-center rounded-none border transition-all ${
                 currentPage === 1
-                  ? "text-slate-300 border-slate-100 cursor-not-allowed"
-                  : "text-slate-500 border-theme hover:text-rose-600 hover:border-rose-600 hover:bg-rose-500/5"
+                  ? "font-serif  border-slate-100 cursor-not-allowed"
+                  : "font-serif  border-theme hover:text-rose-600 hover:border-rose-600 hover:bg-rose-500/5"
               }`}
             >
               <ChevronLeft size={18} />
@@ -130,8 +130,8 @@ function InfectedHostsTable({ hosts = [] }) {
                 onClick={() => setCurrentPage(p)}
                 className={`w-9 h-9 flex items-center justify-center text-[11px] font-serif transition-all border rounded-none ${
                   currentPage === p
-                    ? "bg-rose-50 text-rose-600 border-rose-600 shadow-[0_0_20px_rgba(225,29,72,0.15)] scale-110 z-10"
-                    : "bg-card text-slate-500 border-theme hover:text-rose-600 hover:border-rose-600 hover:shadow-lg hover:shadow-rose-500/10"
+                    ? "bg-rose-50 font-serif text-rose-600 border-rose-600 shadow-[0_0_20px_rgba(225,29,72,0.15)] scale-110 z-10"
+                    : "bg-card font-black  font-serif  border-theme hover:text-rose-600 hover:border-rose-600 hover:shadow-lg hover:shadow-rose-500/10"
                 }`}
               >
                 {p}
@@ -181,14 +181,14 @@ function StatTable({ title, data = [], icon: Icon, labelKey, headerLabel }) {
           <select
             value={metric}
             onChange={(e) => setMetric(e.target.value)}
-            className="appearance-none pl-3 pr-8 py-1.5 text-[12px] font-serif border border-theme rounded-none bg-transparent text-blue-600 hover:bg-blue-500/5 cursor-pointer focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="appearance-none pl-3 pr-8 py-1.5 text-[15px] font-serif border  rounded-none bg-white dark:bg-slate-800 text-blue-900  dark:text-slate-100 cursor-pointer focus:outline-none focus:ring-1 focus:ring-blue-500"
           >
             <option value="packets">Packets</option>
             <option value="connections">Connections</option>
           </select>
           <ChevronDown
             size={14}
-            className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-blue-600"
+            className="pointer-events-none absolute  right-2.5 top-1/2 -translate-y-1/2 text-blue-600 dark:text-slate-100"
           />
         </div>
       </div>
