@@ -6,7 +6,9 @@ import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
 import CaptureSummary from "./CaptureSummary";
 import TrafficDistribution from "./TrafficDistribution";
 import PcapInsights from "./PcapInsights";
-import IpSearchPanel from "./IpSearchPanel";
+// import IpSearchPanel from "./IpSearchPanel";
+import { IPSearch } from "@/app/dashboard/IPSearch";
+
 import { fetchPcapOverview, fetchPcapInsights, fetchPcapTimeline, fetchPcapConnections, fetchPcapGeoReport, fetchPcapDetails, fetchPcapMap } from "./apiService";
 import PropTypes from "prop-types";
 import { DashboardReports } from "../../dashboard/DashboardReports";
@@ -813,7 +815,7 @@ export default function PcapClientView({ setId, initialResponse, session }) {
                         />
                       </div>
                     ) : activeTab === "IP Search" ? (
-                      <IpSearchPanel initialIp={selectedIpForSearch} onScanComplete={() => setSelectedIpForSearch("")} />
+                      <IPSearch initialIp={selectedIpForSearch} onScanComplete={() => setSelectedIpForSearch("")} />
                     ) : activeTab === "Reports" && selectedFile ? (
                       <DashboardReports
                         pcapId={selectedFile.pcap_id}
