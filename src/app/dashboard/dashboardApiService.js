@@ -93,3 +93,44 @@ export async function fetchReportsDetails(type, value) {
     throw error;
   }
 }
+
+export async function triggerExport(type, value) {
+  try {
+    const res = await fetchWithTimeout(`${BASE_URL}/export/${type}?value=${encodeURIComponent(value)}`);
+    if (!res.ok) throw new Error(`Failed to trigger export: ${res.status}`);
+    const json = await res.json();
+    return json.data.job_id;
+  } catch (error) {
+    console.error(`[dashboardApiService] triggerExport for ${type}/${value}:`, error);
+    throw error;
+  }
+}
+
+export async function pollExportStatus(jobId) {
+  try {
+    const res = await fetchWithTimeout(`${BASE_URL}/export/status/${jobId}`);
+    if (!res.ok) throw new Error(`Failed to poll export status: ${res.status}`);
+    const json = await res.json();
+    return json.data;
+  } catch (error) {
+    console.error(`[dashboardApiService] pollExportStatus for ${jobId}:`, error);
+    throw error;
+  }
+}
+
+export async function downloadExport(jobId, filename) {
+  try {
+    const res = await fetchWithTimeout(`${BASE_URL}/export/download/${jobId}`, { timeout: 60000 });
+    if (!res.ok) throw new Error(`Failed to download export: ${res.status}`);
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error(`[dashboardApiService] downloadExport for ${jobId}:`, error);
+    throw error;
+  }
+}

@@ -9,7 +9,7 @@ import 'react-leaflet-cluster/dist/assets/MarkerCluster.Default.css';
 import 'react-leaflet-cluster/dist/assets/MarkerCluster.css';
 import 'flag-icons/css/flag-icons.min.css';
 import { useTheme } from '@/components/ThemeProvider';
-import { getCountryDisplayName } from '@/constants/countryMapping';
+import { getCountryDisplayName, getCountryCode } from '@/constants/countryMapping';
 import PropTypes from 'prop-types';
 
 const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false });
@@ -374,12 +374,6 @@ const SIGNAL_COLORS = {
 const buildGlowShadow = (style) =>
   `0 0 0 4px ${style.halo}, 0 0 26px 7px ${style.pulse}, 0 8px 18px ${style.shadow}`;
 
-// Summary-mode markers (dashboard) use a much smaller, quieter glow - a
-// small soft point of light rather than a sticker-like filled disc. This
-// is deliberately lighter-weight than buildGlowShadow above.
-const buildSummaryGlow = (style) =>
-  `0 0 3px 1px ${style.halo}, 0 0 8px 2px ${style.pulse}`;
-
 // Per-cluster tiers (pcap / reports groupings - counts are usually small,
 // tens to low hundreds).
 const getPcapPointStyle = (count) => {
@@ -389,37 +383,29 @@ const getPcapPointStyle = (count) => {
   return SIGNAL_COLORS.cool;
 };
 
-
-    const SUMMARY_COLORS = {
-  low: {
-    marker: '#10b981',      // Emerald
-    halo: 'rgba(16,185,129,0.22)',
-    pulse: 'rgba(16,185,129,0.36)',
-  },
-  mid: {
-    marker: '#fbbf24',
-    halo: 'rgba(251,191,36,0.24)',
-    pulse: 'rgba(251,191,36,0.40)',
-  },
-  high: {
-    marker: '#f97316',
-    halo: 'rgba(249,115,22,0.25)',
-    pulse: 'rgba(249,115,22,0.42)',
-  },
-  critical: {
-    marker: '#ef4444',
-    halo: 'rgba(239,68,68,0.28)',
-    pulse: 'rgba(239,68,68,0.45)',
-  },
+// Summary map (Dashboard "Overall IP Geo Distribution") heat scale: each
+// country's bullet marker is colored by its own IP count, cool -> hot.
+const SUMMARY_SIGNAL_COLORS = {
+  cool: { marker: '#7c5cff', shadow: 'rgba(99, 61, 255, 0.5)' },   // vivid indigo - reads clearly against the blue ocean instead of blending into it
+  mid: { marker: '#0fd68a', shadow: 'rgba(5, 150, 105, 0.5)' },    // bright emerald
+  warm: { marker: '#ffb020', shadow: 'rgba(217, 119, 6, 0.55)' },  // bright amber
+  hot: { marker: '#ff3b5c', shadow: 'rgba(220, 38, 38, 0.55)' }    // vivid red/rose
 };
 
 const getSummaryPointStyle = (count) => {
-  const n = Number(count) || 0;
-  if (n >= 20000) return SUMMARY_COLORS.critical;
-  if (n >= 2000)  return SUMMARY_COLORS.high;
-  if (n >= 200)   return SUMMARY_COLORS.mid;
-  return SUMMARY_COLORS.low;
+  const value = Number(count) || 0;
+  if (value >= 500) return SUMMARY_SIGNAL_COLORS.hot;
+  if (value >= 50) return SUMMARY_SIGNAL_COLORS.warm;
+  if (value >= 10) return SUMMARY_SIGNAL_COLORS.mid;
+  return SUMMARY_SIGNAL_COLORS.cool;
 };
+
+// Uniform, minimal marker size - density/magnitude is communicated purely
+// through color (see SUMMARY_SIGNAL_COLORS / getSummaryPointStyle), not
+// size. Keeping every dot the same small footprint means tightly-packed
+// regions (e.g. Europe) don't bury the underlying country shapes.
+const SUMMARY_MARKER_SIZE = 11;
+const getSummaryMarkerSize = () => SUMMARY_MARKER_SIZE;
 
 // Continent-level labels only.
 const CONTINENT_LABELS = [
@@ -455,10 +441,7 @@ function ContinentLabels({ theme, L, labels, zoomLevel }) {
 
   return labels.map((label) => {
     const icon = L.divIcon({
-      html: `<div class="${CONTINENT_LABEL_BASE_CLASSES} ${label.sizeClass}" style="color:${labelColor};text-shadow:${labelTextShadow};">${label.text.replace(/\n/g, '<br/>')}</div>`,
-      // "continent-label-marker" targets the Leaflet-generated wrapper element; its
-      // default background/border/shadow are stripped via an arbitrary Tailwind
-      // descendant selector applied on the map's outer container (see below).
+      html: `<div class="continent-label ${label.className}">${label.text.replace(/\n/g, '<br/>')}</div>`,
       className: 'continent-label-marker',
       iconSize: [1, 1],
       iconAnchor: [0, 0]
@@ -569,6 +552,35 @@ const getLandStyle = (theme, hovered = false) => {
   };
 };
 
+/* ---------------------------------------------------------------------- */
+/* Summary-mode flat style                                                  */
+/* ---------------------------------------------------------------------- */
+// Flat, editorial "atlas" style: soft light-blue landmasses (not pure
+// white) on a solid blue ocean, with a fixed grey/near-black border around
+// every country so borders read clearly even where two countries touch.
+// This style is intentionally static - country hover no longer changes
+// fill or border color; the only interactive/visual feedback on the map
+// now lives on the per-country markers.
+const SUMMARY_LAND_FILL = '#ffffff';
+const SUMMARY_BORDER_COLOR = 'rgba(30, 41, 59, 0.42)'; // darker + a touch more opaque so borders read crisply on pure-white land
+
+const getSummaryLandStyle = () => ({
+  color: SUMMARY_BORDER_COLOR,
+  weight: 0.8,
+  opacity: 1,
+  fillColor: SUMMARY_LAND_FILL,
+  fillOpacity: 1,
+  lineCap: 'round',
+  lineJoin: 'round',
+  smoothFactor: 0
+});
+
+// Richer, more saturated ocean backdrop with a soft directional gradient for
+// depth (a flat pale fill was reading as washed-out/dull, and its blue was too
+// close to the old marker color). Land stays pure white, borders stay dark -
+// the ocean is now the only thing carrying color weight behind the markers.
+const SUMMARY_MAP_BACKGROUND = 'radial-gradient(135% 110% at 50% 28%, #6fb8e6 0%, #3f8fc4 45%, #256d9e 100%)';
+
 const formatCompactCount = (count) => {
   const value = Number(count) || 0;
   if (value >= 1_000_000) {
@@ -656,6 +668,10 @@ const buildCountryIsoIndex = (worldCountries) => {
 };
 
 const getCountryIso2 = (name, isoIndex) => {
+  // First try COUNTRY_MAPPING which has accurate ISO2 for all formal backend names
+  const mapped = getCountryCode(name);
+  if (mapped) return mapped;
+  // Fallback to GeoJSON index for any unmapped names
   if (!name || !isoIndex || !isoIndex.size) return null;
   const key = normalizeForMatch(name);
   if (isoIndex.has(key)) return isoIndex.get(key);
@@ -735,14 +751,12 @@ const getPolygonCentroid = (geometry) => {
   return null;
 };
 
-// Summary-mode markers (dashboard): small, quiet glowing points, one per
+// Summary-mode markers (dashboard): one solid, filled-bullet marker per
 // country with IPs > 0 - India included, placed via its own accurate
-// centroid (see indiaCentroid below) rather than the coarser world layer.
-// Every marker is the same fixed (small) size; only color communicates
-// volume. Detail only opens when the marker itself is clicked - the
-// underlying land is no longer clickable in summary mode.
-const SUMMARY_MARKER_SIZE = 8;
-
+// centroid rather than the coarser world layer. Each bullet's color is
+// driven by that country's IP count (see getSummaryPointStyle), size is
+// fixed/minimal (see getSummaryMarkerSize) so magnitude reads purely from
+// color and country shapes stay visible. Detail still opens on click.
 //if no mode or no externalIps, or no countrydata , then return it will select here  pcap , null , null
 export function WorldMapLeaflet({ externalIps = [], onIpClick, mode = 'pcap', countryData = [], title }) {
   const { theme } = useTheme();
@@ -878,8 +892,9 @@ export function WorldMapLeaflet({ externalIps = [], onIpClick, mode = 'pcap', co
   const indiaRenderer = useMemo(() => (L ? L.svg() : null), [L]);
   const worldRenderer = useMemo(() => (L ? L.svg() : null), [L]);
 
-  
-  // detail card — the land polygon is hover-only.
+
+  // detail card — the land polygon is static (no hover feedback); only the
+  // per-country marker is interactive.
   const summaryMarkerItems = useMemo(() => {
     if (!L || mode !== 'summary') return [];
 
@@ -893,7 +908,11 @@ export function WorldMapLeaflet({ externalIps = [], onIpClick, mode = 'pcap', co
         const lat = Number(entry.latitude);
         const lng = Number(entry.longitude);
         const style = getSummaryPointStyle(entry.count);
+        const markerSize = getSummaryMarkerSize(entry.count);
         const iso2 = getCountryIso2(entry.name, countryIsoIndex);
+        // Staggers each dot's blink cycle so the whole map doesn't pulse
+        // in lockstep - purely cosmetic, derived from position.
+        const blinkDelay = (Math.abs(Math.round(lat * 3 + lng * 7)) % 36) / 10;
 
         return {
           entry,
@@ -901,14 +920,10 @@ export function WorldMapLeaflet({ externalIps = [], onIpClick, mode = 'pcap', co
           lat,
           lng,
           icon: L.divIcon({
-            html: `
-              <div class="summary-dot" style="width:${SUMMARY_MARKER_SIZE}px;height:${SUMMARY_MARKER_SIZE}px;box-shadow:${buildSummaryGlow(style)};">
-                <div class="summary-dot-core" style="background:${style.marker};"></div>
-              </div>
-            `,
+            html: `<div class="summary-dot" style="width:${markerSize}px;height:${markerSize}px;background:${style.marker};--dot-glow:${style.marker};--blink-delay:${blinkDelay}s;"></div>`,
             className: '',
-            iconSize: [SUMMARY_MARKER_SIZE, SUMMARY_MARKER_SIZE],
-            iconAnchor: [SUMMARY_MARKER_SIZE / 2, SUMMARY_MARKER_SIZE / 2]
+            iconSize: [markerSize, markerSize],
+            iconAnchor: [markerSize / 2, markerSize / 2]
           })
         };
       });
@@ -929,8 +944,14 @@ export function WorldMapLeaflet({ externalIps = [], onIpClick, mode = 'pcap', co
   const initialZoom = mode === 'reports' ? 8 : (mode === 'summary' ? 2 : 2.2);
 
   // Drives the theme-dependent Leaflet base-map background via a CSS custom
-  // property, referenced by an arbitrary-value Tailwind class below.
-  const mapContainerStyle = { '--leaflet-bg': theme === 'dark' ? '#091224' : '#d8edf3' };
+  // property, referenced by an arbitrary-value Tailwind class below. The
+  // summary map always uses its own solid ocean-blue backdrop regardless of
+  // the app's light/dark theme toggle - pcap/reports are unaffected.
+  const mapContainerStyle = {
+    '--leaflet-bg': mode === 'summary'
+      ? SUMMARY_MAP_BACKGROUND
+      : (theme === 'dark' ? '#091224' : '#d8edf3')
+  };
 
   if (!L) return <div className="w-full h-full bg-slate-900 animate-pulse rounded-none" />;
 
@@ -959,32 +980,6 @@ export function WorldMapLeaflet({ externalIps = [], onIpClick, mode = 'pcap', co
             data={worldCountries}
             renderer={worldRenderer}
             pane="geoPane"
-            onEachFeature={mode === 'summary' ? (feature, layer) => {
-              const props = feature.properties || {};
-              const iso = (props.iso_a3 || props.ISO_A3 || props.adm0_a3 || '').toString().toUpperCase();
-
-              // India is rendered by the dedicated, full-resolution
-              // indiaBorder layer below - skip binding hover here so this
-              // coarser polygon never shows through India.
-              if (iso === 'IND') return;
-
-              const baseStyle = getLandStyle(theme);
-              layer.setStyle(baseStyle);
-
-              // Hover-only visual feedback. Country detail now opens
-              // exclusively via that country's marker (summaryMarkerItems)
-              // - clicking the land itself no longer opens anything, which
-              // avoids the old mis-attributed-click bug (e.g. clicking the
-              // US landmass popping up an unrelated country's data).
-              layer.on('mouseover', () => {
-                layer.setStyle(getLandStyle(theme, true));
-                layer.bringToFront();
-              });
-
-              layer.on('mouseout', () => {
-                layer.setStyle(baseStyle);
-              });
-            } : undefined}
             style={(feature) => {
               const props = feature && feature.properties ? feature.properties : {};
               const iso = (props.iso_a3 || props.ISO_A3 || props.adm0_a3 || '').toString().toUpperCase();
@@ -993,7 +988,7 @@ export function WorldMapLeaflet({ externalIps = [], onIpClick, mode = 'pcap', co
                 if (iso === 'IND') {
                   return { color: 'transparent', weight: 0, fillOpacity: 0, opacity: 0 };
                 }
-                return getLandStyle(theme);
+                return getSummaryLandStyle();
               }
 
               if (iso === 'IND') {
@@ -1034,31 +1029,17 @@ export function WorldMapLeaflet({ externalIps = [], onIpClick, mode = 'pcap', co
 
         {/* Accurate India layer for summary mode, using the dedicated
             full-resolution India border rather than the coarser
-            world-countries.json India polygon. It uses the exact same
-            land styling as every other country (no special fill/glow),
-            and - like every other country in summary mode - the land
-            itself is hover-only; it does not open the detail panel on
-            click. Only India's marker (see summaryMarkerItems) does that,
-            same as any other country. */}
+            world-countries.json India polygon. It uses the same flat,
+            static land style as every other country - no hover state,
+            only that country's marker (see summaryMarkerItems) opens the
+            detail panel. */}
         {mode === 'summary' && indiaBorder && indiaRenderer && (
           <GeoJSON
-            key={`india-choropleth-${theme}`}
+            key={`india-flat-${theme}`}
             data={indiaBorder}
             renderer={indiaRenderer}
             pane="geoPane"
-            style={getLandStyle(theme)}
-            onEachFeature={(feature, layer) => {
-              const baseStyle = getLandStyle(theme);
-              layer.setStyle(baseStyle);
-
-              layer.on('mouseover', () => {
-                layer.setStyle(getLandStyle(theme, true));
-                layer.bringToFront();
-              });
-              layer.on('mouseout', () => {
-                layer.setStyle(baseStyle);
-              });
-            }}
+            style={getSummaryLandStyle()}
           />
         )}
 
@@ -1250,17 +1231,16 @@ export function WorldMapLeaflet({ externalIps = [], onIpClick, mode = 'pcap', co
       {title && (
         <div className="absolute top-6 left-6 z-[1000] flex flex-col gap-2 pointer-events-none">
           <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="bg-card/85 backdrop-blur-xl border border-blue-500/20 px-4 py-2 rounded-none shadow-[0_0_30px_rgba(59,130,246,0.1)] flex items-center gap-3 group transition-all duration-500"
+            initial={{ opacity: 0, y: -8, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.35, ease: 'easeOut' }}
+            className="group bg-card/90 backdrop-blur-xl border border-theme pl-2.5 pr-4 py-2 rounded-2xl shadow-[0_10px_28px_rgba(15,23,42,0.22)] flex items-center gap-2.5 pointer-events-auto transition-transform duration-300 hover:scale-[1.03]"
           >
-            <div className="p-2 bg-blue-500/10 rounded-none group-hover:scale-110 transition-transform duration-500">
-              <MapPin size={16} className="text-blue-500 drop-shadow-[0_0_8px_rgba(59,130,246,0.4)]" />
+            <div className="p-2 bg-blue-500/12 rounded-xl flex items-center justify-center transition-transform duration-300 group-hover:scale-110">
+              <MapPin size={15} className="text-blue-600" />
             </div>
-            <div>
-              <div className="font-bold  font-black text-foreground  group-hover:text-blue-500 transition-colors">
-                {title}
-              </div>
+            <div className="text-[13px] font-black text-foreground tracking-tight leading-none">
+              {title}
             </div>
           </motion.div>
         </div>
@@ -1268,19 +1248,20 @@ export function WorldMapLeaflet({ externalIps = [], onIpClick, mode = 'pcap', co
 
       <div className="absolute top-6 right-6 z-[1000] flex flex-col gap-2">
         <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          whileHover={{ scale: 1.05 }}
-          className="bg-card/85 backdrop-blur-xl border border-blue-500/20 px-4 py-2 rounded-none shadow-[0_0_30px_rgba(59,130,246,0.1)] flex items-center gap-3 group transition-all duration-500"
+          initial={{ opacity: 0, y: -8, scale: 0.96 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.35, ease: 'easeOut' }}
+          whileHover={{ scale: 1.03 }}
+          className="group bg-card/90 backdrop-blur-xl border border-theme pl-2.5 pr-4 py-2 rounded-2xl shadow-[0_10px_28px_rgba(15,23,42,0.22)] flex items-center gap-2.5"
         >
-          <div className="p-2 bg-blue-500/10 rounded-none group-hover:scale-110 transition-transform duration-500">
-            <Globe size={16} className="text-blue-500 drop-shadow-[0_0_8px_rgba(59,130,246,0.4)]" />
+          <div className="p-2 bg-blue-500/12 rounded-xl flex items-center justify-center transition-transform duration-300 group-hover:scale-110">
+            <Globe size={15} className="text-blue-600" />
           </div>
           <div>
-            <div className="font-bold font-black text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400 leading-none mb-1 group-hover:text-blue-400 transition-colors">
+            <div className="font-black text-[9px] uppercase tracking-wider text-slate-500 leading-none mb-1">
               {mode === 'summary' ? 'Total Countries' : 'Total IPs Located'}
             </div>
-            <div className="text-lg font-black text-foreground tracking-tight group-hover:text-blue-500 transition-colors">
+            <div className="text-lg font-black text-foreground tracking-tight leading-none">
               {mode === 'summary' ? countryData.length : validIps.length.toLocaleString()}
             </div>
           </div>
@@ -1346,7 +1327,15 @@ export function WorldMapLeaflet({ externalIps = [], onIpClick, mode = 'pcap', co
 
       <AnimatePresence>
         {selectedCountry && (() => {
-          const accent = getSummaryPointStyle(selectedCountry.count);
+          // The on-map bullet is colored by IP-count magnitude by design;
+          // the popup gets its own legible blue accent (matching the
+          // title/stat chrome above) so the numbers here are easy to read
+          // on the card regardless of the marker's heat color.
+          const accent = {
+            marker: '#3b82f6',
+            halo: 'rgba(59, 130, 246, 0.35)',
+            shadow: 'rgba(37, 99, 235, 0.4)'
+          };
           return (
           <motion.div
             drag
@@ -1433,19 +1422,25 @@ export function WorldMapLeaflet({ externalIps = [], onIpClick, mode = 'pcap', co
           position: relative;
           border-radius: 50%;
           cursor: pointer;
-          opacity: 0.88;
-          transition: transform 0.2s ease-out, filter 0.2s ease-out, opacity 0.2s ease-out;
-        }
-        .summary-dot-core {
-          position: absolute;
-          inset: 0;
-          border-radius: 50%;
+          border: 2px solid #ffffff;
+          box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.15), 0 2px 6px rgba(15, 23, 42, 0.45), 0 0 10px 1px var(--dot-glow, transparent);
+          animation: summary-dot-pulse 2.2s ease-in-out infinite;
+          animation-delay: var(--blink-delay, 0s);
+          transition: transform 0.15s cubic-bezier(0.2, 0.9, 0.2, 1), box-shadow 0.15s ease;
         }
         .summary-dot:hover {
-          opacity: 1;
-          filter: brightness(1.3) saturate(1.15);
-          transform: scale(1.7) !important;
+          animation-play-state: paused;
+          transform: scale(1.8) !important;
+          box-shadow: 0 0 0 5px rgba(255, 255, 255, 0.65), 0 4px 14px rgba(15, 23, 42, 0.55), 0 0 22px 4px var(--dot-glow, transparent) !important;
           z-index: 1000 !important;
+        }
+        @keyframes summary-dot-pulse {
+          0%, 100% {
+            box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.15), 0 2px 6px rgba(15, 23, 42, 0.45), 0 0 8px 1px var(--dot-glow, transparent);
+          }
+          50% {
+            box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.15), 0 2px 6px rgba(15, 23, 42, 0.45), 0 0 16px 5px var(--dot-glow, transparent);
+          }
         }
         .custom-dot-marker:hover {
           transform: scale(3) !important;
@@ -1477,10 +1472,14 @@ export function WorldMapLeaflet({ externalIps = [], onIpClick, mode = 'pcap', co
           text-transform: uppercase;
           user-select: none;
           pointer-events: none;
-          color: ${theme === 'dark' ? 'rgba(148, 197, 255, 0.55)' : 'rgba(30, 41, 59, 0.68)'};
-          text-shadow: ${theme === 'dark'
-            ? '0 1px 3px rgba(0,0,0,0.9), 0 0 14px rgba(59,130,246,0.25)'
-            : '0 1px 2px rgba(255,255,255,0.7), 0 0 10px rgba(255,255,255,0.4)'};
+          color: ${mode === 'summary'
+            ? 'rgba(15, 23, 42, 0.78)'
+            : (theme === 'dark' ? 'rgba(148, 197, 255, 0.55)' : 'rgba(30, 41, 59, 0.68)')};
+          text-shadow: ${mode === 'summary'
+            ? '0 1px 2px rgba(255,255,255,0.6), 0 0 10px rgba(255,255,255,0.4)'
+            : (theme === 'dark'
+                ? '0 1px 3px rgba(0,0,0,0.9), 0 0 14px rgba(59,130,246,0.25)'
+                : '0 1px 2px rgba(255,255,255,0.7), 0 0 10px rgba(255,255,255,0.4)')};
         }
         .continent-label.label-large {
           font-size: 13.5px;
@@ -1564,18 +1563,22 @@ export function WorldMapLeaflet({ externalIps = [], onIpClick, mode = 'pcap', co
           100% { opacity: 0; transform: scale(2.1); }
         }
         .leaflet-container {
-          background: ${theme === 'dark'
-            ? 'radial-gradient(120% 120% at 30% 18%, #16263c 0%, #0a1420 50%, #04070c 100%)'
-            : 'radial-gradient(120% 120% at 30% 15%, #fbfaf6 0%, #f5f3ec 55%, #ece7db 100%)'} !important;
+          background: ${mode === 'summary'
+            ? SUMMARY_MAP_BACKGROUND
+            : (theme === 'dark'
+                ? 'radial-gradient(120% 120% at 30% 18%, #16263c 0%, #0a1420 50%, #04070c 100%)'
+                : 'radial-gradient(120% 120% at 30% 15%, #fbfaf6 0%, #f5f3ec 55%, #ece7db 100%)')} !important;
         }
         .map-atmosphere-vignette {
           position: absolute;
           inset: 0;
           z-index: 450;
           pointer-events: none;
-          background: ${theme === 'dark'
-            ? 'radial-gradient(120% 100% at 50% 45%, transparent 55%, rgba(2, 6, 14, 0.5) 100%)'
-            : 'radial-gradient(120% 100% at 50% 45%, transparent 65%, rgba(120, 105, 80, 0.14) 100%)'};
+          background: ${mode === 'summary'
+            ? 'radial-gradient(120% 100% at 50% 42%, transparent 65%, rgba(10, 30, 60, 0.16) 100%)'
+            : (theme === 'dark'
+                ? 'radial-gradient(120% 100% at 50% 45%, transparent 55%, rgba(2, 6, 14, 0.5) 100%)'
+                : 'radial-gradient(120% 100% at 50% 45%, transparent 65%, rgba(120, 105, 80, 0.14) 100%)')};
         }
         .leaflet-tooltip {
           background: hsl(var(--card) / 0.7) !important;

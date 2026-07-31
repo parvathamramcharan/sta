@@ -9,12 +9,10 @@ import {
   CheckCircle2, User, Cpu, AlertTriangle, X, Zap
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { fetchReportsGeo, fetchReportsDetails, fetchIPScan } from "./dashboardApiService";
+import { fetchReportsGeo, fetchReportsDetails, fetchIPScan, triggerExport, pollExportStatus, downloadExport } from "./dashboardApiService";
 import { getCountryDisplayName, getCountryCode } from "@/constants/countryMapping";
 import { WorldMapLeaflet } from "./WorldMapLeaflet";
-import { compareIspNames, getCountryDisplayName, getCountryFlagClass, getIspDisplayName, matchesCountrySearch, matchesIspSearch } from "./countryUtils";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
+import { compareIspNames,  getCountryFlagClass, getIspDisplayName, matchesCountrySearch, matchesIspSearch } from "./countryUtils";
 import PropTypes from "prop-types";
 
 DashboardReports.propTypes = {
@@ -149,219 +147,33 @@ export function DashboardReports({
   };
 
   const handleDownloadReport = async () => {
-    if (!selectedItem || detailsData.length === 0) return;
-    startPdfGeneration();
-  };
-
-  const startPdfGeneration = async () => {
+    if (!selectedItem || isGeneratingPdf) return;
     setIsGeneratingPdf(true);
-    const userPassword = session?.user?.pdfPassword || "";
-    const doc = new jsPDF({
-      orientation: 'portrait',
-      unit: 'mm',
-      format: 'a4',
-      encryption: {
-        userPassword: userPassword,
-        ownerPassword: userPassword,
-        userPermissions: ["print", "modify", "copy", "annot-forms"]
-      }
-    });
+    try {
+      // Step 1 — trigger
+      const jobId = await triggerExport(discoveryMode, selectedItem.name);
 
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const pageHeight = doc.internal.pageSize.getHeight();
-    const blue = [37, 99, 235]; // #2563eb
-    const slate = [100, 116, 139];
-
-    // --- COVER PAGE ---
-    doc.setFillColor(30, 41, 59); // Dark background
-    doc.rect(0, 0, pageWidth, pageHeight, 'F');
-    
-    // Accent Line
-    doc.setDrawColor(blue[0], blue[1], blue[2]);
-    doc.setLineWidth(1.5);
-    doc.line(20, 40, 20, 120);
-
-    doc.setTextColor(255, 255, 255);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(12);
-    doc.text("REPORT", 30, 45);
-    
-    const reportTitle = discoveryMode === "country"
-      ? getCountryDisplayName(selectedItem.name)
-      : selectedItem.name;
-
-    doc.setFontSize(48);
-    doc.text(reportTitle.toUpperCase(), 30, 75, { maxWidth: 160 });
-    
-    doc.setFontSize(12);
-    doc.setTextColor(slate[0], slate[1], slate[2]);
-    doc.text(`GENERATED ON: ${new Date().toLocaleString()}`, 30, 145);
-    doc.text(`TOTAL IDENTIFIERS: ${detailsData.length}`, 30, 155);
-    doc.setFontSize(10);
-    doc.setTextColor(blue[0], blue[1], blue[2]);
-    doc.text("CDAC-Hyderabd", 30, pageHeight - 30);
-
-    // --- DEEP TELEMETRY (Optimized with Batch Fetching) ---
-    const ipsToDetail = detailsData.slice(0, 500); 
-    const intelCache = new Map();
-    const batchSize = 5; // Concurrency limit to avoid overwhelming the server
-    
-    // Step 1: Pre-fetch all intelligence data in parallel batches
-    setIsGeneratingPdf(true); // Ensure loading state is active
-    for (let i = 0; i < ipsToDetail.length; i += batchSize) {
-      const batch = ipsToDetail.slice(i, i + batchSize);
-      await Promise.all(batch.map(async (item) => {
-        try {
-          const res = await fetchIPScan(item.ip);
-          if (res?.success) {
-            intelCache.set(item.ip, res.data);
-          }
-        } catch (e) {
-          console.error(`Failed to pre-fetch intel for ${item.ip}:`, e);
+      // Step 2 — poll every 1.5s, max 60s
+      const deadline = Date.now() + 60000;
+      let filename = `${selectedItem.name}_report.pdf`;
+      while (Date.now() < deadline) {
+        await new Promise(r => setTimeout(r, 1500));
+        const status = await pollExportStatus(jobId);
+        if (status.status === 'done') {
+          filename = status.filename || filename;
+          break;
         }
-      }));
-    }
-
-    let currentY = 0;
-    
-    for (const [index, item] of ipsToDetail.entries()) {
-      const sNo = `[#${(index + 1).toString().padStart(3, '0')}]`;
-      
-      // Intelligent Page Breaking
-      if (currentY === 0 || currentY > pageHeight - 110) {
-        doc.addPage();
-        currentY = 0;
-      } else {
-        currentY += 12;
-        doc.setDrawColor(241, 245, 249);
-        doc.setLineWidth(0.5);
-        doc.line(20, currentY, pageWidth - 20, currentY);
-        currentY += 8;
+        if (status.status === 'failed') throw new Error(status.error || 'PDF generation failed');
       }
-      
-      // Relative Header Bar
-      doc.setFillColor(30, 41, 59);
-      doc.rect(0, currentY, pageWidth, 35, 'F');
-      
-      doc.setDrawColor(blue[0], blue[1], blue[2]);
-      doc.setLineWidth(1);
-      doc.line(20, currentY + 10, 20, currentY + 25);
-      
-      doc.setTextColor(150, 150, 150);
-      doc.setFontSize(8);
-      doc.text("IP INTELLIGENCE FOR", 25, currentY + 13);
-      
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(22);
-      doc.text(`${sNo}  ${item.ip}`, 25, currentY + 28);
-      
-      currentY += 45;
 
-      const intel = intelCache.get(item.ip);
-      if (intel) {
-        try {
-          // Section 1: Host Identity
-          doc.setTextColor(blue[0], blue[1], blue[2]);
-          doc.setFontSize(10);
-          doc.setFont("helvetica", "bold");
-          doc.text("HOST IDENTITY & NETWORK ORIGIN", 20, currentY + 5);
-          
-          autoTable(doc, {
-            startY: currentY + 10,
-            head: [['PARAMETER', 'VALUE']],
-            body: [
-              ['AUTONOMOUS SYSTEM NUMBER', intel.asn || 'N/A'],
-              ['OS MATCH', intel.os_info?.best_match || 'N/A'],
-              ['OS CONFIDENCE', intel.os_info?.confidence ? `${intel.os_info.confidence}%` : 'N/A'],
-              ['SYSTEM STATUS', intel.status?.toUpperCase() || 'N/A'],
-              ['DNSBL REPUTATION', intel.dnsbl?.listed ? "LISTED / AT RISK" : "CLEAN"],
-              ['rDNS / HOSTNAME', intel.rdns || 'N/A'],
-              ['PROXY TYPE', intel.proxy_type || 'N/A'],
-
-            ],
-            theme: 'grid',
-            headStyles: { fillColor: [100, 116, 139], fontSize: 8 },
-            bodyStyles: { fontSize: 8 },
-            columnStyles: { 0: { cellWidth: 50, fontStyle: 'bold', fillColor: [245, 247, 250] } }
-          });
-
-          // Section 2: Ports & Services (With Reason)
-          doc.text("ACTIVE NETWORK SERVICES", 20, doc.lastAutoTable.finalY + 12);
-          autoTable(doc, {
-            startY: doc.lastAutoTable.finalY + 16,
-            head: [['PORT', 'SERVICE / APPLICATION', 'PROTOCOL', 'STATE', 'REASON']],
-            body: (intel.ports || []).map(p => [
-              p.port, 
-              p.service || p.application || 'Unknown', 
-              p.protocol?.toUpperCase(), 
-              p.state?.toUpperCase(), 
-              p.reason || 'N/A'
-            ]),
-            headStyles: { fillColor: blue, fontSize: 8 },
-            bodyStyles: { fontSize: 8 }
-          });
-
-          // Section 3: Geographic & Diagnostics
-          doc.text("GEOGRAPHIC INTEL", 20, doc.lastAutoTable.finalY + 12);
-          autoTable(doc, {
-            startY: doc.lastAutoTable.finalY + 16,
-            head: [['METADATA', 'VALUE']],
-            body: [
-              ['CITY / REGION', intel.geo?.city || 'N/A'],
-              ['COUNTRY', intel.geo?.country || 'N/A'],
-              ['ISP', intel.geo?.isp || 'N/A'],
-              ['COORDINATES', `${intel.geo?.latitude || 'N/A'}, ${intel.geo?.longitude || 'N/A'}`],          
-            ],
-            theme: 'grid',
-            headStyles: { fillColor: [100, 116, 139], fontSize: 8 },
-            bodyStyles: { fontSize: 8 },
-            columnStyles: { 0: { cellWidth: 50, fontStyle: 'bold', fillColor: [245, 247, 250] } }
-          });
-          
-          // Section 4: WHOIS & Ownership Hierarchy
-          doc.text("OWNERSHIP DETAILS", 20, doc.lastAutoTable.finalY + 12);
-          
-          // Contacts Summary Table
-          autoTable(doc, {
-            startY: doc.lastAutoTable.finalY + 16,
-            head: [['CONTACT TYPE', 'NAME', 'EMAIL', 'PHONE']],
-            body: [
-              ['REGISTRANT', intel.whois?.contacts?.registrant?.name || 'N/A', intel.whois?.contacts?.registrant?.email || 'N/A', intel.whois?.contacts?.registrant?.phone || 'N/A'],
-              ['TECHNICAL', intel.whois?.contacts?.technical?.name || 'N/A', intel.whois?.contacts?.technical?.email || 'N/A', intel.whois?.contacts?.technical?.phone || 'N/A'],
-              ['ABUSE', intel.whois?.contacts?.abuse?.name || 'N/A', intel.whois?.contacts?.abuse?.email || 'N/A', intel.whois?.contacts?.abuse?.phone || 'N/A']
-            ],
-            headStyles: { fillColor: [100, 116, 139], fontSize: 8 },
-            bodyStyles: { fontSize: 7 }
-          });
-
-          // Extended Ownership Table
-          autoTable(doc, {
-            startY: doc.lastAutoTable.finalY + 8,
-            body: [
-              ['ORGANIZATION', intel.whois?.org || intel.whois?.name || 'N/A'],
-              ['NETWORK OWNER', intel.whois?.network_owner || 'N/A'],
-              ['CIDR RANGE', intel.whois?.cidr || 'N/A'],
-              ['REGISTRAR', intel.whois?.registrar || 'N/A'],
-              ['TOP LEVEL DOMAIN / WEBSITE', `${intel.whois?.tld || 'N/A'} / ${intel.whois?.website || 'N/A'}`],
-              ['REGISTERED DATE', intel.whois?.registered || 'N/A']
-            ],
-            theme: 'grid',
-            bodyStyles: { fontSize: 8 },
-            columnStyles: { 0: { cellWidth: 50, fontStyle: 'bold', fillColor: [245, 247, 250] } }
-          });
-          currentY = doc.lastAutoTable.finalY;
-        } catch (e) {
-          console.error('Deep telemetry acquisition failed:', e);
-          doc.setTextColor(200, 0, 0);
-          doc.text("CRITICAL: Deep telemetry acquisition failed for this node.", 20, currentY + 10);
-          currentY += 20;
-        }
-      }
+      // Step 3 — download
+      await downloadExport(jobId, filename);
+      setShowPasswordModal(true);
+    } catch (err) {
+      console.error('Export failed:', err);
+    } finally {
+      setIsGeneratingPdf(false);
     }
-
-    doc.save(`SINKHOLE_INTEL_${reportTitle.replace(/\s+/g, '_')}_${Date.now()}.pdf`);
-    setIsGeneratingPdf(false);
-    setShowPasswordModal(true);
   };
 
   if (isLoadingGeo) {
@@ -455,7 +267,7 @@ export function DashboardReports({
                   whileTap={{ scale: 0.98 }}
                   onClick={() => handleItemSelect(item)}
                   className={`relative text-left px-4 py-3.5 border group overflow-hidden transition-colors duration-300 ${
-                    isSelected
+                    selectedItem?.name === item.name
                       ? "bg-blue-500/[0.07] border-blue-500 shadow-sm z-10"
                       : "bg-card border-slate-200/60 hover:border-blue-500/40 hover:bg-blue-500/[0.02]"
                   }`}

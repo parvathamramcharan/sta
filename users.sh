@@ -11,7 +11,7 @@ if [ ! -f "$SCRIPT_DIR/.env" ]; then
 fi
 
 export $(grep -v '^#' "$SCRIPT_DIR/.env" | grep -v '^$' | xargs)
-KC_URL="http://${KC_HOSTNAME}:8081"
+KC_URL="http://192.168.10.200:8080"
 KC_ADMIN_PASS="$KEYCLOAK_ADMIN_PASSWORD"
 KC_ADMIN="$KEYCLOAK_ADMIN"
 REALM="cdac"

@@ -142,7 +142,7 @@ export default function DashboardClientView({ session }) {
         ref={tabBarRef}
         className="sticky top-14 z-30 bg-white dark:bg-slate-950 border-b border-theme flex w-full overflow-visible transition-colors"
       >
-        <div className="absolute inset-0 bg-blue-100 dark:bg-[#18243f] pointer-events-none" />
+        <div className="absolute inset-0 bg-[#00b894]/15 dark:bg-[#00b894]/10 pointer-events-none" />
         {tabs.map((tab) => {
           if (tab.id === "Reports") {
             return (
@@ -150,15 +150,15 @@ export default function DashboardClientView({ session }) {
                 <button
                   onClick={() => { handleTabChange("Reports"); setReportInitialMode("country"); }}
                   className={`w-full flex items-center dark:text-slate-400 justify-center gap-3 px-6 py-4 font-bold font-black transition-all border-r border-theme relative ${activeTab === "Reports"
-                      ? "text-blue-600 bg-blue-500/10"
-                      : "text-slate-800 hover:text-foreground hover:bg-slate-500/5"
+                      ? "text-black dark:text-white bg-[#00b894]/10"
+                      : "text-slate-500 hover:text-foreground hover:bg-slate-500/5"
                     }`}
                 >
-                  <tab.icon size={14} className={activeTab === "Reports" ? "text-blue-600" : "text-slate-800"} />
+                  <tab.icon size={14} className={activeTab === "Reports" ? "text-black dark:text-white" : "text-slate-500"} />
                   {tab.id}
-                  <ChevronDown size={14} className={activeTab === "Reports" ? "text-blue-600 opacity-70" : "opacity-50"} />
+                  <ChevronDown size={14} className={activeTab === "Reports" ? "opacity-70" : "opacity-50"} />
                   {activeTab === "Reports" && (
-                    <div className="absolute bottom-0 left-0 w-full h-1 bg-blue-500/20" />
+                    <div className="absolute bottom-0 left-0 w-full h-1 bg-[#00b894]/40" />
                   )}
                 </button>
 
@@ -185,14 +185,14 @@ export default function DashboardClientView({ session }) {
               key={tab.id}
               onClick={() => handleTabChange(tab.id)}
               className={`flex-1 flex items-center dark:text-slate-400 justify-center gap-3 px-6 py-4 font-bold font-black transition-all border-r border-theme last:border-r-0 relative ${activeTab === tab.id
-                  ? "text-blue-600 bg-blue-500/10"
-                  : "text-slate-800 hover:text-foreground hover:bg-slate-500/5"
+                  ? "text-black dark:text-white bg-[#00b894]/10"
+                  : "text-slate-500 hover:text-foreground hover:bg-slate-500/5"
                 }`}
             >
-              <tab.icon size={14} className={activeTab === tab.id ? "text-blue-600" : "text-slate-800"} />
+              <tab.icon size={14} className={activeTab === tab.id ? "text-black dark:text-white" : "text-slate-500"} />
               {tab.id}
               {activeTab === tab.id && (
-                <div className="absolute bottom-0 left-0 w-full h-1 bg-blue-500/20" />
+                <div className="absolute bottom-0 left-0 w-full h-1 bg-[#00b894]/40" />
               )}
             </button>
           );
