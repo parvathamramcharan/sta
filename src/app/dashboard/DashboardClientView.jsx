@@ -127,20 +127,20 @@ export default function DashboardClientView({ session }) {
   }
 
   return (
-    <div className="space-y-6 pb-10">
+    <div className="space-y-0 pb-10">
 
-      <div className="h-[650px] w-full">
-        <WorldMapLeaflet
-          mode="summary"
-          countryData={mapData}
-          title="Overall IP Geo Distribution"
-        />
-      </div>
+    <div className="h-[calc(100vh-56px-64px)] w-full">
+  <WorldMapLeaflet
+    mode="summary"
+    countryData={mapData}
+    title="Overall IP Geo Distribution"
+  />
+</div>
 
 
       <div
         ref={tabBarRef}
-        className="sticky top-14 z-30 bg-white dark:bg-slate-950 border-b border-theme flex w-full overflow-visible transition-colors"
+        className="sticky top-12 z-30 bg-white dark:bg-slate-950 border-b border-theme flex w-full overflow-visible transition-colors"
       >
         <div className="absolute inset-0 bg-[#00b894]/15 dark:bg-[#00b894]/10 pointer-events-none" />
         {tabs.map((tab) => {
