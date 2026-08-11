@@ -28,12 +28,15 @@ export default async function RootLayout({ children }) {
       <body
         className={`${openSans.className} font-serif antialiased min-h-screen flex flex-col bg-gray-50 text-gray-900`}
       >
-        <ThemeProvider>
-          {session && <Navbar user={session.user} />}
-          <main className="flex-1 w-full">
-            {children}
-          </main>
-        </ThemeProvider>
+          <ThemeProvider>
+            
+
+            {session && <Navbar user={session.user} />}
+
+            <main className="flex-1 w-full">
+              {children}
+            </main>
+          </ThemeProvider>
       </body>
     </html>
   );

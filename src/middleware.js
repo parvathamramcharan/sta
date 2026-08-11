@@ -3,34 +3,116 @@ import { NextResponse } from "next/server";
 
 export const middleware = auth((req) => {
   const { nextUrl } = req;
+  const pathname = nextUrl.pathname;
+
   const isLoggedIn = !!req.auth;
+
   const userRoles = req.auth?.user?.roles || [];
   const isAdmin = userRoles.includes("admin");
 
-  const isPublicRoute = nextUrl.pathname === "/";
-  const isDashboardRoute = nextUrl.pathname.startsWith("/dashboard");
-  const isPcapRoute = nextUrl.pathname.startsWith("/pcaps");
-  const isReportsRoute = nextUrl.pathname.startsWith("/reports");
+  const isPublicRoute = pathname === "/";
 
-  if (req.auth?.error === 'RefreshTokenError') {
-    return NextResponse.redirect(new URL('/', nextUrl));
+  const isDashboardRoute =
+    pathname.startsWith("/dashboard");
+
+  const isPcapRoute =
+    pathname.startsWith("/pcaps");
+
+  const isReportsRoute =
+    pathname.startsWith("/reports");
+
+  const isUploadRoute =
+    pathname.startsWith("/upload");
+
+  const isAboutRoute =
+    pathname.startsWith("/about");
+
+  const isProtectedRoute =
+    isDashboardRoute ||
+    isPcapRoute ||
+    isReportsRoute ||
+    isUploadRoute ||
+    isAboutRoute;
+
+
+  /*
+   * Refresh token is dead.
+   *
+   * Clear the normal Auth.js session cookie and
+   * send the user to login.
+   */
+  if (req.auth?.error === "RefreshTokenError") {
+    const response = NextResponse.redirect(
+      new URL("/", req.url)
+    );
+
+    response.cookies.delete("authjs.session-token");
+
+    return response;
   }
 
-  if (!isLoggedIn && (isDashboardRoute || isPcapRoute || isReportsRoute)) {
-    return NextResponse.redirect(new URL("/", nextUrl));
+
+  /*
+   * Login page.
+   *
+   * If there is no valid session, stay here.
+   */
+  if (isPublicRoute && !isLoggedIn) {
+    return NextResponse.next();
   }
 
-  if (isLoggedIn && isPublicRoute) {
-    return NextResponse.redirect(new URL(isAdmin ? "/dashboard" : "/reports?set=1", nextUrl));
+
+  /*
+   * Already logged in and visiting login page.
+   */
+  if (isPublicRoute && isLoggedIn) {
+    if (isAdmin) {
+      return NextResponse.redirect(
+        new URL("/dashboard", nextUrl)
+      );
+    }
+
+    return NextResponse.redirect(
+      new URL("/reports?set=1", nextUrl)
+    );
   }
 
-  if (isLoggedIn && !isAdmin && (isDashboardRoute || isPcapRoute)) {
-    return NextResponse.redirect(new URL("/reports?set=1", nextUrl));
+
+  /*
+   * Not logged in → protected page.
+   */
+  if (!isLoggedIn && isProtectedRoute) {
+    return NextResponse.redirect(
+      new URL("/", nextUrl)
+    );
   }
+
+
+  /*
+   * Non-admin users cannot access dashboard/pcaps.
+   */
+  if (
+    isLoggedIn &&
+    !isAdmin &&
+    (isDashboardRoute || isPcapRoute)
+  ) {
+    return NextResponse.redirect(
+      new URL("/reports?set=1", nextUrl)
+    );
+  }
+
 
   return NextResponse.next();
 });
 
+
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
+  matcher: [
+    "/",
+    "/dashboard/:path*",
+    "/pcaps/:path*",
+    "/reports/:path*",
+    "/upload/:path*",
+    "/about/:path*",
+  ],
 };
