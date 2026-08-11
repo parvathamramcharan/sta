@@ -72,31 +72,44 @@ export function DashboardSummary({ data }) {
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 px-6">
+    <div className="mx-6 my-4">
+      <div className="rounded-2xl border border-theme bg-card shadow-sm p-5">
+        <div className="flex items-center gap-2 mb-4">
+          <span className="w-1 h-4 rounded-full bg-blue-500" />
+          <span className="text-[14px] font-bold  tracking-widest text-slate-400">Capture Summary</span>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {kpis.map((kpi, index) => (
         <motion.div
           key={kpi.label}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: index * 0.05 }}
-          className="bg-card  p-6 shadow-sm hover:shadow-md transition-shadow group relative overflow-hidden"
+          className="bg-card p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow group relative overflow-hidden"
+          style={{ border: `1.5px solid ${borderColor(kpi.color)}40` }}
         >
           <div className="flex items-center gap-5">
             <div className={`w-14 h-14 rounded-2xl ${getIconBgClass(kpi.color)} flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform`}>
               <kpi.icon size={28} className={getIconColorClass(kpi.color)} strokeWidth={2} />
             </div>
             <div>
-              <p className="font-serif  text- mb-1">{kpi.label}</p>
-              <h3 className="text-lg  font-serif text-foreground " >{kpi.value}</h3>
+              <p className="text-[14px] font-bold text-slate-800 dark:text-slate-100 mb-0.5">{kpi.label}</p>
+              <h3 className="text-[15px] text-black dark:text-slate-400 tabular-nums">{kpi.value}</h3>
             </div>
           </div>
-          
-
         </motion.div>
       ))}
+        </div>
+      </div>
     </div>
   );
 }
+
+const BORDER_COLORS = {
+  blue: "#3b82f6", emerald: "#10b981", cyan: "#06b6d4", rose: "#f43f5e",
+  orange: "#f97316", violet: "#8b5cf6", slate: "#64748b", indigo: "#6366f1", amber: "#f59e0b",
+};
+const borderColor = (c) => BORDER_COLORS[c] || "#64748b";
 
 function getIconBg(color) {
   const map = {

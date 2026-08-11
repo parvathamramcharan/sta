@@ -1,6 +1,42 @@
 import NextAuth from "next-auth"
 import Credentials from "next-auth/providers/credentials"
 
+// prevent concurrent refresh calls from racing each other
+let refreshPromise = null;
+
+async function refreshAccessToken(token) {
+  if (refreshPromise) return refreshPromise;
+  refreshPromise = (async () => {
+    try {
+      const res = await fetch(`${process.env.KEYCLOAK_ISSUER}/protocol/openid-connect/token`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          grant_type: 'refresh_token',
+          client_id: process.env.KEYCLOAK_CLIENT_ID,
+          client_secret: process.env.KEYCLOAK_CLIENT_SECRET || '',
+          refresh_token: token.refreshToken,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw data;
+      return {
+        ...token,
+        accessToken: data.access_token,
+        refreshToken: data.refresh_token ?? token.refreshToken,
+        accessTokenExpires: Date.now() + data.expires_in * 1000,
+        error: undefined,
+      };
+    } catch (e) {
+      console.error('Token refresh failed:', e);
+      return { ...token, error: 'RefreshTokenError' };
+    } finally {
+      refreshPromise = null;
+    }
+  })();
+  return refreshPromise;
+}
+
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
     Credentials({
@@ -78,29 +114,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         return token;
       }
       if (Date.now() < token.accessTokenExpires) return token;
-      try {
-        const res = await fetch(`${process.env.KEYCLOAK_ISSUER}/protocol/openid-connect/token`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: new URLSearchParams({
-            grant_type: 'refresh_token',
-            client_id: process.env.KEYCLOAK_CLIENT_ID,
-            client_secret: process.env.KEYCLOAK_CLIENT_SECRET || '',
-            refresh_token: token.refreshToken,
-          }),
-        });
-        const data = await res.json();
-        if (!res.ok) throw data;
-        return {
-          ...token,
-          accessToken: data.access_token,
-          refreshToken: data.refresh_token ?? token.refreshToken,
-          accessTokenExpires: Date.now() + data.expires_in * 1000,
-        };
-      } catch (e) {
-        console.error('Token refresh failed:', e);
-        return { ...token, error: 'RefreshTokenError' };
-      }
+      return refreshAccessToken(token);
     },
     async session({ session, token }) {
       if (session.user) {

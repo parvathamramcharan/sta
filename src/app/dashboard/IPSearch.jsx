@@ -85,7 +85,7 @@ export function IPSearch({ initialIp, onScanComplete }) {
               }
             }}
             placeholder="Enter IP Address "
-            className="w-full pl-12 pr-12 py-4 bg-card border border-theme rounded-none text-[15px] font-serif text-foreground focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all shadow-sm placeholder:text-slate-500"
+            className="w-full pl-12 pr-12 py-4 bg-card border border-theme rounded-none text-[15px]  text-foreground focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all shadow-sm placeholder:text-slate-500"
           />
           <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center">
             {loading ? (
@@ -101,7 +101,7 @@ export function IPSearch({ initialIp, onScanComplete }) {
 
       <div className="flex flex-wrap items-center justify-center gap-2 -mt-2 mb-8 min-h-[24px]">
         <Clock size={13} className="" />
-        <span className="text-[14px] font-serif   mr-2">Recent:</span>
+        <span className="text-[14px]    mr-2">Recent:</span>
         {history.length > 0 ? (
           history.map((h, i) => (
             <button
@@ -138,7 +138,7 @@ export function IPSearch({ initialIp, onScanComplete }) {
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-center bg-rose-500/5 border border-rose-500/10 text-rose-500 p-6 rounded-none text-sm font-serif flex items-center gap-3"
+            className="text-center bg-rose-500/5 border border-rose-500/10 text-rose-500 p-6 rounded-none text-sm  flex items-center gap-3"
           >
             <Shield size={20} />
             {error}
@@ -168,8 +168,8 @@ export function IPSearch({ initialIp, onScanComplete }) {
                       <Server size={28} className="text-blue-500 drop-shadow-[0_0_8px_rgba(59,130,246,0.4)]" />
                     </div>
                     <div className="min-w-0">
-                      <div className="font-serif  mb-1 transition-colors">Host Identity</div>
-                      <div className="text-2xl font-serif text-foreground truncate group-hover:text-blue-500 transition-colors">{result.ip}</div>
+                      <div className="text-[16px] font-semibold text-slate-500 mb-0.5">Host Identity</div>
+                      <div className="text-2xl font-bold text-foreground truncate group-hover:text-blue-500 transition-colors">{result.ip}</div>
                     </div>
                   </div>
                   <div className="space-y-4">
@@ -186,29 +186,29 @@ export function IPSearch({ initialIp, onScanComplete }) {
                     <div className="p-2 bg-orange-500/10 rounded-none">
                       <MapPin size={20} className="text-orange-500" />
                     </div>
-                    <div className="font-serif text-[18px] text-foreground  ">Geographic Intel</div>
+                    <div className="text-[16px] font-bold text-foreground">Geographic Intel</div>
                   </div>
                   <div className="space-y-6">
                     <div>
-                      <div className=" text-[16px] font-semibold  font-serif mb-2">City / Region</div>
-                      <div className="text-[14px]  break-words  ">{result.geo?.city || 'Unknown City'}</div>
+                      <div className="text-[16px] font-bold text-slate-700 dark:text-slate-300 mb-0.5">City / Region</div>
+                      <div className="text-[14px] break-words">{result.geo?.city || 'Unknown City'}</div>
                     </div>
                     <div>
-                      <div className=" text-[16px] font-semibold font-serif mb-2">Country</div>
-                      <div className="text-[14px] break-words  ">{result.geo?.country || 'Unknown Country'}</div>
+                      <div className="text-[16px] font-bold text-slate-700 dark:text-slate-300 mb-0.5">Country</div>
+                      <div className="text-[14px] break-words">{result.geo?.country || 'Unknown Country'}</div>
                     </div>
                     <div>
-                      <div className="text-[16px] font-semibold  font-serif mb-2">Service Provider</div>
-                      <div className=" text-[14px] break-words ">{result.geo?.isp || 'Unknown ISP'}</div>
+                      <div className="text-[16px] font-bold text-slate-700 dark:text-slate-300 mb-0.5">Service Provider</div>
+                      <div className="text-[14px] break-words">{result.geo?.isp || 'Unknown ISP'}</div>
                     </div>
                     <div className="grid grid-cols-2 gap-4 pt-4 border-t border-theme">
                       <div>
-                        <div className="text-[16px] font-semibold  font-serif mb-1">Latitude</div>
-                        <div className="text-[14px] break-words ">{result.geo?.latitude || result.location?.lat || 'N/A'}</div>
+                        <div className="text-[16px] font-bold text-slate-700 dark:text-slate-300 mb-0.5">Latitude</div>
+                        <div className="text-[14px] break-words">{result.geo?.latitude || result.location?.lat || 'N/A'}</div>
                       </div>
                       <div>
-                        <div className=" text-[16px] font-semibold font-serif   mb-1">Longitude</div>
-                        <div className="text-[14px]  break-words  ">{result.geo?.longitude || result.location?.lon || 'N/A'}</div>
+                        <div className="text-[16px] font-bold text-slate-700 dark:text-slate-300 mb-0.5">Longitude</div>
+                        <div className="text-[14px] break-words">{result.geo?.longitude || result.location?.lon || 'N/A'}</div>
                       </div>
                     </div>
                   </div>
@@ -225,15 +225,15 @@ export function IPSearch({ initialIp, onScanComplete }) {
                         <Activity size={24} className="text-rose-500" />
                       </div>
                       <div>
-                        <h3 className="text-lg font-serif font-semibold text-foreground  ">Ports & Service Detection</h3>
-                        <p className="font-sm font-serif  mt-0.5">Active Network Services</p>
+                        <h3 className="text-[14px] font-bold text-foreground">Ports &amp; Service Detection</h3>
+                        <p className="font-sm   mt-0.5">Active Network Services</p>
                       </div>
                     </div>
                     <div className="flex flex-col items-end gap-1">
-                      <div className="px-3 py-1 bg-blue-500/10 border border-blue-500/20 rounded-none text-[10px] font-serif text-blue-600">
+                      <div className="px-3 py-1 bg-blue-500/10 border border-blue-500/20 rounded-none text-[10px]  text-blue-600">
                         Total : {result.ports?.length || 0}
                       </div>
-                      <div className="text-[10px] font-serif text-slate-600">
+                      <div className="text-[10px]  text-slate-600">
                         Page <span className="text-foreground">1</span> of <span className="text-foreground">1</span>
                       </div>
                     </div>
@@ -245,11 +245,11 @@ export function IPSearch({ initialIp, onScanComplete }) {
                       <table className="w-full text-left">
                         <thead className="bg-slate-500/5">
                           <tr>
-                            <th className="px-8 py-4 font-serif ">Port</th>
-                            <th className="px-8 py-4 font-serif  ">Service</th>
-                            <th className="px-8 py-4   font-serif ">Protocol</th>
-                            <th className="px-8 py-4   font-serif  ">State</th>
-                            <th className="px-8 py-4 font-serif  ">Reason</th>
+                            <th className="px-8 py-4  ">Port</th>
+                            <th className="px-8 py-4   ">Service</th>
+                            <th className="px-8 py-4    ">Protocol</th>
+                            <th className="px-8 py-4     ">State</th>
+                            <th className="px-8 py-4   ">Reason</th>
                           </tr>
                         </thead>
                         <tbody className="">
@@ -264,23 +264,23 @@ export function IPSearch({ initialIp, onScanComplete }) {
                               <td className="px-8 py-4">
                                 <div className="flex items-center gap-3">
                                   <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)] opacity-0 group-hover:opacity-100 transition-all scale-0 group-hover:scale-100" />
-                                  <span className="text-sm font-serif text-foreground group-hover:translate-x-1 transition-transform duration-300">{p.port}</span>
+                                  <span className="text-sm  text-foreground group-hover:translate-x-1 transition-transform duration-300">{p.port}</span>
                                   {p.state === 'open' && <CheckCircle2 size={12} className="text-emerald-500" />}
                                 </div>
                               </td>
                               <td className="px-8 py-4">
-                                <div className="text-[11px] font-serif text-blue-500 uppercase bg-blue-500/5 px-2 py-1 rounded-none border border-blue-500/10 inline-block group-hover:bg-blue-500/10 transition-colors">
+                                <div className="text-[11px]  text-blue-500 uppercase bg-blue-500/5 px-2 py-1 rounded-none border border-blue-500/10 inline-block group-hover:bg-blue-500/10 transition-colors">
                                   {p.service || p.application || 'Unknown'}
                                 </div>
                               </td>
-                              <td className="px-8 py-4 text-[11px] font-serif  uppercase  transition-colors">{p.protocol}</td>
+                              <td className="px-8 py-4 text-[11px]   uppercase  transition-colors">{p.protocol}</td>
                               <td className="px-8 py-5">
-                                <span className={`text-[10px] font-serif uppercase  px-2 py-1 rounded-none border ${p.state === 'open' ? 'text-emerald-500 bg-emerald-500/5 border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.1)]' : 'text-slate-400 bg-slate-500/5 border-slate-500/20'}`}>
+                                <span className={`text-[10px]  uppercase  px-2 py-1 rounded-none border ${p.state === 'open' ? 'text-emerald-500 bg-emerald-500/5 border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.1)]' : 'text-slate-400 bg-slate-500/5 border-slate-500/20'}`}>
                                   {p.state}
                                 </span>
                               </td>
                               <td className="px-8 py-4 text-right">
-                                <span className="text-[10px] font-serif  uppercase transition-colors">{p.reason || 'N/A'}</span>
+                                <span className="text-[10px]   uppercase transition-colors">{p.reason || 'N/A'}</span>
                               </td>
                             </motion.tr>
                           ))}
@@ -301,7 +301,7 @@ export function IPSearch({ initialIp, onScanComplete }) {
                     <div className="p-2 bg-emerald-500/10 rounded-none">
                       <User size={20} className="text-emerald-500" />
                     </div>
-                    <div className="text-lg font-serif  font-semibold text-foreground  ">Ownership Details</div>
+                    <div className="text-[14px] font-bold text-foreground">Ownership Details</div>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
@@ -346,11 +346,12 @@ indigo: "text-indigo-500 bg-indigo-500/5 border-indigo-500/10",
     <div className={`flex flex-col p-6 rounded-none border ${colorMap[color] || colorMap.slate} space-y-3`}>
       <div className="flex items-center gap-4">
         <Icon size={30} className="shrink-0" />
-        <div className="font-serif ">{label}</div>
+        <div className="text-[16px] font-bold text-slate-700 dark:text-slate-300">{label}</div>
       </div>
+      
       <div className="min-w-0">
-        <div className="text-[25px] font-serif text-foreground break-all leading-tight">{value || "N/A"}</div>
-        {subValue && <div className="text-[22px] font-serif opacity-100 mt-0.5">{subValue}</div>}
+        <div className="text-[14px] dark:text-slate-400 break-all mt-1">{value || "N/A"}</div>
+{subValue && <div className="text-[12px] text-slate-400 mt-0.5">{subValue}</div>}
       </div>
     </div>
   );
@@ -360,7 +361,7 @@ function WhoisSection({ title, data }) {
   if (!data) return null;
   return (
     <div className="p-6 bg-slate-500/[0.03] border border-theme rounded-none space-y-6">
-      <h4 className="font-serif text-blue-500 
+      <h4 className=" text-blue-500 
         border-b border-blue-500/10 pb-3">{title}</h4>
       <div className="space-y-4">
         <WhoisField label="Name" value={data.name} />
@@ -376,9 +377,9 @@ function WhoisSection({ title, data }) {
 function WhoisField({ label, value }) {
   return (
     <div>
-      <div className="font-serif font-semibold mb-1">{label}</div>
+      <div className="text-[16px] font-bold text-slate-700 dark:text-slate-300 mb-0.5">{label}</div>
   
-      <div className="text-[14px] font-serif  break-words   ">{value || "N/A"}</div>
+      <div className="text-[14px] break-words">{value || "N/A"}</div>
     </div>
   );
 }

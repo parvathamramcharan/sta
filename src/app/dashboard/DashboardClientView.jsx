@@ -149,7 +149,7 @@ export default function DashboardClientView({ session }) {
               <div key={tab.id} className="flex-1 min-w-[150px] relative group">
                 <button
                   onClick={() => { handleTabChange("Reports"); setReportInitialMode("country"); }}
-                  className={`w-full flex items-center dark:text-slate-400 justify-center gap-3 px-6 py-4 font-serif transition-all border-r border-theme relative ${activeTab === "Reports"
+                  className={`w-full flex items-center dark:text-slate-400 justify-center gap-3 px-6 py-4 font-semibold transition-all border-r border-theme relative ${activeTab === "Reports"
                       ? "text-black dark:text-white bg-[#00b894]/10"
                       : "text-slate-500 hover:text-foreground hover:bg-slate-500/5"
                     }`}
@@ -166,13 +166,13 @@ export default function DashboardClientView({ session }) {
                 <div className="absolute top-full  left-0 w-full bg-card border border-theme shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
                   <button
                     onClick={() => { handleTabChange("Reports"); setReportInitialMode("country"); }}
-                    className="w-full px-4 py-3  dark:text-slate-400 font-serif text-slate-800 hover:text-blue-600 hover:bg-slate-500/10 transition-all text-center border-b border-theme "
+                    className="w-full px-4 py-3  dark:text-slate-400 font-semibold text-slate-800 hover:text-blue-600 hover:bg-slate-500/10 transition-all text-center border-b border-theme "
                   >
                     Country
                   </button>
                   <button
                     onClick={() => { handleTabChange("Reports"); setReportInitialMode("isp"); }}
-                    className="w-full px-4 py-3  dark:text-slate-400 font-serif  text-slate-800 hover:text-blue-600 hover:bg-slate-500/10 transition-all text-center  "
+                    className="w-full px-4 py-3  dark:text-slate-400 font-semibold  text-slate-800 hover:text-blue-600 hover:bg-slate-500/10 transition-all text-center  "
                   >
                     ISP
                   </button>
@@ -184,7 +184,7 @@ export default function DashboardClientView({ session }) {
             <button
               key={tab.id}
               onClick={() => handleTabChange(tab.id)}
-              className={`flex-1 flex items-center dark:text-slate-400 justify-center gap-3 px-6 py-4 font-serif transition-all border-r border-theme last:border-r-0 relative ${activeTab === tab.id
+              className={`flex-1 flex items-center dark:text-slate-400 justify-center gap-3 px-6 py-4 font-semibold transition-all border-r border-theme last:border-r-0 relative ${activeTab === tab.id
                   ? "text-black dark:text-white bg-[#00b894]/10"
                   : "text-slate-500 hover:text-foreground hover:bg-slate-500/5"
                 }`}

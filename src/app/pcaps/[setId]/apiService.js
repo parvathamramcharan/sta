@@ -4,12 +4,17 @@ export const BASE_URL = typeof window === 'undefined'
   : '/api/proxy';
 
 const fetchWithTimeout = async (url, options = {}) => {
-  const { timeout = 30000 } = options;
+  const { timeout = 30000, ...fetchOptions } = options;
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), timeout);
-  const response = await fetch(url, { ...options, signal: controller.signal });
-  clearTimeout(id);
-  return response;
+  try {
+    const response = await fetch(url, { ...fetchOptions, signal: controller.signal });
+    clearTimeout(id);
+    return response;
+  } catch (error) {
+    clearTimeout(id);
+    throw error;
+  }
 };
 
 export async function fetchPcapSet(setId, accessToken) {

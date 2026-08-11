@@ -383,27 +383,10 @@ const getPcapPointStyle = (count) => {
   return SIGNAL_COLORS.cool;
 };
 
-// Summary map (Dashboard "Overall IP Geo Distribution") heat scale: each
-// country's bullet marker is colored by its own IP count, cool -> hot.
-const SUMMARY_SIGNAL_COLORS = {
-  cool: { marker: '#7c5cff', shadow: 'rgba(99, 61, 255, 0.5)' },   // vivid indigo - reads clearly against the blue ocean instead of blending into it
-  mid: { marker: '#0fd68a', shadow: 'rgba(5, 150, 105, 0.5)' },    // bright emerald
-  warm: { marker: '#ffb020', shadow: 'rgba(217, 119, 6, 0.55)' },  // bright amber
-  hot: { marker: '#ff3b5c', shadow: 'rgba(220, 38, 38, 0.55)' }    // vivid red/rose
-};
+// markers in the global mapview 
+const SUMMARY_MARKER_COLOR = '#ff7f50';
 
-const getSummaryPointStyle = (count) => {
-  const value = Number(count) || 0;
-  if (value >= 500) return SUMMARY_SIGNAL_COLORS.hot;
-  if (value >= 50) return SUMMARY_SIGNAL_COLORS.warm;
-  if (value >= 10) return SUMMARY_SIGNAL_COLORS.mid;
-  return SUMMARY_SIGNAL_COLORS.cool;
-};
 
-// Uniform, minimal marker size - density/magnitude is communicated purely
-// through color (see SUMMARY_SIGNAL_COLORS / getSummaryPointStyle), not
-// size. Keeping every dot the same small footprint means tightly-packed
-// regions (e.g. Europe) don't bury the underlying country shapes.
 const SUMMARY_MARKER_SIZE = 11;
 const getSummaryMarkerSize = () => SUMMARY_MARKER_SIZE;
 
@@ -552,15 +535,7 @@ const getLandStyle = (theme, hovered = false) => {
   };
 };
 
-/* ---------------------------------------------------------------------- */
-/* Summary-mode flat style                                                  */
-/* ---------------------------------------------------------------------- */
-// Flat, editorial "atlas" style: soft light-blue landmasses (not pure
-// white) on a solid blue ocean, with a fixed grey/near-black border around
-// every country so borders read clearly even where two countries touch.
-// This style is intentionally static - country hover no longer changes
-// fill or border color; the only interactive/visual feedback on the map
-// now lives on the per-country markers.
+
 const SUMMARY_LAND_FILL = '#ffffff';
 const SUMMARY_BORDER_COLOR = 'rgba(30, 41, 59, 0.42)'; // darker + a touch more opaque so borders read crisply on pure-white land
 
@@ -575,10 +550,7 @@ const getSummaryLandStyle = () => ({
   smoothFactor: 0
 });
 
-// Richer, more saturated ocean backdrop with a soft directional gradient for
-// depth (a flat pale fill was reading as washed-out/dull, and its blue was too
-// close to the old marker color). Land stays pure white, borders stay dark -
-// the ocean is now the only thing carrying color weight behind the markers.
+// map background gradient for summary mode
 const SUMMARY_MAP_BACKGROUND = 'radial-gradient(135% 110% at 50% 28%, #6fb8e6 0%, #3f8fc4 45%, #256d9e 100%)';
 
 const formatCompactCount = (count) => {
@@ -751,13 +723,7 @@ const getPolygonCentroid = (geometry) => {
   return null;
 };
 
-// Summary-mode markers (dashboard): one solid, filled-bullet marker per
-// country with IPs > 0 - India included, placed via its own accurate
-// centroid rather than the coarser world layer. Each bullet's color is
-// driven by that country's IP count (see getSummaryPointStyle), size is
-// fixed/minimal (see getSummaryMarkerSize) so magnitude reads purely from
-// color and country shapes stay visible. Detail still opens on click.
-//if no mode or no externalIps, or no countrydata , then return it will select here  pcap , null , null
+
 export function WorldMapLeaflet({ externalIps = [], onIpClick, mode = 'pcap', countryData = [], title }) {
   const { theme } = useTheme();
   const [selectedGroup, setSelectedGroup] = useState(null);
@@ -907,7 +873,7 @@ export function WorldMapLeaflet({ externalIps = [], onIpClick, mode = 'pcap', co
       .map((entry) => {
         const lat = Number(entry.latitude);
         const lng = Number(entry.longitude);
-        const style = getSummaryPointStyle(entry.count);
+        const style = { marker: SUMMARY_MARKER_COLOR };
         const markerSize = getSummaryMarkerSize(entry.count);
         const iso2 = getCountryIso2(entry.name, countryIsoIndex);
         // Staggers each dot's blink cycle so the whole map doesn't pulse
@@ -1422,25 +1388,14 @@ export function WorldMapLeaflet({ externalIps = [], onIpClick, mode = 'pcap', co
           position: relative;
           border-radius: 50%;
           cursor: pointer;
-          border: 2px solid #ffffff;
-          box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.15), 0 2px 6px rgba(15, 23, 42, 0.45), 0 0 10px 1px var(--dot-glow, transparent);
-          animation: summary-dot-pulse 2.2s ease-in-out infinite;
-          animation-delay: var(--blink-delay, 0s);
+          border: 1.5px solid rgba(255,255,255,0.9);
+          box-shadow: 0 1px 3px rgba(15, 23, 42, 0.3);
           transition: transform 0.15s cubic-bezier(0.2, 0.9, 0.2, 1), box-shadow 0.15s ease;
         }
         .summary-dot:hover {
-          animation-play-state: paused;
-          transform: scale(1.8) !important;
-          box-shadow: 0 0 0 5px rgba(255, 255, 255, 0.65), 0 4px 14px rgba(15, 23, 42, 0.55), 0 0 22px 4px var(--dot-glow, transparent) !important;
+          transform: scale(2) !important;
+          box-shadow: 0 0 0 4px rgba(255,255,255,0.5), 0 0 16px 4px var(--dot-glow, transparent), 0 4px 12px rgba(15,23,42,0.4) !important;
           z-index: 1000 !important;
-        }
-        @keyframes summary-dot-pulse {
-          0%, 100% {
-            box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.15), 0 2px 6px rgba(15, 23, 42, 0.45), 0 0 8px 1px var(--dot-glow, transparent);
-          }
-          50% {
-            box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.15), 0 2px 6px rgba(15, 23, 42, 0.45), 0 0 16px 5px var(--dot-glow, transparent);
-          }
         }
         .custom-dot-marker:hover {
           transform: scale(3) !important;

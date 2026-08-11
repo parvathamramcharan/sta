@@ -757,12 +757,10 @@ export default function PcapClientView({ setId, initialResponse, session }) {
 
               <div className="flex-1 overflow-y-auto custom-scrollbar">
                 <div className="h-full flex flex-col">
-                  <div className="px-8 py-4 border-b border-theme bg-card shrink-0 flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="flex flex-col">
-                        <div className="font-normal text-blue-800 dark:text-slate-400 whitespace-nowrap  mb-1">PCAP FILENAME</div>
-                        <span className="font-serif font-bold  ">{selectedFile.filename}</span>
-                      </div> 
+                  <div className="px-8 py-4 border-b border-theme bg-card shrink-0 flex items-center">
+                    <div className="flex items-center gap-2">
+                      <span className="font-sans text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400 leading-none">PCAP Filename:</span>
+                      <span className="font-sans text-sm font-semibold text-foreground truncate max-w-[min(100%,600px)]" title={selectedFile.filename}>{selectedFile.filename}</span>
                     </div>
                   </div>
 
