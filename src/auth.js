@@ -108,6 +108,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         session.accessToken = token.accessToken;
         session.user.pdfPassword = token.pdfPassword;
       }
+      session.accessToken = token.accessToken;
+      session.error = token.error;
       return session;
     }
   },
