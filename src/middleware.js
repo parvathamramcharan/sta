@@ -4,107 +4,57 @@ import { NextResponse } from "next/server";
 export const middleware = auth((req) => {
   const { nextUrl } = req;
   const pathname = nextUrl.pathname;
-
   const isLoggedIn = !!req.auth;
-
   const userRoles = req.auth?.user?.roles || [];
   const isAdmin = userRoles.includes("admin");
 
   const isPublicRoute = pathname === "/";
-
-  const isDashboardRoute =
-    pathname.startsWith("/dashboard");
-
-  const isPcapRoute =
-    pathname.startsWith("/pcaps");
-
-  const isReportsRoute =
-    pathname.startsWith("/reports");
-
-  const isUploadRoute =
-    pathname.startsWith("/upload");
-
-  const isAboutRoute =
-    pathname.startsWith("/about");
+  const isDashboardRoute = pathname.startsWith("/dashboard");
+  const isPcapRoute = pathname.startsWith("/pcaps");
+  const isReportsRoute = pathname.startsWith("/reports");
+  const isUploadRoute = pathname.startsWith("/upload");
+  const isAboutRoute = pathname.startsWith("/about");
+  const isFeedbackRoute = pathname.startsWith("/feedback"); // NEW
+  const isFeedbackViewRoute = pathname.startsWith("/feedback/view"); // NEW
 
   const isProtectedRoute =
-    isDashboardRoute ||
-    isPcapRoute ||
-    isReportsRoute ||
-    isUploadRoute ||
-    isAboutRoute;
+    isDashboardRoute || isPcapRoute || isReportsRoute ||
+    isUploadRoute || isAboutRoute || isFeedbackRoute;
 
-
-  /*
-   * Refresh token is dead.
-   *
-   * Clear the normal Auth.js session cookie and
-   * send the user to login.
-   */
+  // Refresh token is dead — clear session cookie and send to login
   if (req.auth?.error === "RefreshTokenError") {
-    const response = NextResponse.redirect(
-      new URL("/", req.url)
-    );
-
+    const response = NextResponse.redirect(new URL("/", req.url));
     response.cookies.delete("authjs.session-token");
-
     return response;
   }
 
+  // Login page, no session → stay here
+  if (isPublicRoute && !isLoggedIn) return NextResponse.next();
 
-  /*
-   * Login page.
-   *
-   * If there is no valid session, stay here.
-   */
-  if (isPublicRoute && !isLoggedIn) {
-    return NextResponse.next();
-  }
-
-
-  /*
-   * Already logged in and visiting login page.
-   */
+  // Already logged in and visiting login page
   if (isPublicRoute && isLoggedIn) {
-    if (isAdmin) {
-      return NextResponse.redirect(
-        new URL("/dashboard", nextUrl)
-      );
-    }
-
     return NextResponse.redirect(
-      new URL("/reports?set=1", nextUrl)
+      new URL(isAdmin ? "/dashboard" : "/reports?set=1", nextUrl)
     );
   }
 
-
-  /*
-   * Not logged in → protected page.
-   */
+  // Not logged in → protected page
   if (!isLoggedIn && isProtectedRoute) {
-    return NextResponse.redirect(
-      new URL("/", nextUrl)
-    );
+    return NextResponse.redirect(new URL("/", nextUrl));
   }
 
-
-  /*
-   * Non-admin users cannot access dashboard/pcaps.
-   */
-  if (
-    isLoggedIn &&
-    !isAdmin &&
-    (isDashboardRoute || isPcapRoute)
-  ) {
-    return NextResponse.redirect(
-      new URL("/reports?set=1", nextUrl)
-    );
+  // Non-admin users cannot access dashboard/pcaps
+  if (isLoggedIn && !isAdmin && (isDashboardRoute || isPcapRoute)) {
+    return NextResponse.redirect(new URL("/reports?set=1", nextUrl));
   }
 
+  // NEW: only admins can access /feedback/view (normal users keep /feedback/submit)
+  if (isLoggedIn && !isAdmin && isFeedbackViewRoute) {
+    return NextResponse.redirect(new URL("/reports?set=1", nextUrl));
+  }
 
   return NextResponse.next();
 });
-
 
 export const config = {
   matcher: [
@@ -114,5 +64,6 @@ export const config = {
     "/reports/:path*",
     "/upload/:path*",
     "/about/:path*",
+    "/feedback/:path*", // NEW
   ],
 };

@@ -1,26 +1,42 @@
 "use client";
 
 import { useState, useEffect, useMemo, useCallback, memo } from "react";
-import { Search, Filter, HardDrive, Clock, Activity, Hash, ArrowUp, ArrowDown, Shield, Globe, Shuffle, X, ChevronDown, FileText, ChevronLeft, ChevronRight, LayoutDashboard, Zap } from "lucide-react";
+import { Search,  Filter,  HardDrive,  Clock,  Activity,Hash, ArrowUp, ArrowDown,  Shield,  Globe,  Shuffle,  X,  ChevronDown,  FileText,  ChevronLeft,  ChevronRight,  LayoutDashboard,Zap,} from "lucide-react";
 import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
 import CaptureSummary from "./CaptureSummary";
 import TrafficDistribution from "./TrafficDistribution";
 import PcapInsights from "./PcapInsights";
-// import IpSearchPanel from "./IpSearchPanel";
 import { IPSearch } from "@/app/dashboard/IPSearch";
-
-import { fetchPcapOverview, fetchPcapInsights, fetchPcapTimeline, fetchPcapConnections, fetchPcapGeoReport, fetchPcapDetails, fetchPcapMap } from "./apiService";
+import {
+  fetchPcapOverview,
+  fetchPcapInsights,
+  fetchPcapTimeline,
+  fetchPcapConnections,
+  fetchPcapGeoReport,
+  fetchPcapDetails,
+  fetchPcapMap,
+} from "./apiService";
 import PropTypes from "prop-types";
 import { DashboardReports } from "../../dashboard/DashboardReports";
 import dynamic from "next/dynamic";
-const WorldMapLeaflet = dynamic(() => import("../../dashboard/WorldMapLeaflet").then(mod => mod.WorldMapLeaflet), { ssr: false });
+const WorldMapLeaflet = dynamic(
+  () =>
+    import("../../dashboard/WorldMapLeaflet").then(
+      (mod) => mod.WorldMapLeaflet,
+    ),
+  { ssr: false },
+);
 
 export function formatBytes(bytes, precision = 2) {
-  if (bytes === 0) return '0 B';
+  if (bytes === 0) return "0 B";
   const k = 1024;
-  const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+  const sizes = ["B", "KB", "MB", "GB", "TB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return Number.parseFloat((bytes / Math.pow(k, i)).toFixed(precision)) + ' ' + sizes[i];
+  return (
+    Number.parseFloat((bytes / Math.pow(k, i)).toFixed(precision)) +
+    " " +
+    sizes[i]
+  );
 }
 
 export function formatDuration(seconds) {
@@ -46,15 +62,15 @@ const containerVariants = {
     transition: {
       staggerChildren: 0.04,
       delayChildren: 0.1,
-    }
-  }
+    },
+  },
 };
 
 const cardVariants = {
   hidden: {
     opacity: 0,
     y: 20,
-    scale: 0.94
+    scale: 0.94,
   },
   visible: {
     opacity: 1,
@@ -62,8 +78,8 @@ const cardVariants = {
     scale: 1,
     transition: {
       ...ANTIGRAVITY_SPRING,
-      opacity: { duration: 0.4 }
-    }
+      opacity: { duration: 0.4 },
+    },
   },
   hover: {
     y: -10,
@@ -71,17 +87,17 @@ const cardVariants = {
     transition: {
       ...ANTIGRAVITY_SPRING,
       stiffness: 240,
-      damping: 18
-    }
+      damping: 18,
+    },
   },
   floating: {
     y: [0, -4, 0],
     transition: {
       duration: 5,
       repeat: Infinity,
-      ease: "easeInOut"
-    }
-  }
+      ease: "easeInOut",
+    },
+  },
 };
 
 const StatItem = memo(({ label, value, icon: Icon, color, isSelected }) => {
@@ -92,25 +108,29 @@ const StatItem = memo(({ label, value, icon: Icon, color, isSelected }) => {
     purple: "text-purple-500",
     amber: "text-amber-500",
     rose: "text-rose-500",
-    slate: "text-slate-500"
+    slate: "text-slate-500",
   };
 
   const iconColor = colorMap[color] || "text-slate-400";
 
   return (
-    <motion.div
-      layout="position"
-      className="flex items-center gap-3"
-    >
-      <div className={`flex items-center justify-center shrink-0 transition-colors ${isSelected ? "text-white" : iconColor
-        }`}>
+    <motion.div layout="position" className="flex items-center gap-3">
+      <div
+        className={`flex items-center justify-center shrink-0 transition-colors ${
+          isSelected ? "text-white" : iconColor
+        }`}
+      >
         <Icon size={16} strokeWidth={2.5} />
       </div>
       <div className="min-w-0">
-        <div className={` font-serif font-semibold tabular-nums leading-tight truncate ${isSelected ? "text-white" : "text-foreground"}`}>
+        <div
+          className={` font-serif font-semibold tabular-nums leading-tight truncate ${isSelected ? "text-white" : "text-foreground"}`}
+        >
           {value}
         </div>
-        <div className={` font-serif  leading-none ${isSelected ? "text-blue-100/60" : ""}`}>
+        <div
+          className={` font-serif  leading-none ${isSelected ? "text-blue-100/60" : ""}`}
+        >
           {label}
         </div>
       </div>
@@ -139,18 +159,23 @@ const PcapCard = memo(({ file, isSelected, onClick }) => {
       variants={cardVariants}
       key={file.pcap_id}
       onClick={onClick}
-      className={`relative flex flex-col min-h-[270px] cursor-pointer border-2 rounded-xl p-5 pt-8 justify-start gap-5 overflow-hidden transition-colors duration-300 will-change-transform transform-gpu ${isSelected
+      className={`relative flex flex-col min-h-[270px] cursor-pointer border-2 rounded-xl p-5 pt-8 justify-start gap-5 overflow-hidden transition-colors duration-300 will-change-transform transform-gpu ${
+        isSelected
           ? "bg-blue-600 border-blue-600 ring-2 ring-blue-600 shadow-2xl shadow-blue-500/30 z-20"
           : `bg-slate-500/[0.01] border-blue-400/40 shadow-blue-500/10 hover:border-blue-500 hover:shadow-2xl hover:shadow-blue-500/20 z-10`
-        }`}
+      }`}
     >
       {/* <div className="relative z-10 flex flex-col items-start text-left gap-1.5 h-[72px]"> */}
       <div className="relative z-10 flex flex-col gap-2 min-h-[60px]">
-        
-          <span className=" font-normal text-blue-800 dark:text-slate-400 whitespace-nowrap">PCAP File :</span>
-        
+        <span className=" font-normal text-blue-800 dark:text-slate-400 whitespace-nowrap">
+          PCAP File :
+        </span>
+
         <div className="pr-2">
-          <div className={`font-serif font-semibold leading-[1.4] line-clamp-2 tracking-tight ${isSelected ? "text-white" : "text-foreground"}`} title={file.filename}>
+          <div
+            className={`font-serif font-semibold leading-[1.4] line-clamp-2 tracking-tight ${isSelected ? "text-white" : "text-foreground"}`}
+            title={file.filename}
+          >
             {file.filename}
           </div>
         </div>
@@ -158,9 +183,9 @@ const PcapCard = memo(({ file, isSelected, onClick }) => {
 
       {/* Telemetry Matrix */}
       <div className="relative z-10 grid grid-cols-2 gap-x-3 gap-y-9 pt-1">
-      
         <StatItem
           label="Size"
+          useEffect
           value={formatBytes(file.size)}
           icon={HardDrive}
           color="slate"
@@ -233,26 +258,44 @@ export default function PcapClientView({ setId, initialResponse, session }) {
 
   // Optimized Cache Matrix
   const [dataCache, setDataCache] = useState({});
-
-  // Local UI state — the ONLY source of truth for selection/tab.
+  // console.log("DATA CACHE:", dataCache);
   const [selectedPcapId, setSelectedPcapId] = useState(null);
   const [activeTab, setActiveTab] = useState("Pcap Summary");
-
-  const selectedFile = initialData.find(f => f.pcap_id === selectedPcapId) || null;
-  
+  const selectedFile =
+    initialData.find((f) => f.pcap_id === selectedPcapId) || null;
+  const [urlInitialized, setUrlInitialized] = useState(false);
   useEffect(() => {
     const url = new URL(window.location.href);
+    const pcap = url.searchParams.get("pcap");
+    const tab = url.searchParams.get("tab");
+    console.log("first useffect called  (reading urls)")
 
-    if (selectedPcapId) {
-      url.searchParams.set("pcap", selectedPcapId);
-      url.searchParams.set("tab", activeTab);
-    } else {
-      url.searchParams.delete("pcap");
-      url.searchParams.delete("tab");
+    if (pcap) {
+      setSelectedPcapId(pcap);
     }
+    if (tab) {
+      setActiveTab(tab);
+    }
+    setUrlInitialized(true); // I read the url and got pcap and tab
+  }, []);
 
-    window.history.replaceState({}, "", url);
-  }, [selectedPcapId, activeTab]);
+  //same runs initilay once after page started , here it registers and unregister event listerners
+  //such that when an event(click an next  button) this is an event  ...will  be called and such that popstate execute
+  useEffect(() => {
+    const handlePopState = () => {
+      const url = new URL(window.location.href);
+      const pcap = url.searchParams.get("pcap");
+      const tab = url.searchParams.get("tab");
+      setSelectedPcapId(pcap);
+      setActiveTab(tab || "Pcap Summary");
+      console.log("pop state executed")
+    };
+    window.addEventListener("popstate", handlePopState);
+    console.log("pop state listener added")
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, []);
 
   const [overviewData, setOverviewData] = useState(null);
   const [connectionsData, setConnectionsData] = useState(null);
@@ -270,14 +313,36 @@ export default function PcapClientView({ setId, initialResponse, session }) {
   const [apiError, setApiError] = useState(null);
 
   const handleCardClick = useCallback((pcapId, isSelected) => {
+    const url = new URL(window.location.href);
+
     if (isSelected) {
       setSelectedPcapId(null);
+      setActiveTab("Pcap Summary");
+      url.searchParams.delete("pcap");
+      url.searchParams.delete("tab");
     } else {
       setSelectedPcapId(pcapId);
       setActiveTab("Pcap Summary");
+      url.searchParams.set("pcap", pcapId);
+      url.searchParams.set("tab", "Pcap Summary");
     }
+
+    window.history.pushState({}, "", url);
+    console.log("Card clicked, URL updated:", url.toString());
   }, []);
 
+  const handleTabChange = useCallback((tabId) => {
+    setActiveTab(tabId);
+    const url = new URL(window.location.href);
+    url.searchParams.set("tab", tabId);
+    window.history.pushState({}, "", url);
+    console.log("Tab changed to:", tabId);
+    
+  }, []);
+
+  //purpose : when selected pcap changes  , load the requested data and store in the react state
+  //  it runs when selected pcap file changes or data caches changes
+  // it first checks data present in cache or not , if yes use it else fetch it ,store and use
   useEffect(() => {
     if (!selectedFile) {
       setOverviewData(null);
@@ -298,14 +363,19 @@ export default function PcapClientView({ setId, initialResponse, session }) {
       try {
         const [overview, timeline] = await Promise.all([
           fetchPcapOverview(selectedFile.pcap_id),
-          fetchPcapTimeline(selectedFile.pcap_id)
+          fetchPcapTimeline(selectedFile.pcap_id),
         ]);
         setOverviewData(overview);
         setTimelineData(timeline);
-        setDataCache(prev => ({ ...prev, [cacheKey]: { overview, timeline } }));
+        setDataCache((prev) => ({
+          ...prev,
+          [cacheKey]: { overview, timeline },
+        }));
       } catch (err) {
         console.error("Data load failed:", err);
-        setApiError("Unable to connect to analysis server. Please try again later.");
+        setApiError(
+          "Unable to connect to analysis server. Please try again later.",
+        );
       } finally {
         setIsLoadingDetails(false);
       }
@@ -325,7 +395,11 @@ export default function PcapClientView({ setId, initialResponse, session }) {
   }, [selectedFile?.pcap_id]);
 
   useEffect(() => {
-    if (!selectedFile || (activeTab !== "Pcap Insights" && activeTab !== "IP Geomap")) return;
+    if (
+      !selectedFile ||
+      (activeTab !== "Pcap Insights" && activeTab !== "IP Geomap")
+    )
+      return;
     if (insightsData && insightsData.pcap_id === selectedFile.pcap_id) return;
 
     const loadInsights = async () => {
@@ -351,10 +425,12 @@ export default function PcapClientView({ setId, initialResponse, session }) {
       try {
         const mapResp = await fetchPcapMap(selectedFile.pcap_id);
         // mapResp may be an object with `external_ips` or a list directly
-        const ips = Array.isArray(mapResp) ? mapResp : (mapResp.external_ips || mapResp.data || []);
+        const ips = Array.isArray(mapResp)
+          ? mapResp
+          : mapResp.external_ips || mapResp.data || [];
         setMapData(ips);
       } catch (err) {
-        console.error('Map load failed:', err);
+        console.error("Map load failed:", err);
         setMapData([]);
       }
     };
@@ -375,12 +451,17 @@ export default function PcapClientView({ setId, initialResponse, session }) {
 
       setIsLoadingConnections(true);
       try {
-        const response = await fetchPcapConnections(selectedFile.pcap_id, connectionsPage, timeFilter);
+        const response = await fetchPcapConnections(
+          selectedFile.pcap_id,
+          connectionsPage,
+          timeFilter,
+        );
 
         // Robust data extraction
         let rawData = response.data || response.connections || response;
-        if (rawData && !Array.isArray(rawData) && typeof rawData === 'object') {
-          rawData = rawData.connections || rawData.data || rawData.results || [];
+        if (rawData && !Array.isArray(rawData) && typeof rawData === "object") {
+          rawData =
+            rawData.connections || rawData.data || rawData.results || [];
         }
         const data = Array.isArray(rawData) ? rawData : [];
 
@@ -389,23 +470,29 @@ export default function PcapClientView({ setId, initialResponse, session }) {
 
         if (!pagination) {
           // Fallback to overview data or local count
-          const total = overviewData?.capture_summary?.connections || data.length;
+          const total =
+            overviewData?.capture_summary?.connections || data.length;
           pagination = {
             total: total,
             total_pages: Math.ceil(total / 100),
             page: connectionsPage,
-            limit: 100
+            limit: 100,
           };
-        } else if (overviewData?.capture_summary?.connections && pagination.total < overviewData.capture_summary.connections) {
-            // If API says fewer than summary, but summary is reliable, we can use summary for total
-            // but only if we trust the API is returning a subset
-            pagination.total = overviewData.capture_summary.connections;
-            pagination.total_pages = Math.ceil(pagination.total / (pagination.limit || 100));
+        } else if (
+          overviewData?.capture_summary?.connections &&
+          pagination.total < overviewData.capture_summary.connections
+        ) {
+          // If API says fewer than summary, but summary is reliable, we can use summary for total
+          // but only if we trust the API is returning a subset
+          pagination.total = overviewData.capture_summary.connections;
+          pagination.total_pages = Math.ceil(
+            pagination.total / (pagination.limit || 100),
+          );
         }
 
         setConnectionsData(data);
         setConnectionsPagination(pagination);
-        setDataCache(prev => ({ ...prev, [cacheKey]: { data, pagination } }));
+        setDataCache((prev) => ({ ...prev, [cacheKey]: { data, pagination } }));
       } catch (err) {
         console.error("Connections load failed:", err);
       } finally {
@@ -414,7 +501,13 @@ export default function PcapClientView({ setId, initialResponse, session }) {
     };
 
     loadConnections();
-  }, [selectedFile?.pcap_id, connectionsPage, timeFilter, activeTab, overviewData?.capture_summary?.connections]);
+  }, [
+    selectedFile?.pcap_id,
+    connectionsPage,
+    timeFilter,
+    activeTab,
+ 
+  ]);
 
   const [selectedIpForSearch, setSelectedIpForSearch] = useState("");
 
@@ -426,23 +519,37 @@ export default function PcapClientView({ setId, initialResponse, session }) {
   }, []);
 
   const sortedData = useMemo(() => {
-    const filteredData = initialData.filter(item =>
-      item.filename.toLowerCase().includes(search.toLowerCase())
+    const filteredData = initialData.filter((item) =>
+      item.filename.toLowerCase().includes(search.toLowerCase()),
     );
 
     // Apply date range filtering when set
-    const filteredAndDated = filteredData.filter(item => {
+    const filteredAndDated = filteredData.filter((item) => {
       if (!dateFrom && !dateTo) return true;
 
-      const itemStartDate = item.start_time ? item.start_time.slice(0, 10) : null;
+      const itemStartDate = item.start_time
+        ? item.start_time.slice(0, 10)
+        : null;
       const itemEndDate = item.end_time ? item.end_time.slice(0, 10) : null;
       if (!itemStartDate && !itemEndDate) return false;
 
       const fromDate = dateFrom || null;
       const toDate = dateTo || null;
 
-      const fromOK = !fromDate || (itemStartDate ? itemStartDate >= fromDate : itemEndDate ? itemEndDate >= fromDate : false);
-      const toOK = !toDate || (itemEndDate ? itemEndDate <= toDate : itemStartDate ? itemStartDate <= toDate : false);
+      const fromOK =
+        !fromDate ||
+        (itemStartDate
+          ? itemStartDate >= fromDate
+          : itemEndDate
+            ? itemEndDate >= fromDate
+            : false);
+      const toOK =
+        !toDate ||
+        (itemEndDate
+          ? itemEndDate <= toDate
+          : itemStartDate
+            ? itemStartDate <= toDate
+            : false);
 
       return fromOK && toOK;
     });
@@ -452,14 +559,19 @@ export default function PcapClientView({ setId, initialResponse, session }) {
 
     if (filter === "Random") {
       result.sort((a, b) => {
-        const seedA = (Number.parseInt(a.pcap_id.substring(0, 4), 16) || 0) + randomSeed;
-        const seedB = (Number.parseInt(b.pcap_id.substring(0, 4), 16) || 0) + randomSeed;
-        return (Math.sin(seedA) - Math.sin(seedB));
+        const seedA =
+          (Number.parseInt(a.pcap_id.substring(0, 4), 16) || 0) + randomSeed;
+        const seedB =
+          (Number.parseInt(b.pcap_id.substring(0, 4), 16) || 0) + randomSeed;
+        return Math.sin(seedA) - Math.sin(seedB);
       });
     }
-    if (filter === "Size") result.sort((a, b) => (a.size - b.size) * orderMultiplier);
-    if (filter === "Duration") result.sort((a, b) => (a.duration - b.duration) * orderMultiplier);
-    if (filter === "Packets") result.sort((a, b) => (a.packets - b.packets) * orderMultiplier);
+    if (filter === "Size")
+      result.sort((a, b) => (a.size - b.size) * orderMultiplier);
+    if (filter === "Duration")
+      result.sort((a, b) => (a.duration - b.duration) * orderMultiplier);
+    if (filter === "Packets")
+      result.sort((a, b) => (a.packets - b.packets) * orderMultiplier);
     if (filter === "Date") {
       result.sort((a, b) => {
         const aDate = a.start_time || a.end_time || "";
@@ -467,7 +579,8 @@ export default function PcapClientView({ setId, initialResponse, session }) {
         return (new Date(aDate) - new Date(bDate)) * orderMultiplier;
       });
     }
-    if (filter === "External IPs") result.sort((a, b) => (a.ip_count - b.ip_count) * orderMultiplier);
+    if (filter === "External IPs")
+      result.sort((a, b) => (a.ip_count - b.ip_count) * orderMultiplier);
 
     return result;
   }, [initialData, search, dateFrom, dateTo, filter, sortOrder, randomSeed]);
@@ -475,7 +588,7 @@ export default function PcapClientView({ setId, initialResponse, session }) {
   const handleFilterClick = (label) => {
     if (label === "Random") {
       setFilter("Random");
-      setRandomSeed(prev => prev + 1);
+      setRandomSeed((prev) => prev + 1);
       return;
     }
 
@@ -497,26 +610,30 @@ export default function PcapClientView({ setId, initialResponse, session }) {
     return (
       <button
         onClick={() => handleFilterClick(label)}
-        className={`flex items-center gap-1.5 px-3 py-1.5 font-serif rounded-md border transition-all ${isActive
+        className={`flex items-center gap-1.5 px-3 py-1.5 font-serif rounded-md border transition-all ${
+          isActive
             ? "bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-500/20"
             : "bg-card border-theme  hover:text-foreground hover:bg-slate-500/5"
-          }`}
+        }`}
       >
         {label}
-        {isActive && (
-          label === "Random" ? (
-            <Shuffle size={14} className="text-white animate-in zoom-in duration-300" />
+        {isActive &&
+          (label === "Random" ? (
+            <Shuffle
+              size={14}
+              className="text-white animate-in zoom-in duration-300"
+            />
+          ) : sortOrder === "asc" ? (
+            <ArrowUp size={14} className="text-white" />
           ) : (
-            sortOrder === "asc" ? <ArrowUp size={14} className="text-white" /> : <ArrowDown size={14} className="text-white" />
-          )
-        )}
+            <ArrowDown size={14} className="text-white" />
+          ))}
       </button>
     );
   };
 
   return (
     <div className="flex flex-col gap-3 pb-10">
-
       <div className="flex items-center justify-between shrink-0 pt-1 ">
         <h1 className="text-[20px]  font-medium   font-serif text-foreground flex items-center gap-3 ml-6">
           PCAP Set {setId}
@@ -531,13 +648,16 @@ export default function PcapClientView({ setId, initialResponse, session }) {
           {stats.observed_ips && (
             <span className="text-emerald-500 text-sm font-medium bg-emerald-500/10 px-3 py-1 rounded-none border border-emerald-500/20">
               {/* {stats.observed_ips.toLocaleString()} External IPs */}
-              {stats.observed_ips.toLocaleString('en-US')} External IPs
+              {stats.observed_ips.toLocaleString("en-US")} External IPs
             </span>
           )}
         </h1>
 
         <div className="relative w-[600px]">
-          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <Search
+            size={15}
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+          />
           <input
             type="text"
             placeholder="Search pcap files..."
@@ -547,7 +667,6 @@ export default function PcapClientView({ setId, initialResponse, session }) {
           />
         </div>
       </div>
-
 
       <div className="flex items-center justify-between bg-card p-2 rounded-xl border border-theme shadow-sm shrink-0">
         <div className="flex items-center gap-1.5">
@@ -566,7 +685,10 @@ export default function PcapClientView({ setId, initialResponse, session }) {
               type="date"
               value={dateFrom}
               max={dateTo || undefined}
-              onChange={(e) => { setDateFrom(e.target.value); setCurrentPage(1); }}
+              onChange={(e) => {
+                setDateFrom(e.target.value);
+                setCurrentPage(1);
+              }}
               className=" font-serif px-2 py-1 bg-transparent border border-transparent rounded-md"
               placeholder="dd/mm/yyyy"
             />
@@ -575,12 +697,19 @@ export default function PcapClientView({ setId, initialResponse, session }) {
               type="date"
               value={dateTo}
               min={dateFrom || undefined}
-              onChange={(e) => { setDateTo(e.target.value); setCurrentPage(1); }}
+              onChange={(e) => {
+                setDateTo(e.target.value);
+                setCurrentPage(1);
+              }}
               className=" font-serif px-2 py-1 bg-transparent border border-transparent rounded-md"
               placeholder="dd/mm/yyyy"
             />
             <button
-              onClick={() => { setDateFrom(""); setDateTo(""); setCurrentPage(1); }}
+              onClick={() => {
+                setDateFrom("");
+                setDateTo("");
+                setCurrentPage(1);
+              }}
               className={`flex items-center gap-1.5 px-3 py-1.5 font-serif rounded-md border transition-all bg-card border-theme  hover:text-foreground hover:bg-slate-500/5`}
             >
               Clear
@@ -588,13 +717,23 @@ export default function PcapClientView({ setId, initialResponse, session }) {
           </div>
         </div>
         <div className="px-4 text-[11px] font-black text-foreground uppercase tracking-widest border-l border-theme ml-2">
-          <span className="text-blue-600">{(currentPage - 1) * itemsPerPage + 1}-{Math.min(currentPage * itemsPerPage, sortedData.length)}</span> <span className=" px-1 normal-case font-serif">of</span> <span className="text-foreground fomt-serif">{sortedData.length}</span> PCAPs
+          <span className="text-blue-600">
+            {(currentPage - 1) * itemsPerPage + 1}-
+            {Math.min(currentPage * itemsPerPage, sortedData.length)}
+          </span>{" "}
+          <span className=" px-1 normal-case font-serif">of</span>{" "}
+          <span className="text-foreground fomt-serif">
+            {sortedData.length}
+          </span>{" "}
+          PCAPs
         </div>
       </div>
 
-
-      <div className={`transition-all duration-500 ease-in-out overflow-y-auto pr-2 pb-2 overflow-x-hidden custom-scrollbar ${selectedFile ? "h-[32vh]" : "h-[78vh]"
-        }`}>
+      <div
+        className={`transition-all duration-500 ease-in-out overflow-y-auto pr-2 pb-2 overflow-x-hidden custom-scrollbar ${
+          selectedFile ? "h-[32vh]" : "h-[78vh]"
+        }`}
+      >
         <LayoutGroup>
           <motion.div
             variants={containerVariants}
@@ -604,18 +743,23 @@ export default function PcapClientView({ setId, initialResponse, session }) {
             style={{ contain: "layout paint" }}
           >
             <AnimatePresence mode="popLayout" initial={false}>
-              {sortedData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((file, idx) => {
-                const isSelected = selectedFile?.pcap_id === file.pcap_id;
+              {sortedData
+                .slice(
+                  (currentPage - 1) * itemsPerPage,
+                  currentPage * itemsPerPage,
+                )
+                .map((file, idx) => {
+                  const isSelected = selectedFile?.pcap_id === file.pcap_id;
 
-                return (
-                  <PcapCard
-                    key={file.pcap_id}
-                    file={file}
-                    isSelected={isSelected}
-                    onClick={() => handleCardClick(file.pcap_id, isSelected)}
-                  />
-                );
-              })}
+                  return (
+                    <PcapCard
+                      key={file.pcap_id}
+                      file={file}
+                      isSelected={isSelected}
+                      onClick={() => handleCardClick(file.pcap_id, isSelected)}
+                    />
+                  );
+                })}
             </AnimatePresence>
           </motion.div>
         </LayoutGroup>
@@ -624,18 +768,21 @@ export default function PcapClientView({ setId, initialResponse, session }) {
         {sortedData.length > itemsPerPage && (
           <div className="flex items-center justify-center gap-2 mt-8 mb-4">
             <button
-              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+              onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
               disabled={currentPage === 1}
-              className={`p-2 rounded-lg border transition-all ${currentPage === 1
+              className={`p-2 rounded-lg border transition-all ${
+                currentPage === 1
                   ? "text-slate-300 border-slate-100 cursor-not-allowed"
                   : "text-slate-600 border-slate-200 hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50"
-                }`}
+              }`}
             >
               <ChevronLeft size={18} />
             </button>
 
             <div className="flex items-center gap-1">
-              {Array.from({ length: Math.ceil(sortedData.length / itemsPerPage) }).map((_, i) => {
+              {Array.from({
+                length: Math.ceil(sortedData.length / itemsPerPage),
+              }).map((_, i) => {
                 const pageNum = i + 1;
                 if (
                   pageNum === 1 ||
@@ -646,10 +793,11 @@ export default function PcapClientView({ setId, initialResponse, session }) {
                     <button
                       key={pageNum}
                       onClick={() => setCurrentPage(pageNum)}
-                      className={`min-w-[36px] h-9 px-2 rounded-lg border text-sm font-bold transition-all ${currentPage === pageNum
+                      className={`min-w-[36px] h-9 px-2 rounded-lg border text-sm font-bold transition-all ${
+                        currentPage === pageNum
                           ? "bg-blue-500/10 border-blue-500/20 text-blue-600 shadow-sm"
                           : "bg-card border-theme text-slate-500 hover:border-blue-500 hover:text-blue-600"
-                        }`}
+                      }`}
                     >
                       {pageNum}
                     </button>
@@ -658,26 +806,39 @@ export default function PcapClientView({ setId, initialResponse, session }) {
                   pageNum === currentPage - 2 ||
                   pageNum === currentPage + 2
                 ) {
-                  return <span key={pageNum} className="px-1 text-slate-400">...</span>;
+                  return (
+                    <span key={pageNum} className="px-1 text-slate-400">
+                      ...
+                    </span>
+                  );
                 }
                 return null;
               })}
             </div>
 
             <button
-              onClick={() => setCurrentPage(prev => Math.min(Math.ceil(sortedData.length / itemsPerPage), prev + 1))}
-              disabled={currentPage === Math.ceil(sortedData.length / itemsPerPage)}
-              className={`p-2 rounded-lg border transition-all ${currentPage === Math.ceil(sortedData.length / itemsPerPage)
+              onClick={() =>
+                setCurrentPage((prev) =>
+                  Math.min(
+                    Math.ceil(sortedData.length / itemsPerPage),
+                    prev + 1,
+                  ),
+                )
+              }
+              disabled={
+                currentPage === Math.ceil(sortedData.length / itemsPerPage)
+              }
+              className={`p-2 rounded-lg border transition-all ${
+                currentPage === Math.ceil(sortedData.length / itemsPerPage)
                   ? "text-slate-300 border-slate-100 cursor-not-allowed"
                   : "text-slate-600 border-slate-200 hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50"
-                }`}
+              }`}
             >
               <ChevronRight size={18} />
             </button>
           </div>
         )}
       </div>
-
 
       <AnimatePresence>
         {selectedFile && (
@@ -696,15 +857,33 @@ export default function PcapClientView({ setId, initialResponse, session }) {
                       return (
                         <div key={tab.id} className="flex-1 relative group">
                           <button
-                            onClick={() => { setActiveTab("Reports"); setReportInitialMode("country"); }}
-                            className={`w-full whitespace-nowrap px-4 py-4 font-serif dark:text-slate-400  transition-all text-center border-r border-theme relative group flex items-center justify-center gap-2 ${activeTab === "Reports"
+                            onClick={() => {
+                              handleTabChange("Reports");
+                              setReportInitialMode("country");
+                            }}
+                            className={`w-full whitespace-nowrap px-4 py-4 font-serif dark:text-slate-400  transition-all text-center border-r border-theme relative group flex items-center justify-center gap-2 ${
+                              activeTab === "Reports"
                                 ? "text-blue-600 bg-blue-500/10"
                                 : "text-slate-800 hover:text-foreground hover:bg-slate-500/5"
-                              }`}
+                            }`}
                           >
-                            <tab.icon size={14} className={activeTab === "Reports" ? "text-blue-600" : "text-slate-800 dark:text-slate-400"} />
+                            <tab.icon
+                              size={14}
+                              className={
+                                activeTab === "Reports"
+                                  ? "text-blue-600"
+                                  : "text-slate-800 dark:text-slate-400"
+                              }
+                            />
                             {tab.id}
-                            <ChevronDown size={14} className={activeTab === "Reports" ? "text-blue-600 opacity-70" : "opacity-100"} />
+                            <ChevronDown
+                              size={14}
+                              className={
+                                activeTab === "Reports"
+                                  ? "text-blue-600 opacity-70"
+                                  : "opacity-100"
+                              }
+                            />
                             {activeTab === "Reports" && (
                               <div className="absolute bottom-0 left-0 right-0 h-1 bg-blue-500/20" />
                             )}
@@ -713,13 +892,20 @@ export default function PcapClientView({ setId, initialResponse, session }) {
                           {/* Discovery Mode Dropdown */}
                           <div className="absolute top-full left-0 w-full bg-card  border  border-theme shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-[60]">
                             <button
-                              onClick={() => { setActiveTab("Reports"); setReportInitialMode("country"); }}
+                              onClick={() => {
+                                handleTabChange("Reports");
+                                setReportInitialMode("country");
+                              }}
                               className="w-full px-4 py-3 font-serif dark:text-slate-400 text-slate-800 hover:text-blue-600 hover:bg-slate-500/10 transition-all text-center border-b border-theme "
                             >
                               Country
                             </button>
                             <button
-                              onClick={() => { setActiveTab("Reports"); setReportInitialMode("isp"); }}
+                              onClick={() => {
+                                handleTabChange("Reports");
+                                ("Reports");
+                                setReportInitialMode("isp");
+                              }}
                               className="w-full px-4 py-3 font-serif dark:text-slate-400  text-slate-800 hover:text-blue-600 hover:bg-slate-500/10 transition-all text-center "
                             >
                               ISP
@@ -731,13 +917,22 @@ export default function PcapClientView({ setId, initialResponse, session }) {
                     return (
                       <button
                         key={tab.id}
-                        onClick={() => setActiveTab(tab.id)}
-                        className={`flex-1 whitespace-nowrap px-4 py-4  font-serif dark:text-slate-400  transition-all text-center border-r border-theme last:border-r-0 relative group flex items-center justify-center gap-2 ${activeTab === tab.id
+
+                        onClick={() => handleTabChange(tab.id)}
+                        className={`flex-1 whitespace-nowrap px-4 py-4  font-serif dark:text-slate-400  transition-all text-center border-r border-theme last:border-r-0 relative group flex items-center justify-center gap-2 ${
+                          activeTab === tab.id
                             ? "text-blue-600 bg-blue-500/10"
                             : "text-slate-800 hover:text-foreground hover:bg-slate-500/5"
-                          }`}
+                        }`}
                       >
-                        <tab.icon size={14} className={activeTab === tab.id ? "text-blue-600" : "text-slate-800 dark:text-slate-400"} />
+                        <tab.icon
+                          size={14}
+                          className={
+                            activeTab === tab.id
+                              ? "text-blue-600"
+                              : "text-slate-800 dark:text-slate-400"
+                          }
+                        />
                         {tab.id}
                         {activeTab === tab.id && (
                           <div className="absolute bottom-0 left-0 right-0 h-1 bg-blue-500/20" />
@@ -748,10 +943,14 @@ export default function PcapClientView({ setId, initialResponse, session }) {
                 </div>
 
                 <button
-                  onClick={() => setSelectedPcapId(null)}
+                  // onClick={() => setSelectedPcapId(null)}
+                  onClick={() => handleCardClick(selectedFile.pcap_id, true)}
                   className="w-16 h-full flex items-center justify-center bg-rose-500/5 text-rose-500 hover:bg-rose-500 hover:text-white transition-all group shrink-0 border-l border-theme"
                 >
-                  <X size={20} className="group-hover:rotate-90 transition-transform duration-300" />
+                  <X
+                    size={20}
+                    className="group-hover:rotate-90 transition-transform duration-300"
+                  />
                 </button>
               </div>
 
@@ -759,8 +958,15 @@ export default function PcapClientView({ setId, initialResponse, session }) {
                 <div className="h-full flex flex-col">
                   <div className="px-8 py-4 border-b border-theme bg-card shrink-0 flex items-center">
                     <div className="flex items-center gap-2">
-                      <span className="font-sans text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400 leading-none">PCAP Filename:</span>
-                      <span className="font-sans text-sm font-semibold text-foreground truncate max-w-[min(100%,600px)]" title={selectedFile.filename}>{selectedFile.filename}</span>
+                      <span className="font-sans text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400 leading-none">
+                        PCAP Filename:
+                      </span>
+                      <span
+                        className="font-sans text-sm font-semibold text-foreground truncate max-w-[min(100%,600px)]"
+                        title={selectedFile.filename}
+                      >
+                        {selectedFile.filename}
+                      </span>
                     </div>
                   </div>
 
@@ -768,13 +974,16 @@ export default function PcapClientView({ setId, initialResponse, session }) {
                     {isLoadingDetails ? (
                       <div className="p-8 space-y-8 animate-pulse">
                         <div className="grid grid-cols-3 gap-6">
-                          {[1, 2, 3].map(i => (
-                            <div key={i} className="h-36 bg-slate-500/5 rounded-none border border-slate-200" />
+                          {[1, 2, 3].map((i) => (
+                            <div
+                              key={i}
+                              className="h-36 bg-slate-500/5 rounded-none border border-slate-200"
+                            />
                           ))}
                         </div>
                         <div className="grid grid-cols-2 gap-6">
-                           <div className="h-64 bg-slate-500/5 rounded-none border border-slate-200" />
-                           <div className="h-64 bg-slate-500/5 rounded-none border border-slate-200" />
+                          <div className="h-64 bg-slate-500/5 rounded-none border border-slate-200" />
+                          <div className="h-64 bg-slate-500/5 rounded-none border border-slate-200" />
                         </div>
                         <div className="h-80 bg-slate-500/5 rounded-none border border-slate-200" />
                       </div>
@@ -783,26 +992,33 @@ export default function PcapClientView({ setId, initialResponse, session }) {
                         {apiError}
                       </div>
                     ) : activeTab === "Pcap Summary" && overviewData ? (
-                        <CaptureSummary
-                          overviewData={overviewData}
-                          connectionsData={connectionsData}
-                          timelineData={timelineData}
-                          connectionsPagination={connectionsPagination}
-                          connectionsPage={connectionsPage}
-                          setConnectionsPage={setConnectionsPage}
-                          timeFilter={timeFilter}
-                          setTimeFilter={setTimeFilter}
-                          isLoadingConnections={isLoadingConnections}
-                          onIpClick={handleIpClick}
-                          pcapId={selectedFile?.pcap_id}
-                          onTimelineClick={(from, to) => { setDateFrom(from); setDateTo(to); setCurrentPage(1); }}
-                        />
+                      <CaptureSummary
+                        overviewData={overviewData}
+                        connectionsData={connectionsData}
+                        timelineData={timelineData}
+                        connectionsPagination={connectionsPagination}
+                        connectionsPage={connectionsPage}
+                        setConnectionsPage={setConnectionsPage}
+                        timeFilter={timeFilter}
+                        setTimeFilter={setTimeFilter}
+                        isLoadingConnections={isLoadingConnections}
+                        onIpClick={handleIpClick}
+                        pcapId={selectedFile?.pcap_id}
+                        onTimelineClick={(from, to) => {
+                          setDateFrom(from);
+                          setDateTo(to);
+                          setCurrentPage(1);
+                        }}
+                      />
                     ) : activeTab === "Traffic Distribution" && overviewData ? (
                       <TrafficDistribution
                         data={overviewData.traffic_distribution}
                       />
                     ) : activeTab === "Pcap Insights" && insightsData ? (
-                      <PcapInsights data={insightsData} onIpClick={handleIpClick} />
+                      <PcapInsights
+                        data={insightsData}
+                        onIpClick={handleIpClick}
+                      />
                     ) : activeTab === "IP Geomap" ? (
                       <div className="h-[750px] w-full rounded-none overflow-hidden border border-theme relative group shadow-2xl transition-colors bg-card">
                         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(37,99,235,0.05),transparent_70%)] pointer-events-none z-10" />
@@ -813,7 +1029,10 @@ export default function PcapClientView({ setId, initialResponse, session }) {
                         />
                       </div>
                     ) : activeTab === "IP Search" ? (
-                      <IPSearch initialIp={selectedIpForSearch} onScanComplete={() => setSelectedIpForSearch("")} />
+                      <IPSearch
+                        initialIp={selectedIpForSearch}
+                        onScanComplete={() => setSelectedIpForSearch("")}
+                      />
                     ) : activeTab === "Reports" && selectedFile ? (
                       <DashboardReports
                         pcapId={selectedFile.pcap_id}
@@ -834,7 +1053,6 @@ export default function PcapClientView({ setId, initialResponse, session }) {
           </motion.div>
         )}
       </AnimatePresence>
-
     </div>
   );
 }

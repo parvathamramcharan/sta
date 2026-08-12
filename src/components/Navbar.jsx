@@ -20,8 +20,6 @@ import {
   UploadCloud,
 } from "lucide-react";
 import { LogoutConfirmModal } from "./LogoutConfirmModal";
-import { FeedbackModal } from "./FeedbackModal";
-import { ViewFeedbackModal } from "./ViewFeedbackModal";
 import { useTheme } from "./ThemeProvider";
 import { MessageSquare } from "lucide-react";
 
@@ -33,7 +31,6 @@ export function Navbar({ user }) {
   const [pcapMenuOpen, setPcapMenuOpen] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
-  const [showViewFeedbackModal, setShowViewFeedbackModal] = useState(false);
 
   const pcapRef = useRef(null);
   const userRef = useRef(null);
@@ -134,7 +131,6 @@ export function Navbar({ user }) {
                   <div className="absolute top-14 left-0 bg-card border border-theme shadow-2xl rounded-xl overflow-hidden p-1.5 min-w-[160px] z-50">
                     {[
                       { label: "Set 1", href: "/pcaps/set-1" },
-                      { label: "Set 2", href: "/pcaps/set-2" },
                     ].map((set) => (
                       <Link
                         key={set.href}
@@ -283,19 +279,27 @@ export function Navbar({ user }) {
               </div>
 
               <div className="relative">
-                <button
-                  onClick={() => {
+               
+                 
+                <Link
+                  href={isAdmin ? "#" : "/feedback/submit"}
+                  onClick={(e) => {
                     if (isAdmin) {
+                      e.preventDefault();
                       setFeedbackMenuOpen(!feedbackMenuOpen);
-                    } else {
-                      setUserMenuOpen(false);
-                      setShowFeedbackModal(true);
+                      return;
                     }
+
+                    setUserMenuOpen(false);
+                    setFeedbackMenuOpen(false);
                   }}
                   className="w-full text-left px-3 py-2 font-semibold text-slate-800 dark:text-slate-200 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center justify-between"
                 >
                   <span className="flex items-center gap-2">
-                    <MessageSquare size={14} className="text-slate-800 dark:text-slate-200" />
+                    <MessageSquare
+                      size={14}
+                      className="text-slate-800 dark:text-slate-200"
+                    />
                     Feedback
                   </span>
 
@@ -307,31 +311,30 @@ export function Navbar({ user }) {
                       }`}
                     />
                   )}
-                </button>
+                </Link>
 
                 {isAdmin && feedbackMenuOpen && (
                   <div className="absolute right-full top-0 mr-2 bg-card border border-theme rounded-xl shadow-2xl min-w-[190px] p-1.5">
-                    <button
+                    <Link
+                      href="/feedback/view"
                       onClick={() => {
                         setUserMenuOpen(false);
                         setFeedbackMenuOpen(false);
-                        setShowViewFeedbackModal(true);
                       }}
-                      className="w-full text-left px-3 py-2 font-semibold  text-slate-800 dark:text-slate-200 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800"
+                      className="block w-full text-left px-3 py-2 font-semibold text-slate-800 dark:text-slate-200 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800"
                     >
                       View Feedback
-                    </button>
-
-                    <button
+                    </Link>
+                    <Link
+                      href="/feedback/submit"
                       onClick={() => {
                         setUserMenuOpen(false);
                         setFeedbackMenuOpen(false);
-                        setShowFeedbackModal(true);
                       }}
-                      className="w-full text-left px-3 py-2 font-semibold text-slate-800  dark:text-slate-200 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800"
+                      className="block w-full text-left px-3 py-2 font-semibold text-slate-800 dark:text-slate-200 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800"
                     >
                       Submit Feedback
-                    </button>
+                    </Link>
                   </div>
                 )}
               </div>
@@ -354,15 +357,6 @@ export function Navbar({ user }) {
         isOpen={showLogoutModal}
         onClose={() => setShowLogoutModal(false)}
         onConfirm={handleLogout}
-      />
-      <FeedbackModal
-        isOpen={showFeedbackModal}
-        onClose={() => setShowFeedbackModal(false)}
-        user={user}
-      />
-      <ViewFeedbackModal
-        isOpen={showViewFeedbackModal}
-        onClose={() => setShowViewFeedbackModal(false)}
       />
     </>
   );

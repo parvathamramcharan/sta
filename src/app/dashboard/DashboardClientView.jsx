@@ -3,7 +3,14 @@
 import { useState, useEffect, useRef } from "react";
 import PropTypes from "prop-types";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { LayoutDashboard, FileText, Activity, Globe, Search, ChevronDown } from "lucide-react";
+import {
+  LayoutDashboard,
+  FileText,
+  Activity,
+  Globe,
+  Search,
+  ChevronDown,
+} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 import { WorldMapLeaflet } from "./WorldMapLeaflet";
@@ -12,18 +19,45 @@ import { DashboardStats } from "./DashboardStats";
 import TrafficDistribution from "../pcaps/[setId]/TrafficDistribution";
 import { IPSearch } from "./IPSearch";
 import { DashboardReports } from "./DashboardReports";
-import { fetchGlobalMapData, fetchDashboardOverview, fetchDashboardInsights } from "./dashboardApiService";
+import {
+  fetchGlobalMapData,
+  fetchDashboardOverview,
+  fetchDashboardInsights,
+} from "./dashboardApiService";
 
 DashboardClientView.propTypes = {
   session: PropTypes.object,
 };
 
 export default function DashboardClientView({ session }) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
+  const[activeTab,setActiveTab]=useState("Pcap Summary");
 
-  const [activeTab, setActiveTab] = useState(searchParams.get("tab") || "Pcap Summary");
+  useEffect(()=>{
+    const url =  new URL(window.location.href);
+    const tab = url.searchParams.get("tab");
+    console.log("dashboard first useeffect url reading done");
+    if(tab){
+      setActiveTab(tab);
+    }
+  },[]);
+
+  useEffect(()=>{
+    const handlePopState=()=>{
+      const url = new URL(window.location.href);
+      const tab = url.searchParams.get("tab");
+      setActiveTab(tab);
+      console.log("popstate event fired, tab is ",tab);
+    };
+    window.addEventListener("popstate",handlePopState);
+    console.log("added popstate listener");
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  },[]);
+
+  
+
+
   const tabBarRef = useRef(null);
   const [data, setData] = useState(null);
   const [mapData, setMapData] = useState([]);
@@ -43,9 +77,18 @@ export default function DashboardClientView({ session }) {
       try {
         console.log("[Dashboard] Starting data fetch...");
         const [overview, insights, globalMap] = await Promise.all([
-          fetchDashboardOverview().then(d => { console.log("[Dashboard] Overview loaded"); return d; }),
-          fetchDashboardInsights().then(d => { console.log("[Dashboard] Insights loaded"); return d; }),
-          fetchGlobalMapData().then(d => { console.log("[Dashboard] Map data loaded"); return d; })
+          fetchDashboardOverview().then((d) => {
+            console.log("[Dashboard] Overview loaded");
+            return d;
+          }),
+          fetchDashboardInsights().then((d) => {
+            console.log("[Dashboard] Insights loaded");
+            return d;
+          }),
+          fetchGlobalMapData().then((d) => {
+            console.log("[Dashboard] Map data loaded");
+            return d;
+          }),
         ]);
 
         console.log("[Dashboard] All data received successfully");
@@ -66,7 +109,7 @@ export default function DashboardClientView({ session }) {
             bytes: summary.bytes || 0,
             connections: summary.connections || 0,
             ftp_sessions_count: summary.ftp_sessions_count || 0,
-            file_size: summary.file_size || 0
+            file_size: summary.file_size || 0,
           },
           traffic_distribution: traffic,
           stats_details: {
@@ -74,8 +117,9 @@ export default function DashboardClientView({ session }) {
             top_countries: trends.top_countries || [],
             top_cities: trends.top_cities || [],
             top_isps: trends.top_isps || [],
-            infected_hosts: summary.infected_hosts || trends.infected_hosts || []
-          }
+            infected_hosts:
+              summary.infected_hosts || trends.infected_hosts || [],
+          },
         });
       } catch (err) {
         console.error("Dashboard data load failed:", err);
@@ -87,32 +131,37 @@ export default function DashboardClientView({ session }) {
   }, []);
 
   useEffect(() => {
-    const tabParam = searchParams.get("tab");
+    const url = new URL(window.location.href);
+
+    const tabParam = url.searchParams.get("tab");
     if (tabParam && tabParam !== "Pcap Summary") {
       const timer = setTimeout(() => {
         if (tabBarRef.current) {
           const yOffset = -56; // Offset for navbar (h-14 is 56px)
           const element = tabBarRef.current;
-          const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
-          window.scrollTo({ top: y, behavior: 'smooth' });
+          const y =
+            element.getBoundingClientRect().top + window.pageYOffset + yOffset;
+          window.scrollTo({ top: y, behavior: "smooth" });
         }
       }, 300);
       return () => clearTimeout(timer);
     }
-  }, [searchParams]);
+  }, [activeTab]);
 
   const handleTabChange = (tabId) => {
-    setActiveTab(tabId);
-    const params = new URLSearchParams(searchParams);
-    params.set("tab", tabId);
-    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+     setActiveTab(tabId);
+     const url = new URL(window.location.href);
+     url.searchParams.set("tab", tabId);
+     window.history.pushState({}, "", url);
+     console.log("Tab changed to:", tabId);
 
     // Scroll tab bar to top with offset for sticky navbar
     if (tabBarRef.current) {
       const yOffset = -56; // Offset for navbar (h-14 is 56px)
       const element = tabBarRef.current;
-      const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
-      window.scrollTo({ top: y, behavior: 'smooth' });
+      const y =
+        element.getBoundingClientRect().top + window.pageYOffset + yOffset;
+      window.scrollTo({ top: y, behavior: "smooth" });
     }
   };
 
@@ -120,23 +169,25 @@ export default function DashboardClientView({ session }) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
         <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
-        <p className="text-slate-500 font-bold text-sm 
-          animate-pulse">Fetching Data...</p>
+        <p
+          className="text-slate-500 font-bold text-sm 
+          animate-pulse"
+        >
+          Fetching Data...
+        </p>
       </div>
     );
   }
 
   return (
     <div className="space-y-0 pb-10">
-
-    <div className="h-[calc(100vh-56px-64px)] w-full">
-  <WorldMapLeaflet
-    mode="summary"
-    countryData={mapData}
-    title="Overall IP Geo Distribution"
-  />
-</div>
-
+      <div className="h-[calc(100vh-56px-64px)] w-full">
+        <WorldMapLeaflet
+          mode="summary"
+          countryData={mapData}
+          title="Overall IP Geo Distribution"
+        />
+      </div>
 
       <div
         ref={tabBarRef}
@@ -148,15 +199,31 @@ export default function DashboardClientView({ session }) {
             return (
               <div key={tab.id} className="flex-1 min-w-[150px] relative group">
                 <button
-                  onClick={() => { handleTabChange("Reports"); setReportInitialMode("country"); }}
-                  className={`w-full flex items-center dark:text-slate-400 justify-center gap-3 px-6 py-4 font-semibold transition-all border-r border-theme relative ${activeTab === "Reports"
+                  onClick={() => {
+                    handleTabChange("Reports");
+                    setReportInitialMode("country");
+                  }}
+                  className={`w-full flex items-center dark:text-slate-400 justify-center gap-3 px-6 py-4 font-semibold transition-all border-r border-theme relative ${
+                    activeTab === "Reports"
                       ? "text-black dark:text-white bg-[#00b894]/10"
                       : "text-slate-500 hover:text-foreground hover:bg-slate-500/5"
-                    }`}
+                  }`}
                 >
-                  <tab.icon size={14} className={activeTab === "Reports" ? "text-black dark:text-white" : "text-slate-500"} />
+                  <tab.icon
+                    size={14}
+                    className={
+                      activeTab === "Reports"
+                        ? "text-black dark:text-white"
+                        : "text-slate-500"
+                    }
+                  />
                   {tab.id}
-                  <ChevronDown size={14} className={activeTab === "Reports" ? "opacity-70" : "opacity-50"} />
+                  <ChevronDown
+                    size={14}
+                    className={
+                      activeTab === "Reports" ? "opacity-70" : "opacity-50"
+                    }
+                  />
                   {activeTab === "Reports" && (
                     <div className="absolute bottom-0 left-0 w-full h-1 bg-[#00b894]/40" />
                   )}
@@ -165,13 +232,19 @@ export default function DashboardClientView({ session }) {
                 {/* Dropdown Menu */}
                 <div className="absolute top-full  left-0 w-full bg-card border border-theme shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
                   <button
-                    onClick={() => { handleTabChange("Reports"); setReportInitialMode("country"); }}
+                    onClick={() => {
+                      handleTabChange("Reports");
+                      setReportInitialMode("country");
+                    }}
                     className="w-full px-4 py-3  dark:text-slate-400 font-semibold text-slate-800 hover:text-blue-600 hover:bg-slate-500/10 transition-all text-center border-b border-theme "
                   >
                     Country
                   </button>
                   <button
-                    onClick={() => { handleTabChange("Reports"); setReportInitialMode("isp"); }}
+                    onClick={() => {
+                      handleTabChange("Reports");
+                      setReportInitialMode("isp");
+                    }}
                     className="w-full px-4 py-3  dark:text-slate-400 font-semibold  text-slate-800 hover:text-blue-600 hover:bg-slate-500/10 transition-all text-center  "
                   >
                     ISP
@@ -184,12 +257,20 @@ export default function DashboardClientView({ session }) {
             <button
               key={tab.id}
               onClick={() => handleTabChange(tab.id)}
-              className={`flex-1 flex items-center dark:text-slate-400 justify-center gap-3 px-6 py-4 font-semibold transition-all border-r border-theme last:border-r-0 relative ${activeTab === tab.id
+              className={`flex-1 flex items-center dark:text-slate-400 justify-center gap-3 px-6 py-4 font-semibold transition-all border-r border-theme last:border-r-0 relative ${
+                activeTab === tab.id
                   ? "text-black dark:text-white bg-[#00b894]/10"
                   : "text-slate-500 hover:text-foreground hover:bg-slate-500/5"
-                }`}
+              }`}
             >
-              <tab.icon size={14} className={activeTab === tab.id ? "text-black dark:text-white" : "text-slate-500"} />
+              <tab.icon
+                size={14}
+                className={
+                  activeTab === tab.id
+                    ? "text-black dark:text-white"
+                    : "text-slate-500"
+                }
+              />
               {tab.id}
               {activeTab === tab.id && (
                 <div className="absolute bottom-0 left-0 w-full h-1 bg-[#00b894]/40" />
@@ -198,7 +279,6 @@ export default function DashboardClientView({ session }) {
           );
         })}
       </div>
-
 
       <AnimatePresence mode="wait">
         <motion.div
@@ -217,16 +297,17 @@ export default function DashboardClientView({ session }) {
             <TrafficDistribution data={data.traffic_distribution} />
           )}
 
-          {activeTab === "IP Search" && (
-            <IPSearch />
-          )}
+          {activeTab === "IP Search" && <IPSearch />}
 
           {activeTab === "Pcap Insights" && (
             <DashboardStats stats={data.stats_details} />
           )}
 
           {activeTab === "Reports" && (
-            <DashboardReports initialMode={reportInitialMode} session={session} />
+            <DashboardReports
+              initialMode={reportInitialMode}
+              session={session}
+            />
           )}
         </motion.div>
       </AnimatePresence>

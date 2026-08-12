@@ -4,7 +4,7 @@ import { Open_Sans } from "next/font/google";
 import { Navbar } from "@/components/Navbar";
 import { auth } from "@/auth";
 import { ThemeProvider } from "@/components/ThemeProvider";
-
+import AuthSessionProvider from "./SessionProvider";
 const openSans = Open_Sans({
   subsets: ["latin"],
   weight: ["300", "400", "500", "600", "700"],
@@ -28,15 +28,13 @@ export default async function RootLayout({ children }) {
       <body
         className={`${openSans.className} font-serif antialiased min-h-screen flex flex-col bg-gray-50 text-gray-900`}
       >
+        <AuthSessionProvider>
           <ThemeProvider>
-            
-
             {session && <Navbar user={session.user} />}
 
-            <main className="flex-1 w-full">
-              {children}
-            </main>
+            <main className="flex-1 w-full">{children}</main>
           </ThemeProvider>
+        </AuthSessionProvider>
       </body>
     </html>
   );
