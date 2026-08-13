@@ -5,9 +5,7 @@ import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 
 async function handleRequest(request, { params }) {
-  console.time("auth");
   const session = await auth();
-  console.timeEnd("auth");
   const pathParts = await params;    // access params 
   const path = pathParts.apiPath.join('/');  // gets the what the browser req and join them  ex : pcaps/set-1
 

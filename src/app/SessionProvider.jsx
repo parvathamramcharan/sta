@@ -1,11 +1,13 @@
-"use client";
+  "use client";
 
-import { SessionProvider } from "next-auth/react";
+  import { SessionProvider } from "next-auth/react";
 
-export default function AuthSessionProvider({ children }) {
-  return (
-    <SessionProvider>
-      {children}
-    </SessionProvider>
-  );
-}
+  export default function AuthSessionProvider({ children }) {
+    return (
+      <SessionProvider>
+        {children}
+      </SessionProvider>
+    );
+  }
+
+  //SessionProvider is a React provider from Auth.js.
