@@ -1,7 +1,7 @@
-export const USE_MOCK_DATA = false;
 export const BASE_URL = typeof window === 'undefined' 
   ? process.env.BACKEND_URL
   : '/api/proxy';
+
 
 const fetchWithTimeout = async (url, options = {}) => {
   const { timeout = 30000, ...fetchOptions } = options;
