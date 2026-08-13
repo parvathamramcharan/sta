@@ -13,10 +13,7 @@ const getKeycloakTokenEndpoint = () => {
 
 async function refreshAccessToken(token) {
   const refreshToken = token.refreshToken;
-
-  /*
-   * No refresh token available.
-   */
+   // No refresh token available.
   if (!refreshToken) {
     return {
       ...token,
@@ -26,21 +23,13 @@ async function refreshAccessToken(token) {
       error: "RefreshTokenError",
     };
   }
-
-  /*
-   * IMPORTANT:
-   *
-   * If another request is already refreshing this exact
-   * refresh token, wait for that request instead of sending
-   * another refresh request.
-   */
+   //If another request is already refreshing this exact 
+   //refresh token, wait for that request instead of sending , another refresh request.
   if (refreshPromises.has(refreshToken)) {
     return await refreshPromises.get(refreshToken);
   }
+ //Create ONE refresh request for this refresh token.
 
-  /*
-   * Create ONE refresh request for this refresh token.
-   */
   const refreshPromise = (async () => {
     try {
       const issuer =
@@ -66,10 +55,7 @@ async function refreshAccessToken(token) {
       });
 
       const data = await res.json();
-
-      /*
-       * Refresh failed.
-       */
+       // Refresh failed.
       if (!res.ok) {
         console.error(
           "Keycloak token refresh failed:",
@@ -84,20 +70,11 @@ async function refreshAccessToken(token) {
           error: "RefreshTokenError",
         };
       }
-
-      /*
-       * Refresh succeeded.
-       */
+       // Refresh succeeded.
       return {
         ...token,
-
         accessToken: data.access_token,
-
-        /*
-         * Keycloak may return a new refresh token.
-         *
-         * If it doesn't, keep the existing one.
-         */
+         //Keycloak may return a new refresh token. If it doesn't, keep the existing one.
         refreshToken:
           data.refresh_token ?? refreshToken,
 
@@ -122,11 +99,7 @@ async function refreshAccessToken(token) {
       };
     }
   })();
-
-  /*
-   * Store the promise so concurrent requests
-   * using the SAME refresh token share it.
-   */
+  // Store the promise so concurrent requests , using the SAME refresh token share it.
   refreshPromises.set(
     refreshToken,
     refreshPromise
@@ -135,9 +108,7 @@ async function refreshAccessToken(token) {
   try {
     return await refreshPromise;
   } finally {
-    /*
-     * Remove it after the refresh finishes.
-     */
+     // Remove it after the refresh finishes.
     refreshPromises.delete(refreshToken);
   }
 }
@@ -160,10 +131,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       async authorize(credentials) {
         try {
           const tokenEndpoint = getKeycloakTokenEndpoint();
-
-          /*
-           * Initial login using Keycloak password grant.
-           */
+           // Initial login using Keycloak password grant.
           const res = await fetch(tokenEndpoint, {
             method: "POST",
             headers: {
@@ -179,9 +147,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             }),
           });
 
-          /*
-           * Login failed.
-           */
+           // Login failed.
           if (!res.ok) {
             const errorData = await res.json().catch(() => ({}));
             console.error("Keycloak authentication error:", errorData);
@@ -197,12 +163,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             console.error("Keycloak response did not contain required tokens");
             return null;
           }
-
-          /*
-           * Decode access token payload.
-           *
-           * JWT uses Base64URL, so convert it before decoding.
-           */
+           // Decode access token payload. JWT uses Base64URL, so convert it before decoding.
           const payloadPart = accessToken.split(".")[1];
 
           if (!payloadPart) {
@@ -216,57 +177,31 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
               "base64"
             ).toString("utf8")
           );
-
-          /*
-           * Get realm roles.
-           */
+          // Get realm roles.
           const realmRoles = payload.realm_access?.roles || [];
-
-          /*
-           * Get client roles.
-           */
+           //Get client roles.
           const clientRoles =
             payload.resource_access?.[process.env.KEYCLOAK_CLIENT_ID]?.roles || [];
-
-          /*
-           * Get direct roles.
-           */
+           // Get direct roles.
           const directRoles = payload.roles || [];
-
-          /*
-           * Combine all roles.
-           */
+           // Combine all roles.
           const allRoles = [...realmRoles, ...clientRoles, ...directRoles];
-
-          /*
-           * Remove duplicate roles.
-           */
+           // Remove duplicate roles.
           const uniqueRoles = [...new Set(allRoles)];
-
-          /*
-           * User information.
-           */
+           // User information.
           const username = credentials?.username || "";
-
-          /*
-           * NOTE:
-           *
-           * You currently derive pdfPassword from the user's
-           * login password.
-           *
-           * This is preserved here to avoid changing your
-           * existing application behavior.
-           *
-           * However, for security, you should eventually replace
-           * this with a separately generated PDF password.
-           */
+           // You currently derive pdfPassword from the user's
+           //login password.
+           
+           //This is preserved here to avoid changing your
+           //existing application behavior.
+           
+           // However, for security, you should eventually replace
+           //this with a separately generated PDF password.
           const userPart = username.substring(0, 5);
           const passPart = (credentials?.password || "").substring(0, 5);
           const pdfPassword = `${userPart}${passPart}`;
-
-          /*
-           * Return user object to NextAuth.
-           */
+           // Return user object to NextAuth.
           return {
             id: payload.sub,
             name: payload.name || payload.preferred_username || username,
@@ -284,13 +219,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       },
     }),
   ],
-
   callbacks: {
-    /*
-     * ============================================================
-     * JWT CALLBACK
-     * ============================================================
-     */
+   // JWT CALLBACK
     async jwt({ token, user }) {
       // Initial login
       if (user) {
@@ -300,26 +230,21 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.accessTokenExpires = user.accessTokenExpires;
         token.pdfPassword = user.pdfPassword;
         token.error = undefined;
-
         return token;
       }
-
       // Refresh already failed.
       // Do NOT keep trying the dead refresh token.
       if (token.error === "RefreshTokenError") {
         return token;
       }
-
       // Access token is still valid
       if (token.accessTokenExpires && Date.now() < token.accessTokenExpires) {
         return token;
       }
-
       // Access token expired → try refresh
       if (token.refreshToken) {
         return refreshAccessToken(token);
       }
-
       // No refresh token → login again
       return {
         ...token,
@@ -329,35 +254,19 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         error: "RefreshTokenError",
       };
     },
-
-    /*
-     * ============================================================
-     * SESSION CALLBACK
-     * ============================================================
-     */
+     //SESSION CALLBACK
     async session({ session, token }) {
       if (session.user) {
         session.user.roles = token.roles || ["user"];
         session.user.pdfPassword = token.pdfPassword;
       }
-
-      /*
-       * Give the frontend the current access token.
-       */
+       //Give the frontend the current access token.
       session.accessToken = token.accessToken;
-
-      /*
-       * If refresh failed, frontend receives:
-       *
-       * session.error === "RefreshTokenError"
-       *
-       */
+       // If refresh failed, frontend receives , session.error === "RefreshTokenError"
       session.error = token.error;
-
       return session;
     },
   },
-
   pages: {
     signIn: "/",
   },
