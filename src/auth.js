@@ -12,38 +12,70 @@ const getKeycloakTokenEndpoint = () => {
 };
 
 async function refreshAccessToken(token) {
-  try {
-    if (!token.refreshToken) {
-      return {
-        ...token,
-        accessToken: undefined,
-        refreshToken: undefined,
-        accessTokenExpires: 0,
-        error: "RefreshTokenError",
-      };
-    }
+  const refreshToken = token.refreshToken;
 
-    const res = await fetch(
-      `${process.env.KEYCLOAK_ISSUER}/protocol/openid-connect/token`,
-      {
+  /*
+   * No refresh token available.
+   */
+  if (!refreshToken) {
+    return {
+      ...token,
+      accessToken: undefined,
+      refreshToken: undefined,
+      accessTokenExpires: 0,
+      error: "RefreshTokenError",
+    };
+  }
+
+  /*
+   * IMPORTANT:
+   *
+   * If another request is already refreshing this exact
+   * refresh token, wait for that request instead of sending
+   * another refresh request.
+   */
+  if (refreshPromises.has(refreshToken)) {
+    return await refreshPromises.get(refreshToken);
+  }
+
+  /*
+   * Create ONE refresh request for this refresh token.
+   */
+  const refreshPromise = (async () => {
+    try {
+      const issuer =
+        process.env.KEYCLOAK_ISSUER?.replace(/\/$/, "");
+
+      const tokenEndpoint =
+        `${issuer}/protocol/openid-connect/token`;
+
+      const res = await fetch(tokenEndpoint, {
         method: "POST",
         headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
+          "Content-Type":
+            "application/x-www-form-urlencoded",
         },
         body: new URLSearchParams({
           grant_type: "refresh_token",
-          client_id: process.env.KEYCLOAK_CLIENT_ID,
-          client_secret: process.env.KEYCLOAK_CLIENT_SECRET || "",
-          refresh_token: token.refreshToken,
+          client_id:
+            process.env.KEYCLOAK_CLIENT_ID,
+          client_secret:
+            process.env.KEYCLOAK_CLIENT_SECRET || "",
+          refresh_token: refreshToken,
         }),
-      }
-    );
+      });
 
-    const data = await res.json();
+      const data = await res.json();
 
-    // Refresh token is expired/revoked
-    if (!res.ok) {
-      if (data?.error === "invalid_grant") {
+      /*
+       * Refresh failed.
+       */
+      if (!res.ok) {
+        console.error(
+          "Keycloak token refresh failed:",
+          data
+        );
+
         return {
           ...token,
           accessToken: undefined,
@@ -53,6 +85,34 @@ async function refreshAccessToken(token) {
         };
       }
 
+      /*
+       * Refresh succeeded.
+       */
+      return {
+        ...token,
+
+        accessToken: data.access_token,
+
+        /*
+         * Keycloak may return a new refresh token.
+         *
+         * If it doesn't, keep the existing one.
+         */
+        refreshToken:
+          data.refresh_token ?? refreshToken,
+
+        accessTokenExpires:
+          Date.now() +
+          data.expires_in * 1000,
+
+        error: undefined,
+      };
+    } catch (error) {
+      console.error(
+        "Unexpected token refresh error:",
+        error
+      );
+
       return {
         ...token,
         accessToken: undefined,
@@ -61,28 +121,26 @@ async function refreshAccessToken(token) {
         error: "RefreshTokenError",
       };
     }
+  })();
 
-    // Refresh succeeded
-    return {
-      ...token,
-      accessToken: data.access_token,
-      refreshToken: data.refresh_token ?? token.refreshToken,
-      accessTokenExpires: Date.now() + data.expires_in * 1000,
-      error: undefined,
-    };
-  } catch (error) {
-    console.error("Unexpected token refresh error:", error);
+  /*
+   * Store the promise so concurrent requests
+   * using the SAME refresh token share it.
+   */
+  refreshPromises.set(
+    refreshToken,
+    refreshPromise
+  );
 
-    return {
-      ...token,
-      accessToken: undefined,
-      refreshToken: undefined,
-      accessTokenExpires: 0,
-      error: "RefreshTokenError",
-    };
+  try {
+    return await refreshPromise;
+  } finally {
+    /*
+     * Remove it after the refresh finishes.
+     */
+    refreshPromises.delete(refreshToken);
   }
 }
-
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
     Credentials({

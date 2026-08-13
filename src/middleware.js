@@ -21,13 +21,20 @@ export const middleware = auth((req) => {
     isDashboardRoute || isPcapRoute || isReportsRoute ||
     isUploadRoute || isAboutRoute || isFeedbackRoute;
 
-  // Refresh token is dead — clear session cookie and send to login
-  if (req.auth?.error === "RefreshTokenError") {
-    const response = NextResponse.redirect(new URL("/", req.url));
-    response.cookies.delete("authjs.session-token");
-    return response;
-  }
 
+    console.log( "MIDDLEWARE:",pathname,
+                "loggedIn:",  isLoggedIn,
+                "error:",  req.auth?.error
+              );
+
+  if (
+  req.auth?.error === "RefreshTokenError" &&
+  pathname !== "/auth/force-logout"
+) {
+  return NextResponse.redirect(
+    new URL("/auth/force-logout", req.url)
+  );
+}
   // Login page, no session → stay here
   if (isPublicRoute && !isLoggedIn) return NextResponse.next();
 
