@@ -27,7 +27,6 @@ export default async function AppLoginPage() {
             Network Traffic Analysis
           </h1>
         
-        
           <LoginForm />
         </div>
       </div>

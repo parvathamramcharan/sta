@@ -33,6 +33,7 @@ export default async function RootLayout({ children }) {
             {session && <Navbar user={session.user} />}
 
             <main className="flex-1 w-full">{children}</main>
+           
           </ThemeProvider>
         </AuthSessionProvider>
       </body>

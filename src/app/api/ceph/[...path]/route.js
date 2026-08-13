@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 
 async function handleRequest(request, { params }) {
+  //Read the path from the request and set the backend URL
   const pathParts = await params;
   const path = pathParts.path.join('/');
   const searchParams = request.nextUrl.searchParams.toString();
@@ -9,7 +10,9 @@ async function handleRequest(request, { params }) {
 
   console.log(`[Ceph Proxy] ${request.method} -> ${backendUrl}`);
 
+ 
   try {
+     //1.prepare fetch options
     const fetchOptions = {
       method: request.method,
       headers: {
@@ -17,25 +20,30 @@ async function handleRequest(request, { params }) {
       },
       cache: 'no-store',
     };
-
+     //2 Copy the request body and add to fecthOptions
     if (['POST', 'PUT', 'PATCH'].includes(request.method)) {
       const body = await request.arrayBuffer();
       if (body.byteLength) fetchOptions.body = body;
     }
 
+    //3.Create a 30-second timeout
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000);
 
+    //4.send request to backend
     const res = await fetch(backendUrl, {
       ...fetchOptions,
       signal: controller.signal,
     });
-
+   //5.Stop the timeout timer , if backend responds within  30 sec
     clearTimeout(timeoutId);
 
+    //6. Find the response type from backend
     const contentType = res.headers.get('Content-Type') || 'application/json';
+    //7. If the backend returns a file, read it as arrayBuffer
     const responseBody = await res.arrayBuffer();
 
+    //8. Return the response with the same status and headers
     const response = new NextResponse(responseBody, {
       status: res.status,
       headers: {
@@ -45,10 +53,10 @@ async function handleRequest(request, { params }) {
 
     return response;
   } catch (error) {
+    // Handle errors like timeouts or network issues
     console.error(`[Ceph Proxy] Error fetching ${backendUrl}:`, error);
     const status = error.name === 'AbortError' ? 504 : 500;
     return NextResponse.json({ error: error?.message || 'Ceph proxy failed' }, { status });
   }
 }
-
 export { handleRequest as GET, handleRequest as POST, handleRequest as PUT, handleRequest as DELETE, handleRequest as PATCH };

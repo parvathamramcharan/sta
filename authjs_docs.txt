@@ -1,0 +1,32 @@
+Access token expired
+        ↓
+refreshAccessToken()
+        ↓
+Is refresh token available?
+   NO ─────→ RefreshTokenError
+   │
+  YES
+   ↓
+Already refreshing this token?
+   YES ────→ wait for existing Promise
+   │
+   NO
+   ↓
+Create refresh request
+   ↓
+Send refresh_token to Keycloak
+   ↓
+   ┌───────────────┐
+   │               │
+ Failed         Success
+   ↓               ↓
+Error           New access token
+   ↓               ↓
+RefreshTokenError Update token
+   │               │
+   └───────┬───────┘
+           ↓
+Delete Promise from Map
+
+
+=============================================

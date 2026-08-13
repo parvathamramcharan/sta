@@ -1,19 +1,27 @@
+// Built-in NextAuth function for configuring authentication.
 import NextAuth from "next-auth";
+// Built-in Credentials provider for username/password login.
 import Credentials from "next-auth/providers/credentials";
 
-// Prevent concurrent refresh calls for the SAME refresh token.
-// Using a Map is safer than one global refreshPromise because
-// different users must not share the same refresh request.
+// Store ongoing token-refresh promises by refresh token,
+// so concurrent requests for the same token share one refresh request.stores in js in memory map on the server/runtime
 const refreshPromises = new Map();
 
+// Returns the Keycloak endpoint used to obtain/refresh tokens.
 const getKeycloakTokenEndpoint = () => {
   const issuer = process.env.KEYCLOAK_ISSUER?.replace(/\/$/, "");
   return `${issuer}/protocol/openid-connect/token`;
 };
 
-async function refreshAccessToken(token) {
+// Refreshes the access token using the refresh token.
+async function refreshAccessToken(token) {  // Receives the current NextAuth JWT token
+
+  console.log("auth.js => refreshacesstoken called");
+  // Refresh the expired access token using the stored refresh token.
   const refreshToken = token.refreshToken;
-   // No refresh token available.
+
+
+  // No refresh token available, so token refresh cannot be performed.
   if (!refreshToken) {
     return {
       ...token,
@@ -23,13 +31,13 @@ async function refreshAccessToken(token) {
       error: "RefreshTokenError",
     };
   }
-   //If another request is already refreshing this exact 
-   //refresh token, wait for that request instead of sending , another refresh request.
+  //If another request is already refreshing this exact 
+  //refresh token, wait for that request instead of sending , another refresh request.
   if (refreshPromises.has(refreshToken)) {
     return await refreshPromises.get(refreshToken);
   }
- //Create ONE refresh request for this refresh token.
-
+ 
+  //Create ONE refresh request for this refresh token.
   const refreshPromise = (async () => {
     try {
       const issuer =
@@ -116,7 +124,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
     Credentials({
       name: "Keycloak",
-
       credentials: {
         username: {
           label: "Username",
@@ -127,8 +134,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           type: "password",
         },
       },
-
       async authorize(credentials) {
+          console.log("auth.js => authorize called");
         try {
           const tokenEndpoint = getKeycloakTokenEndpoint();
            // Initial login using Keycloak password grant.
@@ -158,6 +165,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
           const accessToken = data?.access_token;
           const refreshToken = data?.refresh_token;
+          // console.log("access token ",accessToken);
+          // console.log("refresh token ",refreshToken);
 
           if (!accessToken || !refreshToken) {
             console.error("Keycloak response did not contain required tokens");
@@ -180,8 +189,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           // Get realm roles.
           const realmRoles = payload.realm_access?.roles || [];
            //Get client roles.
-          const clientRoles =
-            payload.resource_access?.[process.env.KEYCLOAK_CLIENT_ID]?.roles || [];
+          const clientRoles = payload.resource_access?.[process.env.KEYCLOAK_CLIENT_ID]?.roles || [];
            // Get direct roles.
           const directRoles = payload.roles || [];
            // Combine all roles.
@@ -190,18 +198,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           const uniqueRoles = [...new Set(allRoles)];
            // User information.
           const username = credentials?.username || "";
-           // You currently derive pdfPassword from the user's
-           //login password.
-           
-           //This is preserved here to avoid changing your
-           //existing application behavior.
-           
-           // However, for security, you should eventually replace
-           //this with a separately generated PDF password.
-          const userPart = username.substring(0, 5);
-          const passPart = (credentials?.password || "").substring(0, 5);
-          const pdfPassword = `${userPart}${passPart}`;
+        
+          // const userPart = username.substring(0, 5);
+          // const passPart = (credentials?.password || "").substring(0, 5);
+          // const pdfPassword = `${userPart}${passPart}`;
            // Return user object to NextAuth.
+
+           console.log("auth.js=> authrize ended")
           return {
             id: payload.sub,
             name: payload.name || payload.preferred_username || username,
@@ -210,7 +213,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             accessToken,
             refreshToken,
             accessTokenExpires: Date.now() + (data.expires_in || 60) * 1000,
-            pdfPassword,
+            // pdfPassword,
           };
         } catch (error) {
           console.error("Connection to Keycloak failed:", error);
@@ -222,13 +225,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   callbacks: {
    // JWT CALLBACK
     async jwt({ token, user }) {
+      console.log("auth.js => jwt callback called");
       // Initial login
       if (user) {
         token.roles = user.roles;
         token.accessToken = user.accessToken;
         token.refreshToken = user.refreshToken;
         token.accessTokenExpires = user.accessTokenExpires;
-        token.pdfPassword = user.pdfPassword;
+        // token.pdfPassword = user.pdfPassword;
         token.error = undefined;
         return token;
       }
@@ -256,9 +260,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     },
      //SESSION CALLBACK
     async session({ session, token }) {
+      console.log("auth.js => session called")
       if (session.user) {
         session.user.roles = token.roles || ["user"];
-        session.user.pdfPassword = token.pdfPassword;
+        // session.user.pdfPassword = token.pdfPassword;
       }
        //Give the frontend the current access token.
       session.accessToken = token.accessToken;
