@@ -140,7 +140,7 @@ export default function TrafficDistribution({ data }) {
             {appData.length === 0 ? <NoData /> : (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={appData.slice(0, 5)} layout="vertical"
-                  margin={{ top: 4, right: 16, left: 8, bottom: 4 }}>
+                  margin={{ top: 4, right: 40, left: 8, bottom: 24 }} barCategoryGap="40%">
                   <defs>
                     {appData.slice(0, 5).map((_, i) => (
                       <linearGradient key={`grad-${i}`} id={`colorApp${i}`} x1="0" y1="0" x2="1" y2="0">
@@ -149,14 +149,14 @@ export default function TrafficDistribution({ data }) {
                       </linearGradient>
                     ))}
                   </defs>
-                  <XAxis type="number" tick={{ fontSize: 10, fill: '#475569', fontWeight: 'bold' }}
+                  <XAxis type="number" domain={[0, 'dataMax * 1.16']} tick={{ fontSize: 10, fill: '#000000', fontWeight: 'normal' }}
                     tickFormatter={formatAxisLabel} axisLine={false} tickLine={false}
-                    label={{ value: 'Packets', position: 'insideBottom', offset: -2, fontSize: 9, fill: '#94a3b8' }} />
-                  <YAxis dataKey="label" type="category" width={90}
-                    tick={{ fontSize: 11, fill: '#334155', fontWeight: 'bold' }}
+                    label={{ value: 'Packets', position: 'bottom', offset: 8, fontSize: 10, fill: '#000000' }} />
+                  <YAxis dataKey="label" type="category" width={110}
+                    tick={{ fontSize: 11, fill: '#000000', fontWeight: 'normal' }}
                     axisLine={false} tickLine={false} />
                   <RechartsTooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--foreground) / 0.05)' }} />
-                  <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={15}>
+                  <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={10}>
                     {appData.slice(0, 5).map((_, index) => (
                       <Cell key={`cell-${index}`} fill={`url(#colorApp${index})`} />
                     ))}
@@ -166,11 +166,11 @@ export default function TrafficDistribution({ data }) {
             )}
           </ChartContainer>
 
-          {/* URLs*/}
-          <ChartContainer title="URL's (Top 5)">
+          {/* URLs */}
+          <ChartContainer title="URLs (Top 5)">
             {urlData.length === 0 ? <NoData /> : (
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={urlData.slice(0, 5)} margin={{ top: 8, right: 8, left: 0, bottom: 58 }}>
+                <BarChart data={urlData.slice(0, 5)} margin={{ top: 8, right: 8, left: 20, bottom: 58 }}>
                   <defs>
                     <linearGradient id="colorUri" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="0%" stopColor="#48dbfb" />
@@ -184,15 +184,16 @@ export default function TrafficDistribution({ data }) {
                       return (
                         <g transform={`translate(${x},${y})`}>
                           <text x={0} y={0} dy={4} textAnchor="end" transform="rotate(-42)"
-                            fontSize={10} fill="#64748b" fontFamily="sans-serif">{text}</text>
+                            fontSize={10} fill="#000000" fontFamily="sans-serif" fontWeight="normal">{text}</text>
                         </g>
                       );
                     }}
                   />
-                  <YAxis tick={{ fontSize: 10, fill: 'hsl(var(--foreground) / 0.6)', fontWeight: 'bold' }}
-                    tickFormatter={formatAxisLabel} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 10, fill: '#000000', fontWeight: 'normal' }}
+                    domain={[0, 'dataMax * 1.08']} tickFormatter={formatAxisLabel} axisLine={false} tickLine={false}
+                    label={{ value: 'Packets', angle: -90, position: 'insideLeft', offset: -10, fontSize: 10, fill: '#000000' }} />
                   <RechartsTooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--foreground) / 0.05)' }} />
-                  <Bar dataKey="value" fill="url(#colorUri)" radius={[4, 4, 0, 0]} barSize={20} />
+                  <Bar dataKey="value" fill="url(#colorUri)" radius={[4, 4, 0, 0]} barSize={12} />
                 </BarChart>
               </ResponsiveContainer>
             )}
@@ -203,7 +204,7 @@ export default function TrafficDistribution({ data }) {
             {dnsData.length === 0 ? <NoData /> : (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={dnsData.slice(0, 5)} layout="vertical"
-                  margin={{ top: 4, right: 16, left: 8, bottom: 4 }}>
+                  margin={{ top: 4, right: 52, left: 8, bottom: 26 }} barCategoryGap="45%">
                   <defs>
                     {dnsData.slice(0, 5).map((_, i) => (
                       <linearGradient key={`gradDns-${i}`} id={`colorDns${i}`} x1="0" y1="0" x2="1" y2="0">
@@ -212,14 +213,14 @@ export default function TrafficDistribution({ data }) {
                       </linearGradient>
                     ))}
                   </defs>
-                  <XAxis type="number" tick={{ fontSize: 10, fill: 'hsl(var(--foreground) / 0.6)', fontWeight: 'bold' }}
+                  <XAxis type="number" domain={[0, 'dataMax * 1.18']} tick={{ fontSize: 10, fill: '#000000', fontWeight: 'normal' }}
                     tickFormatter={formatAxisLabel} axisLine={false} tickLine={false}
-                    label={{ value: 'Packets', position: 'insideBottom', offset: -2, fontSize: 9, fill: '#94a3b8' }} />
-                  <YAxis dataKey="label" type="category" width={150}
-                    tick={{ fontSize: 10, fill: 'hsl(var(--foreground) / 0.8)', fontWeight: 'bold' }}
+                    label={{ value: 'Packets', position: 'bottom', offset: 10, fontSize: 10, fill: '#000000' }} />
+                  <YAxis dataKey="label" type="category" width={140}
+                    tick={{ fontSize: 10, fill: '#000000', fontWeight: 'normal' }}
                     axisLine={false} tickLine={false} />
                   <RechartsTooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--foreground) / 0.05)' }} />
-                  <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={14}>
+                  <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={10}>
                     {dnsData.slice(0, 5).map((_, index) => (
                       <Cell key={`cell-${index}`} fill={`url(#colorDns${index})`} />
                     ))}
@@ -269,7 +270,7 @@ export default function TrafficDistribution({ data }) {
             {sslData.length === 0 ? <NoData /> : (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={sslData.slice(0, 5)} layout="vertical"
-                  margin={{ top: 4, right: 16, left: 8, bottom: 4 }}>
+                  margin={{ top: 4, right: 48, left: 8, bottom: 24 }} barCategoryGap="42%">
                   <defs>
                     {sslData.slice(0, 5).map((_, i) => (
                       <linearGradient key={`gradSsl-${i}`} id={`colorSsl${i}`} x1="0" y1="0" x2="1" y2="0">
@@ -278,14 +279,14 @@ export default function TrafficDistribution({ data }) {
                       </linearGradient>
                     ))}
                   </defs>
-                  <XAxis type="number" tick={{ fontSize: 10, fill: '#475569', fontWeight: 'bold' }}
+                  <XAxis type="number" domain={[0, 'dataMax * 1.18']} tick={{ fontSize: 10, fill: '#000000', fontWeight: 'normal' }}
                     tickFormatter={formatAxisLabel} axisLine={false} tickLine={false}
-                    label={{ value: 'Packets', position: 'insideBottom', offset: -2, fontSize: 9, fill: '#94a3b8' }} />
-                  <YAxis dataKey="label" type="category" width={150}
-                    tick={{ fontSize: 10, fill: '#334155', fontWeight: 'bold' }}
+                    label={{ value: 'Packets', position: 'bottom', offset: 8, fontSize: 10, fill: '#000000' }} />
+                  <YAxis dataKey="label" type="category" width={140}
+                    tick={{ fontSize: 10, fill: '#000000', fontWeight: 'normal' }}
                     axisLine={false} tickLine={false} />
                   <RechartsTooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--foreground) / 0.05)' }} />
-                  <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={12}>
+                  <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={10}>
                     {sslData.slice(0, 5).map((_, index) => (
                       <Cell key={`cell-${index}`} fill={`url(#colorSsl${index})`} />
                     ))}
