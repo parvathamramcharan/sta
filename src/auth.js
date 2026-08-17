@@ -270,7 +270,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
        // If refresh failed, frontend receives , session.error === "RefreshTokenError"
       session.error = token.error;
       return session;
-    },
+    },    
   },
   pages: {
     signIn: "/",
