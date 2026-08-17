@@ -167,15 +167,21 @@ export default function DashboardClientView({ session }) {
 
   if (isLoading || !data) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-        <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
-        <p
-          className="text-slate-500 font-bold text-sm 
-          animate-pulse"
-        >
-          Fetching Data...
-        </p>
-      </div>
+      <div className="flex flex-col items-center justify-center min-h-[80vh]">
+  <div className="flex flex-col items-center">
+    {/* Spinner */}
+    <div className="relative w-12 h-12 mb-5">
+      <div className="absolute inset-0 rounded-full border-4 border-emerald-500/15" />
+      <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-emerald-500 animate-spin" />
+    </div>
+
+    {/* Status */}
+    <p className="text-sm font-semibold text-foreground">
+      Fetching PCAP Data 
+    </p>
+
+  </div>
+</div>
     );
   }
 
