@@ -149,11 +149,13 @@ export default function TrafficDistribution({ data }) {
                       </linearGradient>
                     ))}
                   </defs>
-                  <XAxis type="number" domain={[0, 'dataMax * 1.16']} tick={{ fontSize: 10, fill: '#000000', fontWeight: 'normal' }}
+                  <XAxis type="number" domain={[0, 'dataMax * 1.16']} tick={{ fontSize: 10, fill: 'hsl(var(--foreground))', fontWeight: 'normal' }}
                     tickFormatter={formatAxisLabel} axisLine={false} tickLine={false}
-                    label={{ value: 'Packets', position: 'bottom', offset: 8, fontSize: 10, fill: '#000000' }} />
-                  <YAxis dataKey="label" type="category" width={110}
-                    tick={{ fontSize: 11, fill: '#000000', fontWeight: 'normal' }}
+                    label={{ value: 'Packets', position: 'bottom', offset: 8, fontSize: 10, fill: 'hsl(var(--foreground))' }}
+                    
+                    />
+                  <YAxis dataKey="label" type="category" width={200}
+                    tick={{ fontSize: 11, fontWeight: 'normal' , fill: 'hsl(var(--foreground))',}}
                     axisLine={false} tickLine={false} />
                   <RechartsTooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--foreground) / 0.05)' }} />
                   <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={10}>
@@ -178,20 +180,20 @@ export default function TrafficDistribution({ data }) {
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
-                  <XAxis dataKey="label" height={58} interval={0} axisLine={false} tickLine={false}
+                  <XAxis dataKey="label" height={58} interval={0} axisLine={false} tickLine={false}  
                     tick={({ x, y, payload }) => {
                       const text = payload.value?.length > 18 ? payload.value.slice(0, 18) + '…' : payload.value;
                       return (
                         <g transform={`translate(${x},${y})`}>
-                          <text x={0} y={0} dy={4} textAnchor="end" transform="rotate(-42)"
-                            fontSize={10} fill="#000000" fontFamily="sans-serif" fontWeight="normal">{text}</text>
+                          <text x={0} y={0} dy={4} textAnchor="end" transform="rotate(-42) "
+                            fontSize={10} fill="#000000" fontFamily="sans-serif" fontWeight="normal"  className="fill-black dark:fill-gray-300">{text}</text>
                         </g>
                       );
                     }}
                   />
-                  <YAxis tick={{ fontSize: 10, fill: '#000000', fontWeight: 'normal' }}
+                  <YAxis tick={{ fontSize: 10,  fill: 'hsl(var(--foreground))', fontWeight: 'normal' }}
                     domain={[0, 'dataMax * 1.08']} tickFormatter={formatAxisLabel} axisLine={false} tickLine={false}
-                    label={{ value: 'Packets', angle: -90, position: 'insideLeft', offset: -10, fontSize: 10, fill: '#000000' }} />
+                    label={{ value: 'Packets', angle: -90, position: 'insideLeft', offset: -10, fontSize: 10, fill: 'hsl(var(--foreground))' }} />
                   <RechartsTooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--foreground) / 0.05)' }} />
                   <Bar dataKey="value" fill="url(#colorUri)" radius={[4, 4, 0, 0]} barSize={12} />
                 </BarChart>
@@ -204,7 +206,7 @@ export default function TrafficDistribution({ data }) {
             {dnsData.length === 0 ? <NoData /> : (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={dnsData.slice(0, 5)} layout="vertical"
-                  margin={{ top: 4, right: 52, left: 8, bottom: 26 }} barCategoryGap="45%">
+                  margin={{ top: 4, right: 48, left: 8, bottom: 26 }} barCategoryGap="45%">
                   <defs>
                     {dnsData.slice(0, 5).map((_, i) => (
                       <linearGradient key={`gradDns-${i}`} id={`colorDns${i}`} x1="0" y1="0" x2="1" y2="0">
@@ -213,11 +215,11 @@ export default function TrafficDistribution({ data }) {
                       </linearGradient>
                     ))}
                   </defs>
-                  <XAxis type="number" domain={[0, 'dataMax * 1.18']} tick={{ fontSize: 10, fill: '#000000', fontWeight: 'normal' }}
+                  <XAxis type="number" domain={[0, 'dataMax * 1.7']} tick={{ fontSize: 10,  fill: 'hsl(var(--foreground))', fontWeight: 'normal' }}
                     tickFormatter={formatAxisLabel} axisLine={false} tickLine={false}
-                    label={{ value: 'Packets', position: 'bottom', offset: 10, fontSize: 10, fill: '#000000' }} />
-                  <YAxis dataKey="label" type="category" width={140}
-                    tick={{ fontSize: 10, fill: '#000000', fontWeight: 'normal' }}
+                    label={{ value: 'Packets', position: 'bottom', offset: 10, fontSize: 10, fill: 'hsl(var(--foreground))' }} />
+                  <YAxis dataKey="label" type="category" width={200}
+                    tick={{ fontSize: 10,  fill: 'hsl(var(--foreground))', fontWeight: 'normal' }}
                     axisLine={false} tickLine={false} />
                   <RechartsTooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--foreground) / 0.05)' }} />
                   <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={10}>
@@ -279,11 +281,11 @@ export default function TrafficDistribution({ data }) {
                       </linearGradient>
                     ))}
                   </defs>
-                  <XAxis type="number" domain={[0, 'dataMax * 1.18']} tick={{ fontSize: 10, fill: '#000000', fontWeight: 'normal' }}
+                  <XAxis type="number" domain={[0, 'dataMax * 1.18']} tick={{ fontSize: 10,  fill: 'hsl(var(--foreground))', fontWeight: 'normal' }}
                     tickFormatter={formatAxisLabel} axisLine={false} tickLine={false}
-                    label={{ value: 'Packets', position: 'bottom', offset: 8, fontSize: 10, fill: '#000000' }} />
-                  <YAxis dataKey="label" type="category" width={140}
-                    tick={{ fontSize: 10, fill: '#000000', fontWeight: 'normal' }}
+                    label={{ value: 'Packets', position: 'bottom', offset: 8, fontSize: 10, fill: 'hsl(var(--foreground))' }} />
+                  <YAxis dataKey="label" type="category" width={200}
+                    tick={{ fontSize: 10,  fill: 'hsl(var(--foreground))', fontWeight: 'normal' }}
                     axisLine={false} tickLine={false} />
                   <RechartsTooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--foreground) / 0.05)' }} />
                   <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={10}>
