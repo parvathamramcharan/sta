@@ -636,7 +636,8 @@ export default function PcapClientView({ setId, initialResponse, session }) {
     <div className="flex flex-col gap-3 pb-10">
       <div className="flex items-center justify-between shrink-0 pt-1 ">
         <h1 className="text-[20px]  font-medium   font-serif text-foreground flex items-center gap-3 ml-6">
-          PCAP Set {setId}
+          
+         {setId == 2 ? "PoC Demo Pcaps" : `PCAP Set ${setId}`}
           <span className="text-amber-500 text-sm font-serif  bg-amber-500/10 px-3 py-1 rounded-none border border-amber-500/20">
             {stats.total_pcaps || initialData.length} Files
           </span>
