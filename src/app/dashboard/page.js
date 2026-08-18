@@ -12,7 +12,7 @@ export default async function AnalyticsDashboardPage() {
 
   return (
     <div className="w-full ">
-      <Suspense fallback={<div className="h-screen flex items-center justify-center text-slate-500 font-black uppercase tracking-widest text-xs">Synchronizing Intelligence...</div>}>
+      <Suspense fallback={<div className="h-screen flex items-center justify-center text-slate-500 font-black uppercase tracking-widest text-xs"></div>}>
         <DashboardClientView session={session} />
       </Suspense>
     </div>
